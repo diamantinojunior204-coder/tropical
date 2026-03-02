@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carregando...</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+
+    .container {
+      text-align: center;
+      width: 100%;
+      max-width: 400px;
+      padding: 20px;
+    }
+
+    .logo {
+      width: 200px;
+      max-width: 80%;
+      margin-bottom: 20px;
+      animation: float 2.5s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0); }
+    }
+
+    .status {
+      font-size: 16px;
+      margin-bottom: 20px;
+      opacity: 0.85;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(255,255,255,0.3);
+      border-top: 4px solid #fff;
+      border-radius: 50%;
+      margin: 0 auto 20px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .btn {
+      display: none;
+      margin-top: 20px;
+      padding: 15px;
+      width: 100%;
+      font-size: 18px;
+      font-weight: bold;
+      color: #fff;
+      background: linear-gradient(90deg, #00c6ff, #0072ff);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(0,198,255,0.6); }
+      70% { box-shadow: 0 0 0 15px rgba(0,198,255,0); }
+      100% { box-shadow: 0 0 0 0 rgba(0,198,255,0); }
+    }
+
+    .btn:hover {
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <!-- SUA IMAGEM PNG -->
+    <img src="logo.png" alt="Logo" class="logo" />
+
+    <div class="spinner" id="spinner"></div>
+
+    <div class="status" id="status">
+      Acordando o servidor...
+    </div>
+
+    <button class="btn" id="enterBtn">
+      🎮 Jogar Agora
+    </button>
+  </div>
+
+  <script>
+    const RENDER_URL = "https://SEU-APP.onrender.com"; // 👈 TROQUE AQUI
+
+    const statusText = document.getElementById("status");
+    const spinner = document.getElementById("spinner");
+    const btn = document.getElementById("enterBtn");
+
+    async function checkServer() {
+      try {
+        const res = await fetch(RENDER_URL, { mode: "no-cors" });
+        
+        // Se chegou aqui, o Render respondeu
+        spinner.style.display = "none";
+        statusText.innerText = "Servidor pronto!";
+        btn.style.display = "block";
+
+        btn.onclick = () => {
+          window.location.href = RENDER_URL;
+        };
+
+      } catch (e) {
+        console.log("Servidor ainda dormindo...");
+      }
+    }
+
+    // Checa a cada 5 segundos
+    setInterval(checkServer, 5000);
+  </script>
+</body>
+</html>
