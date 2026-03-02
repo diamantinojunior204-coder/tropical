@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Carregando...</title>
+  <meta charset="UTF-8">
+  <title>Aguarde | Carregando</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
     * {
@@ -15,123 +15,95 @@
 
     body {
       height: 100vh;
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      background:
+        linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
+        url("fundo.png") no-repeat center center fixed;
+      background-size: cover;
       display: flex;
       align-items: center;
       justify-content: center;
       color: #fff;
+      text-align: center;
     }
 
     .container {
-      text-align: center;
-      width: 100%;
-      max-width: 400px;
-      padding: 20px;
+      width: 90%;
+      max-width: 380px;
+      padding: 25px;
+      border-radius: 16px;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(6px);
+      box-shadow: 0 0 30px rgba(0,0,0,0.8);
     }
 
     .logo {
-      width: 200px;
-      max-width: 80%;
+      width: 140px;
       margin-bottom: 20px;
-      animation: float 2.5s ease-in-out infinite;
     }
 
-    @keyframes float {
-      0% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
-      100% { transform: translateY(0); }
+    h1 {
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 25px;
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #00ffcc, #00bfa6);
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 15px rgba(0,255,204,0.6);
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 25px rgba(0,255,204,0.9);
+    }
+
+    button:active {
+      transform: scale(0.98);
     }
 
     .status {
-      font-size: 16px;
-      margin-bottom: 20px;
-      opacity: 0.85;
-    }
-
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid rgba(255,255,255,0.3);
-      border-top: 4px solid #fff;
-      border-radius: 50%;
-      margin: 0 auto 20px;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .btn {
-      display: none;
-      margin-top: 20px;
-      padding: 15px;
-      width: 100%;
-      font-size: 18px;
-      font-weight: bold;
-      color: #fff;
-      background: linear-gradient(90deg, #00c6ff, #0072ff);
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      animation: pulse 1.5s infinite;
-    }
-
-    @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(0,198,255,0.6); }
-      70% { box-shadow: 0 0 0 15px rgba(0,198,255,0); }
-      100% { box-shadow: 0 0 0 0 rgba(0,198,255,0); }
-    }
-
-    .btn:hover {
-      transform: scale(1.05);
+      margin-top: 15px;
+      font-size: 13px;
+      opacity: 0.8;
     }
   </style>
 </head>
 
 <body>
-  <div class="container">
-    <!-- SUA IMAGEM PNG -->
-    <img src="Diamantino.jpg" alt="Logo" class="logo" />
 
-    <div class="spinner" id="spinner"></div>
+  <div class="container">
+    <img src="Diamantino.jpg" alt="Logo" class="logo">
+
+    <h1>Aplicação iniciando</h1>
+    <p>Estamos preparando a diversão para você!.<br>Aguarde alguns segundos.</p>
+
+    <button onclick="entrar()">JOGAR AGORA</button>
 
     <div class="status" id="status">
-      Acordando o servidor...
+      Pronto para entrar
     </div>
-
-    <button class="btn" id="enterBtn">
-      🎮 Jogar Agora
-    </button>
   </div>
 
   <script>
-    const RENDER_URL = "https://sites-uxsm.onrender.com"; // 👈 TROQUE AQUI
-
-    const statusText = document.getElementById("status");
-    const spinner = document.getElementById("spinner");
-    const btn = document.getElementById("enterBtn");
-
-    async function checkServer() {
-      try {
-        const res = await fetch(RENDER_URL, { mode: "no-cors" });
-        
-        // Se chegou aqui, o Render respondeu
-        spinner.style.display = "none";
-        statusText.innerText = "Servidor pronto!";
-        btn.style.display = "block";
-
-        btn.onclick = () => {
-          window.location.href = RENDER_URL;
-        };
-
-      } catch (e) {
-        console.log("Servidor ainda dormindo...");
-      }
+    function entrar() {
+      document.getElementById("status").innerText = "Entrando...";
+      window.location.href = "https://SEU-APP.onrender.com";
     }
-
-    // Checa a cada 5 segundos
-    setInterval(checkServer, 5000);
   </script>
+
 </body>
 </html>
