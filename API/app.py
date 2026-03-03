@@ -347,7 +347,6 @@ def api_cartas():
     return jsonify(
         processar_aposta(session["user_id"], "cartas", aposta, calcular)
     )
-if __name__ == "__main__":
 
 if __name__ == "__main__":
     app.run(
@@ -355,3 +354,4 @@ if __name__ == "__main__":
         port=5000,
         debug=True
     )
+
