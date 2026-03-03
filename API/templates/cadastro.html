@@ -2,19 +2,106 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cadastro</title>
+
+<style>
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body{
+    min-height: 100vh;
+    background: url("fundo.jpg") no-repeat center center fixed;
+    background-size: cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Caixa principal */
+.container{
+    width: 90%;
+    max-width: 360px;
+    background: rgba(0,0,0,0.75);
+    padding: 25px;
+    border-radius: 12px;
+    color: #fff;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+/* Título */
+.container h2{
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Inputs */
+.container input{
+    width: 100%;
+    padding: 14px;
+    margin-bottom: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+/* Botão */
+.container button{
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    background: #00c853;
+    color: #fff;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.container button:hover{
+    background: #00b248;
+}
+
+/* Link */
+.container a{
+    display: block;
+    margin-top: 15px;
+    text-align: center;
+    color: #ccc;
+    text-decoration: none;
+}
+
+.container a:hover{
+    color: #fff;
+}
+
+/* Ajustes extras para telas pequenas */
+@media (max-height: 600px){
+    body{
+        align-items: flex-start;
+        padding-top: 20px;
+    }
+}
+</style>
 </head>
+
 <body>
 
-<h2>Cadastro</h2>
+<div class="container">
+    <h2>Cadastro</h2>
 
-<form method="POST">
-  <input type="text" name="usuario" placeholder="Usuário" required>
-  <input type="password" name="senha" placeholder="Senha" required>
-  <button type="submit">Cadastrar</button>
-</form>
+    <form method="POST">
+        <input type="text" name="usuario" placeholder="Usuário" required>
+        <input type="password" name="senha" placeholder="Senha" required>
+        <button type="submit">Cadastrar</button>
+    </form>
 
-<a href="/">Voltar ao login</a>
+    <a href="/">Voltar ao login</a>
+</div>
 
 </body>
 </html>
