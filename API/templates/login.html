@@ -2,6 +2,7 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Halloween Cassino 🎃</title>
 
 <style>
@@ -13,29 +14,35 @@
 }
 
 body{
-  height:100vh;
-  background: radial-gradient(circle at top, #1b0b2e, #050008);
+  min-height:100vh;
+  background:
+    linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.85)),
+    url("/static/img/bg-halloween.jpg") no-repeat center center;
+  background-size: cover;
   display:flex;
   align-items:center;
   justify-content:center;
   color:#fff;
+  padding:20px;
 }
 
 /* Container */
 .login-box{
-  width:360px;
-  padding:35px;
-  background: rgba(0,0,0,0.7);
-  border-radius:16px;
-  box-shadow: 0 0 25px rgba(255,140,0,0.4);
-  animation: fadeIn 1s ease;
+  width:100%;
+  max-width:360px;
+  padding:30px 25px;
+  background: rgba(0,0,0,0.75);
+  border-radius:18px;
+  box-shadow: 0 0 30px rgba(255,140,0,0.45);
+  animation: fadeIn 0.8s ease;
 }
 
 /* Logo */
 .logo{
   text-align:center;
-  font-size:32px;
-  margin-bottom:10px;
+  font-size:28px;
+  font-weight:bold;
+  margin-bottom:8px;
 }
 
 .logo span{
@@ -46,7 +53,7 @@ body{
 .subtitle{
   text-align:center;
   font-size:14px;
-  opacity:.8;
+  opacity:.85;
   margin-bottom:25px;
 }
 
@@ -56,10 +63,14 @@ input{
   padding:14px;
   margin-bottom:15px;
   border:none;
-  border-radius:10px;
+  border-radius:12px;
   background:#12001f;
   color:#fff;
   font-size:15px;
+}
+
+input::placeholder{
+  color:#bbb;
 }
 
 input:focus{
@@ -70,10 +81,10 @@ input:focus{
 /* Botão */
 button{
   width:100%;
-  padding:14px;
+  padding:15px;
   background: linear-gradient(135deg, #ff8c00, #ff4500);
   border:none;
-  border-radius:12px;
+  border-radius:14px;
   font-size:16px;
   font-weight:bold;
   color:#000;
@@ -81,21 +92,21 @@ button{
   transition:.3s;
 }
 
-button:hover{
-  transform: scale(1.05);
-  box-shadow:0 0 15px #ff8c00;
+button:active{
+  transform: scale(0.96);
 }
 
 /* Link */
 .link{
   text-align:center;
-  margin-top:15px;
+  margin-top:18px;
   font-size:14px;
 }
 
 .link a{
   color:#ff8c00;
   text-decoration:none;
+  font-weight:bold;
 }
 
 .link a:hover{
@@ -104,8 +115,23 @@ button:hover{
 
 /* Animação */
 @keyframes fadeIn{
-  from{opacity:0; transform: translateY(30px);}
+  from{opacity:0; transform: translateY(25px);}
   to{opacity:1; transform: translateY(0);}
+}
+
+/* Ajustes Mobile */
+@media (max-width:480px){
+  .logo{
+    font-size:24px;
+  }
+
+  .subtitle{
+    font-size:13px;
+  }
+
+  button{
+    font-size:15px;
+  }
 }
 </style>
 </head>
@@ -113,8 +139,8 @@ button:hover{
 <body>
 
 <div class="login-box">
-  <div class="logo"> <span>TROPICAL</span>DIAMANTE</div>
-  <div class="subtitle">Entre no jogo… se tiver coragem</div>
+  <div class="logo"><span>TROPICAL</span>DIAMANTE</div>
+  <div class="subtitle">Entre no jogo… se tiver coragem 🎃</div>
 
   <form method="POST">
     <input type="text" name="usuario" placeholder="Usuário" required>
