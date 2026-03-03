@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Cassino Halloween 🎃</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: radial-gradient(circle, #1b1b1b, #000);
+            color: #fff;
+        }
+        header {
+            background: #111;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid orange;
+        }
+        .saldo {
+            font-size: 18px;
+            color: #00ff99;
+        }
+        .user {
+            font-size: 14px;
+            color: #ccc;
+        }
+        a {
+            color: orange;
+            text-decoration: none;
+            margin-left: 15px;
+        }
+        main {
+            padding: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <div>
+        <div class="user">👤 {{ session.username }}</div>
+        <div class="saldo">💰 Saldo: R$ {{ saldo }}</div>
+    </div>
+
+    <nav>
+        <a href="/index">🏠 Menu</a>
+        <a href="/slot">🎰 Slot</a>
+        <a href="/logout">🚪 Sair</a>
+    </nav>
+</header>
+
+<main>
+    {% block conteudo %}{% endblock %}
+</main>
+
+</body>
+</html>

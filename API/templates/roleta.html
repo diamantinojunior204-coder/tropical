@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roleta Europeia 🎡</title>
+<style>
+body{
+    background: radial-gradient(circle, #004400, #001a00);
+    color:#fff;
+    font-family: Arial, sans-serif;
+    text-align:center;
+    padding:20px;
+}
+h2{
+    color: gold;
+    text-shadow: 0 0 10px black;
+}
+#saldoBox{
+    font-size:18px;
+    margin-bottom:10px;
+}
+#canvasContainer{
+    position: relative;
+    width: 320px;
+    height: 320px;
+    margin: auto;
+}
+canvas{
+    background: radial-gradient(circle, #0b5, #003300);
+    border-radius:50%;
+    box-shadow: 0 0 20px #fff;
+}
+button{
+    padding:10px 20px;
+    margin:5px;
+    font-size:16px;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    background: orange;
+    color:black;
+    font-weight:bold;
+    box-shadow: 0 0 8px #fff;
+}
+#resultado{
+    margin-top:15px;
+    font-size:20px;
+    min-height:28px;
+}
+#numeroFinal{
+    font-size:36px;
+    margin-top:10px;
+    color: gold;
+    text-shadow: 0 0 8px black;
+}
+#historico{
+    margin-top:20px;
+    max-width: 350px;
+    margin-left:auto;
+    margin-right:auto;
+    background: rgba(0,0,0,0.4);
+    padding:10px;
+    border-radius:8px;
+    font-size:14px;
+    text-align:left;
+}
+#historico h3{
+    margin-top:0;
+    margin-bottom:5px;
+}
+</style>
+</head>
+<body>
+
+<h2>🎡 Roleta Europeia</h2>
+<div id="saldoBox">💰 Saldo: R$ <span id="saldo">{{ saldo }}</span></div>
+
+<div id="canvasContainer">
+    <canvas id="roletaCanvas" width="320" height="320"></canvas>
+</div>
+
+<div>
+    <button onclick="setCor('vermelho')">🔴 Vermelho</button>
+    <button onclick="setCor('preto')">⚫ Preto</button>
+    <button onclick="setCor('verde')">🟢 Verde</button>
+    <button onclick="girar()">🎯 Girar</button>
+    <button onclick="toggleMusica()">🔊 Música</button>
+</div>
+
+<p id="resultado"></p>
+<p id="numeroFinal"></p>
+
+<div id="historico">
+    <h3>Histórico de Jogadas:</h3>
+    <ul id="listaHistorico"></ul>
+</div>
+
+<audio id="som" src="/static/som/roleta.mp3" preload="auto"></audio>
+
+<script>
+const canvas = document.getElementById("roletaCanvas");
+const ctx = canvas.getContext("2d");
+const som = document.getElementById("som");
+const numeros = Array.from({length:37},(_,i)=>i);
+const NUMEROS_VERMELHOS = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+let angulo = 0;
+let girando = false;
+let corEscolhida = "vermelho";
+
+// desenhar roleta
+function desenharRoleta(){
+    const raio = canvas.width/2 - 10;
+    const centro = canvas.width/2;
+    const angSetor = 2*Math.PI/numeros.length;
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    numeros.forEach((n,i)=>{
+        const inicio = i*angSetor + angulo;
+        const cor = n===0?"green":(NUMEROS_VERMELHOS.has(n)?"red":"black");
+        ctx.beginPath();
+        ctx.moveTo(centro,centro);
+        ctx.arc(centro,centro,raio,inicio,inicio+angSetor);
+        ctx.closePath();
+        ctx.fillStyle = cor;
+        ctx.fill();
+        // número mais perto da borda
+        const angMeio = inicio + angSetor/2;
+        const x = centro + Math.cos(angMeio)*(raio*0.88);
+        const y = centro + Math.sin(angMeio)*(raio*0.88);
+        ctx.fillStyle = "white";
+        ctx.font = "bold 16px Arial";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(n,x,y);
+    });
+}
+
+// escolher cor
+function setCor(c){
+    corEscolhida = c;
+}
+
+// girar roleta
+function girar(){
+    if(girando) return;
+    girando = true;
+    som.currentTime=0;
+    som.play();
+
+    const aposta = prompt("Digite sua aposta R$");
+    if(!aposta || aposta<=0){alert("Aposta inválida"); girando=false; return;}
+
+    fetch("/api/roleta",{
+        method:"POST",
+        headers:{"Content-Type":"application/x-www-form-urlencoded"},
+        body:`aposta=${aposta}&tipo=${corEscolhida}`
+    })
+    .then(r=>r.json())
+    .then(d=>{
+        if(d.error){document.getElementById("resultado").textContent="❌ Saldo insuficiente"; girando=false; return;}
+        document.getElementById("saldo").textContent = d.saldo;
+        const numeroSorteado = d.numero;
+        document.getElementById("numeroFinal").textContent = "🎯 Número: "+numeroSorteado;
+        document.getElementById("resultado").textContent = d.ganho>0?"🎉 Ganhou R$ "+d.ganho:"😈 Perdeu";
+
+        // adiciona ao histórico
+        const li = document.createElement("li");
+        li.textContent = `Aposta: ${corEscolhida} | Número: ${numeroSorteado} | Resultado: ${d.ganho>0?"Ganhou":"Perdeu"} R$${d.ganho}`;
+        document.getElementById("listaHistorico").prepend(li);
+
+        // animação da roleta e bola
+        const angPorNumero = 2*Math.PI/numeros.length;
+        const destino = numeroSorteado * angPorNumero;
+        let tempo = 0;
+        const duracao = 4000;
+        const inicio = angulo;
+        const raioBola = canvas.width/2 - 20;
+
+        function anim() {
+            tempo += 16;
+            let t = tempo / duracao;
+            if (t>1) t=1;
+            angulo = inicio + (Math.PI*6 + destino - inicio) * t * (1 - t/2);
+            desenharRoleta();
+
+            // bola centralizada no setor correto
+            const centro = canvas.width/2;
+            const angBola = -angulo + Math.PI/2 + destino + angPorNumero/2; 
+            const offset = Math.sin(t*20)*4*(1-t);
+            ctx.beginPath();
+            ctx.arc(centro + Math.cos(angBola)*raioBola, centro + Math.sin(angBola)*raioBola + offset, 8, 0, 2*Math.PI);
+            ctx.fillStyle="white";
+            ctx.fill();
+
+            if(t<1) requestAnimationFrame(anim);
+            else girando=false;
+        }
+        requestAnimationFrame(anim);
+    });
+}
+
+// música
+function toggleMusica(){
+    if(som.paused) som.play();
+    else som.pause();
+}
+
+desenharRoleta();
+</script>
+
+</body>
+</html>

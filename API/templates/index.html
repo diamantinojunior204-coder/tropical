@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎰 Cassino Demo</title>
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Arial, Helvetica, sans-serif;
+}
+
+body{
+  min-height:100vh;
+  background: radial-gradient(circle at top, #1a1a1a, #000);
+  color:#fff;
+  display:flex;
+  flex-direction:column;
+}
+
+header{
+  padding:15px;
+  text-align:center;
+  background:#111;
+  border-bottom:1px solid #333;
+}
+
+header h1{
+  font-size:22px;
+  color:gold;
+}
+
+#saldo{
+  margin-top:5px;
+  font-size:16px;
+}
+
+main{
+  flex:1;
+  padding:20px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(140px,1fr));
+  gap:15px;
+}
+
+.card{
+  background:linear-gradient(145deg,#222,#000);
+  border-radius:15px;
+  padding:20px;
+  text-align:center;
+  cursor:pointer;
+  transition:.3s;
+  box-shadow:0 0 15px rgba(0,0,0,.7);
+}
+
+.card:hover{
+  transform:scale(1.05);
+  box-shadow:0 0 20px gold;
+}
+
+.card span{
+  font-size:40px;
+  display:block;
+  margin-bottom:10px;
+}
+
+.card h2{
+  font-size:16px;
+}
+
+footer{
+  padding:10px;
+  text-align:center;
+  background:#111;
+  border-top:1px solid #333;
+}
+
+a{
+  color:gold;
+  text-decoration:none;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🎰DIAMANTE TROPICAL</h1>
+  <div id="saldo">Saldo: R$ {{ saldo }}</div>
+</header>
+
+<main>
+
+
+    <div class="card" onclick="location.href='/roleta'">
+      <span>🎰</span>
+      <h2>Roleta</h2>
+    </div>
+
+    <div class="card" onclick="location.href='/cartas'">
+      <span>🃏</span>
+      <h2>Cartas</h2>
+    </div>
+
+    <div class="card" onclick="location.href='/slot'">
+      <span>💎</span>
+      <h2>Caça-Níquel</h2>
+      
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <a href="/logout">Sair</a>
+</footer>
+
+</body>
+</html>

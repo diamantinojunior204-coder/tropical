@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>🃏 Cassino - Cartas</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+    margin:0;
+    font-family: Arial, sans-serif;
+    background: radial-gradient(circle at top, #222, #000);
+    color:#fff;
+    text-align:center;
+}
+
+header{
+    padding:15px;
+    background:#111;
+    box-shadow:0 0 15px #000;
+}
+
+.saldo{
+    font-size:18px;
+    margin-top:5px;
+}
+
+.mesa{
+    display:grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap:10px;
+    max-width:600px;
+    margin:20px auto;
+    padding:10px;
+}
+
+.card{
+    perspective:800px;
+}
+
+.card-inner{
+    position:relative;
+    width:100%;
+    padding-top:140%;
+    transform-style:preserve-3d;
+    transition:transform 0.6s ease;
+}
+
+.card.virada .card-inner{
+    transform:rotateY(180deg);
+}
+
+.card-face{
+    position:absolute;
+    inset:0;
+    backface-visibility:hidden;
+    border-radius:10px;
+    box-shadow:0 0 15px rgba(0,0,0,0.8);
+}
+
+.card-back{
+    background:url("/static/cartas/back.jpeg") center/cover no-repeat;
+    
+}
+
+.card-front{
+    transform:rotateY(180deg);
+    background-size:cover;
+    background-position:center;
+}
+
+.controles{
+    margin:15px;
+}
+
+input{
+    padding:8px;
+    border-radius:6px;
+    border:none;
+    width:120px;
+    text-align:center;
+}
+
+button{
+    padding:10px 15px;
+    border:none;
+    border-radius:8px;
+    background:#e63946;
+    color:#fff;
+    font-weight:bold;
+    margin:5px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#ff4d5a;
+}
+
+.resultado{
+    margin-top:10px;
+    font-size:18px;
+}
+
+.historico{
+    max-width:600px;
+    margin:20px auto;
+    background:#111;
+    border-radius:10px;
+    padding:10px;
+    text-align:left;
+}
+
+.linha{
+    font-size:14px;
+    padding:4px 0;
+    border-bottom:1px solid #222;
+}
+
+footer{
+    margin-top:30px;
+    padding:20px 10px;
+    background:linear-gradient(to top, #000, #111);
+    border-top:1px solid #222;
+    box-shadow:0 -5px 20px rgba(0,0,0,0.8);
+}
+
+.footer-inner{
+    max-width:600px;
+    margin:auto;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    align-items:center;
+}
+
+.footer-title{
+    font-size:16px;
+    font-weight:bold;
+    color:#e63946;
+    text-shadow:0 0 8px rgba(230,57,70,0.8);
+}
+
+.footer-sub{
+    font-size:12px;
+    opacity:0.7;
+}
+
+.footer-line{
+    width:60%;
+    height:1px;
+    background:linear-gradient(to right, transparent, #444, transparent);
+    margin:8px 0;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+    <h2>🃏 Jogo de Cartas</h2>
+    <div class="saldo">Saldo: R$ <span id="saldoValor">{{ saldo }}</span></div>
+</header>
+
+<div class="mesa" id="cartas"></div>
+
+<div class="controles">
+    <input type="number" id="aposta" placeholder="Aposta">
+    <br>
+    <button onclick="jogar()">🎲 Jogar</button>
+    <button onclick="toggleMusica()">🎵 Música</button>
+</div>
+
+<div class="resultado" id="resultado"></div>
+
+<div class="historico">
+    <strong>📜 Histórico</strong>
+    <div id="lista"></div>
+</div>
+
+<footer>
+    <div class="footer-inner">
+        <div class="footer-line"></div>
+        <div class="footer-title">🎰 Cassino DIAMANTE TROPICAL</div>
+        <div class="footer-sub">Jogo DEMO</div>
+        <div class="footer-sub">© 2026 • Desenvolvido por você 😎</div>
+        <div class="footer-line"></div>
+    </div>
+</footer>
+
+<audio id="musica" loop>
+    <source src="/static/musica/cassino.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+let musica = document.getElementById("musica");
+let tocando = false;
+
+function toggleMusica(){
+    tocando ? musica.pause() : musica.play();
+    tocando = !tocando;
+}
+
+function criarCarta(){
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const inner = document.createElement("div");
+    inner.className = "card-inner";
+
+    const back = document.createElement("div");
+    back.className = "card-face card-back";
+
+    const front = document.createElement("div");
+    front.className = "card-face card-front";
+
+    inner.appendChild(back);
+    inner.appendChild(front);
+    card.appendChild(inner);
+
+    return card;
+}
+
+function iniciarMesa(){
+    const mesa = document.getElementById("cartas");
+    mesa.innerHTML = "";
+    for(let i=0;i<5;i++){
+        mesa.appendChild(criarCarta());
+    }
+}
+
+function virarCartas(cartas){
+    const cards = document.querySelectorAll(".card");
+    cartas.forEach((img, i)=>{
+        setTimeout(()=>{
+            const front = cards[i].querySelector(".card-front");
+            front.style.backgroundImage = `url('/static/cartas/${img}.jpeg')`;
+            cards[i].classList.add("virada");
+        }, i*300);
+    });
+}
+
+function jogar(){
+    const aposta = document.getElementById("aposta").value;
+    if(!aposta || aposta <= 0){
+        alert("Digite uma aposta válida");
+        return;
+    }
+
+    iniciarMesa();
+
+    fetch("/api/cartas",{
+        method:"POST",
+        headers:{"Content-Type":"application/x-www-form-urlencoded"},
+        body:"aposta="+aposta
+    })
+    .then(r=>r.json())
+    .then(d=>{
+        if(d.error){
+            document.getElementById("resultado").innerText = d.error;
+            return;
+        }
+
+        virarCartas(d.cartas);
+
+        document.getElementById("saldoValor").innerText = d.saldo;
+        document.getElementById("resultado").innerText =
+            `🃏 ${d.mao} | ${d.ganho > 0 ? "Ganhou" : "Perdeu"} R$ ${d.ganho}`;
+
+        const linha = document.createElement("div");
+        linha.className = "linha";
+        linha.innerText = `Aposta: R$${aposta} | ${d.mao} | ${d.ganho > 0 ? "Ganhou" : "Perdeu"}`;
+        document.getElementById("lista").prepend(linha);
+    });
+}
+
+iniciarMesa();
+</script>
+
+</body>
+</html>

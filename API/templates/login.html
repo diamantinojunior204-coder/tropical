@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Halloween Cassino 🎃</title>
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+body{
+  height:100vh;
+  background: radial-gradient(circle at top, #1b0b2e, #050008);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+}
+
+/* Container */
+.login-box{
+  width:360px;
+  padding:35px;
+  background: rgba(0,0,0,0.7);
+  border-radius:16px;
+  box-shadow: 0 0 25px rgba(255,140,0,0.4);
+  animation: fadeIn 1s ease;
+}
+
+/* Logo */
+.logo{
+  text-align:center;
+  font-size:32px;
+  margin-bottom:10px;
+}
+
+.logo span{
+  color:#ff8c00;
+}
+
+/* Sub */
+.subtitle{
+  text-align:center;
+  font-size:14px;
+  opacity:.8;
+  margin-bottom:25px;
+}
+
+/* Inputs */
+input{
+  width:100%;
+  padding:14px;
+  margin-bottom:15px;
+  border:none;
+  border-radius:10px;
+  background:#12001f;
+  color:#fff;
+  font-size:15px;
+}
+
+input:focus{
+  outline:none;
+  box-shadow:0 0 8px #ff8c00;
+}
+
+/* Botão */
+button{
+  width:100%;
+  padding:14px;
+  background: linear-gradient(135deg, #ff8c00, #ff4500);
+  border:none;
+  border-radius:12px;
+  font-size:16px;
+  font-weight:bold;
+  color:#000;
+  cursor:pointer;
+  transition:.3s;
+}
+
+button:hover{
+  transform: scale(1.05);
+  box-shadow:0 0 15px #ff8c00;
+}
+
+/* Link */
+.link{
+  text-align:center;
+  margin-top:15px;
+  font-size:14px;
+}
+
+.link a{
+  color:#ff8c00;
+  text-decoration:none;
+}
+
+.link a:hover{
+  text-decoration:underline;
+}
+
+/* Animação */
+@keyframes fadeIn{
+  from{opacity:0; transform: translateY(30px);}
+  to{opacity:1; transform: translateY(0);}
+}
+</style>
+</head>
+
+<body>
+
+<div class="login-box">
+  <div class="logo"> <span>TROPICAL</span>DIAMANTE</div>
+  <div class="subtitle">Entre no jogo… se tiver coragem</div>
+
+  <form method="POST">
+    <input type="text" name="usuario" placeholder="Usuário" required>
+    <input type="password" name="senha" placeholder="Senha" required>
+    <button type="submit">🎰 ENTRAR</button>
+  </form>
+
+  <div class="link">
+    Não tem conta? <a href="/cadastro">Criar agora</a>
+  </div>
+</div>
+
+</body>
+</html>
