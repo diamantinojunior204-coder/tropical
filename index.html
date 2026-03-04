@@ -1,160 +1,65 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Carregando...</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JOGO...</title>
 
 <style>
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family: 'Arial', sans-serif;
+body {
+    font-family: Arial, sans-serif;
+    background: #0f172a;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
 }
-
-body{
-  height:100vh;
-  background:
-    radial-gradient(circle at top, #00ffd5, #003333 60%, #000);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#fff;
-  overflow:hidden;
+.box {
+    text-align: center;
+    max-width: 320px;
 }
-
-/* CONTAINER */
-.box{
-  text-align:center;
-  width:90%;
-  max-width:360px;
+.loader {
+    border: 4px solid #1e293b;
+    border-top: 4px solid #38bdf8;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    margin: 20px auto;
+    animation: spin 1s linear infinite;
 }
-
-/* DIAMANTE */
-.diamond{
-  width:90px;
-  height:90px;
-  margin:0 auto 30px;
-  background: linear-gradient(135deg, #00fff0, #00aaff, #00ff88);
-  transform: rotate(45deg);
-  animation: spin 2.5s linear infinite, glow 1.5s ease-in-out infinite;
-  box-shadow: 0 0 30px rgba(0,255,200,0.8);
+@keyframes spin {
+    100% { transform: rotate(360deg); }
 }
-
-/* TEXTO */
-h1{
-  font-size:22px;
-  margin-bottom:10px;
-  letter-spacing:1px;
-}
-
-p{
-  font-size:14px;
-  opacity:.85;
-  margin-bottom:25px;
-}
-
-/* LOADING DOTS */
-.loading{
-  font-size:18px;
-  letter-spacing:4px;
-}
-
-/* BOTÃO */
-button{
-  display:none;
-  width:100%;
-  padding:16px;
-  margin-top:20px;
-  font-size:20px;
-  border:none;
-  border-radius:12px;
-  background: linear-gradient(135deg, #00ffd5, #00ff88);
-  color:#000;
-  font-weight:bold;
-  cursor:pointer;
-  animation: pulse 1.5s infinite;
-  box-shadow: 0 0 25px rgba(0,255,180,0.9);
-}
-
-/* ANIMAÇÕES */
-@keyframes spin{
-  from{transform:rotate(45deg);}
-  to{transform:rotate(405deg);}
-}
-
-@keyframes glow{
-  0%,100%{box-shadow:0 0 20px #00ffd5;}
-  50%{box-shadow:0 0 45px #00ff88;}
-}
-
-@keyframes pulse{
-  0%{transform:scale(1);}
-  50%{transform:scale(1.07);}
-  100%{transform:scale(1);}
-}
-
-/* PARTÍCULAS */
-.particle{
-  position:absolute;
-  width:6px;
-  height:6px;
-  background:#00ffd5;
-  border-radius:50%;
-  animation: float 6s linear infinite;
-  opacity:.6;
-}
-
-@keyframes float{
-  from{transform:translateY(100vh);}
-  to{transform:translateY(-10vh);}
+small {
+    color: #94a3b8;
 }
 </style>
 </head>
-
 <body>
 
 <div class="box">
-  <div class="diamond"></div>
-
-  <h1>Diamante Tropical</h1>
-  <p>Carregando o servidor<br>Prepare-se para jogar</p>
-
-  <div class="loading" id="dots">● ● ●</div>
-
-  <button id="btn" onclick="entrar()">JOGAR AGORA</button>
+    <h2>⏳ Aguarde um instante</h2>
+    <p>Diamante tropical carregando...</p>
+    <div class="loader"></div>
+    <small>Isso pode levar até 30 segundos</small>
 </div>
 
 <script>
-/* EFEITO DOS PONTOS */
-let dots = document.getElementById("dots");
-let count = 0;
+const RENDER_URL = "https://tropical-5q68.onrender.com";
 
-setInterval(()=>{
-  count = (count+1)%4;
-  dots.innerText = "● ".repeat(count || 3);
-},500);
-
-/* MOSTRA BOTÃO */
-setTimeout(()=>{
-  dots.style.display="none";
-  document.getElementById("btn").style.display="block";
-},4500);
-
-/* REDIRECIONA */
-function entrar(){
-  window.location.href = "https://tropical-5q68.onrender.com";
+async function checkServer() {
+    try {
+        const res = await fetch(RENDER_URL, { mode: "no-cors" });
+        // Se chegou aqui, o servidor respondeu
+        window.location.href = RENDER_URL;
+    } catch (e) {
+        setTimeout(checkServer, 3000);
+    }
 }
 
-/* PARTÍCULAS */
-for(let i=0;i<25;i++){
-  let p=document.createElement("div");
-  p.className="particle";
-  p.style.left=Math.random()*100+"vw";
-  p.style.animationDuration=4+Math.random()*6+"s";
-  document.body.appendChild(p);
-}
+checkServer();
 </script>
 
 </body>
