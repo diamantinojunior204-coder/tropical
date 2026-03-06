@@ -274,7 +274,29 @@ def add_saldo():
 
     return redirect("/admin")
 
+# ================================
+# PAGINAS DOS JOGOS
+# ================================
 
+@app.route("/slot")
+def slot_page():
+    if "user_id" not in session:
+        return redirect("/")
+    return render_template("slot.html", saldo=get_saldo())
+
+
+@app.route("/roleta")
+def roleta_page():
+    if "user_id" not in session:
+        return redirect("/")
+    return render_template("roleta.html", saldo=get_saldo())
+
+
+@app.route("/cartas")
+def cartas_page():
+    if "user_id" not in session:
+        return redirect("/")
+    return render_template("cartas.html", saldo=get_saldo())
 # ================================
 # SLOT
 # ================================
@@ -374,3 +396,4 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=int(os.environ.get("PORT",5000))
     )
+
