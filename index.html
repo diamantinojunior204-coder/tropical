@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>JOGO...</title>
+<title>App José Valdo...</title>
 
 <style>
 body {
@@ -20,6 +20,13 @@ body {
     text-align: center;
     max-width: 320px;
 }
+
+.box img{
+    width:100%;
+    border-radius:10px;
+    margin-bottom:15px;
+}
+
 .loader {
     border: 4px solid #1e293b;
     border-top: 4px solid #38bdf8;
@@ -40,19 +47,39 @@ small {
 <body>
 
 <div class="box">
-    <h2>⏳ Aguarde um instante💎</h2>
-    <p>Diamante tropical carregando...</p>
+
+    <img id="slide" src="URL_DA_IMAGEM_1">
+
+    <h2>⏳ Aguarde um instante</h2>
+    <p>Jogo carregando...</p>
     <div class="loader"></div>
     <small>Isso pode levar até 30 segundos</small>
 </div>
 
 <script>
+
+const imagens = [
+"URL_DA_IMAGEM_1",
+"URL_DA_IMAGEM_2",
+"URL_DA_IMAGEM_3"
+];
+
+let index = 0;
+
+setInterval(()=>{
+    index++;
+    if(index >= imagens.length){
+        index = 0;
+    }
+    document.getElementById("slide").src = imagens[index];
+},2000);
+
+
 const RENDER_URL = "https://tropical-5q68.onrender.com";
 
 async function checkServer() {
     try {
         const res = await fetch(RENDER_URL, { mode: "no-cors" });
-        // Se chegou aqui, o servidor respondeu
         window.location.href = RENDER_URL;
     } catch (e) {
         setTimeout(checkServer, 3000);
@@ -60,6 +87,7 @@ async function checkServer() {
 }
 
 checkServer();
+
 </script>
 
 </body>
