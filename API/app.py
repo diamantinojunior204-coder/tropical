@@ -2,7 +2,11 @@ import os
 import psycopg2
 from flask import Flask, render_template, request, redirect, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
-
+import os
+import sqlite3
+import psycopg2
+from urllib.parse import urlparse
+from flask import Flask
 app = Flask(__name__)
 app.secret_key = "segredo_super_cassino"
 
@@ -366,6 +370,7 @@ if __name__ == "__main__":
         port=5000,
         debug=True
     )
+
 
 
 
