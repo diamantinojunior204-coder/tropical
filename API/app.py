@@ -6,11 +6,26 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 app.secret_key = "segredo_super_cassino"
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+
 
 def conectar():
-    return psycopg2.connect(DATABASE_URL)
 
+    db_url = os.getenv("DATABASE_URL")
+
+    if db_url:
+        result = urlparse(db_url)
+        conn = psycopg2.connect(
+            database=result.path[1:],
+            user=result.username,
+            password=result.password,
+            host=result.hostname,
+            port=result.port
+        )
+        return conn
+    else:
+        conn = sqlite3.connect(DB)
+        conn.row_factory = sqlite3.Row
+        return conn
 def criar_db():
     conn = conectar()
     c = conn.cursor()
@@ -351,6 +366,7 @@ if __name__ == "__main__":
         port=5000,
         debug=True
     )
+
 
 
 
