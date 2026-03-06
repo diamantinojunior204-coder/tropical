@@ -1,57 +1,52 @@
-from flask import Flask, render_template, request, redirect, session, url_for, jsonify
-import sqlite3
-from werkzeug.security import generate_password_hash, check_password_hash
-from random import choice
 import os
+import psycopg2
+from flask import Flask, render_template, request, redirect, session, jsonify
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.secret_key = "segredo_super_cassino"
 
-DB = "database.db"
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# =====================================================
-# BANCO DE DADOS
-# =====================================================
 def conectar():
-    conn = sqlite3.connect(DB)
-    conn.row_factory = sqlite3.Row
-    return conn
+    return psycopg2.connect(DATABASE_URL)
 
 def criar_db():
     conn = conectar()
     c = conn.cursor()
 
     c.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+    CREATE TABLE IF NOT EXISTS users(
+        id SERIAL PRIMARY KEY,
         username TEXT UNIQUE,
         password TEXT,
-        saldo REAL DEFAULT 0,
+        saldo FLOAT DEFAULT 0,
         is_admin INTEGER DEFAULT 0
     )
     """)
 
     c.execute("""
-    CREATE TABLE IF NOT EXISTS jackpot (
-        id INTEGER PRIMARY KEY,
-        valor REAL
+    CREATE TABLE IF NOT EXISTS apostas(
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER,
+        jogo TEXT,
+        aposta FLOAT,
+        ganho FLOAT,
+        data TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
 
     c.execute("""
-    CREATE TABLE IF NOT EXISTS apostas (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        jogo TEXT,
-        aposta REAL,
-        ganho REAL,
-        data DATETIME DEFAULT CURRENT_TIMESTAMP
+    CREATE TABLE IF NOT EXISTS jackpot(
+        id INTEGER PRIMARY KEY,
+        valor FLOAT
     )
     """)
 
-    c.execute("SELECT valor FROM jackpot WHERE id = 1")
+    c.execute("SELECT * FROM jackpot WHERE id=1")
+
     if not c.fetchone():
-        c.execute("INSERT INTO jackpot (id, valor) VALUES (1, 100)")
+        c.execute("INSERT INTO jackpot VALUES (1,100)")
 
     conn.commit()
     conn.close()
@@ -59,14 +54,16 @@ def criar_db():
 def criar_admin():
     conn = conectar()
     c = conn.cursor()
-    c.execute("SELECT id FROM users WHERE is_admin = 1")
+
+    c.execute("SELECT id FROM users WHERE is_admin=1")
+
     if not c.fetchone():
-        c.execute(
-            "INSERT INTO users (username,password,is_admin,saldo) VALUES (?,?,1,0)",
-            ("admin", generate_password_hash("admin123"))
-        )
-        conn.commit()
-        print("✅ ADMIN: admin / admin123")
+        c.execute("""
+        INSERT INTO users(username,password,is_admin,saldo)
+        VALUES(%s,%s,1,0)
+        """,("admin", generate_password_hash("admin123")))
+
+    conn.commit()
     conn.close()
 
 criar_db()
@@ -354,4 +351,5 @@ if __name__ == "__main__":
         port=5000,
         debug=True
     )
+
 
