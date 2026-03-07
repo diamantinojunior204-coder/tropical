@@ -260,7 +260,36 @@ def admin():
         lucro=round(lucro,2)
     )
 
+#==========rota paginas=======
+# ================================
+# PÁGINAS DOS JOGOS
+# ================================
 
+@app.route("/slot")
+def slot():
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    return render_template("slot.html", saldo=get_saldo())
+
+
+@app.route("/roleta")
+def roleta():
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    return render_template("roleta.html", saldo=get_saldo())
+
+
+@app.route("/cartas")
+def cartas():
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    return render_template("cartas.html", saldo=get_saldo())
 # ================================
 # SLOT
 # ================================
@@ -377,3 +406,4 @@ if __name__=="__main__":
         host="0.0.0.0",
         port=int(os.environ.get("PORT",5000))
     )
+
