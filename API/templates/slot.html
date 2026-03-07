@@ -6,234 +6,189 @@
 <title>🎰 Slot Cassino</title>
 
 <style>
-
 body{
-margin:0;
-font-family:Arial;
-background:url("/static/fundo.jpeg");
-background-size:cover;
-color:white;
-text-align:center;
+  margin:0;
+  font-family:Arial;
+  background:url("/static/fundo.jpeg");
+  background-size:cover;
+  color:white;
+  text-align:center;
 }
 
-/* topo */
-
 .topo{
-padding:10px;
-background:rgba(0,0,0,0.6);
-display:flex;
-justify-content:space-between;
+  padding:10px;
+  background:rgba(0,0,0,0.6);
+  display:flex;
+  justify-content:space-between;
 }
 
 #saldo{
-font-weight:bold;
-color:gold;
+  font-weight:bold;
+  color:gold;
 }
 
-/* máquina */
-
 .slot{
-margin-top:30px;
-display:grid;
-grid-template-columns:repeat(3,100px);
-grid-gap:10px;
-justify-content:center;
+  margin-top:30px;
+  display:grid;
+  grid-template-columns:repeat(3,100px);
+  grid-gap:10px;
+  justify-content:center;
 }
 
 .celula{
-width:100px;
-height:100px;
-background:black;
-border-radius:10px;
-display:flex;
-align-items:center;
-justify-content:center;
-border:3px solid gold;
+  width:100px;
+  height:100px;
+  background:black;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:3px solid gold;
 }
 
 .celula img{
-width:80px;
+  width:80px;
 }
 
-/* botões */
-
 .controls{
-margin-top:20px;
+  margin-top:20px;
 }
 
 button{
-padding:12px 20px;
-font-size:16px;
-border:none;
-border-radius:8px;
-background:orange;
-cursor:pointer;
+  padding:12px 20px;
+  font-size:16px;
+  border:none;
+  border-radius:8px;
+  background:orange;
+  cursor:pointer;
 }
 
 button:hover{
-background:gold;
+  background:gold;
 }
 
 input{
-padding:10px;
-width:120px;
+  padding:10px;
+  width:120px;
 }
 
-/* vitória */
-
 .win{
-animation:piscar 0.5s infinite;
+  animation:piscar 0.5s infinite;
 }
 
 @keyframes piscar{
-0%{box-shadow:0 0 10px gold;}
-50%{box-shadow:0 0 25px orange;}
-100%{box-shadow:0 0 10px gold;}
+  0%{box-shadow:0 0 10px gold;}
+  50%{box-shadow:0 0 25px orange;}
+  100%{box-shadow:0 0 10px gold;}
 }
-
 </style>
 </head>
 
 <body>
 
 <div class="topo">
-
-<div>
-Saldo: <span id="saldo">R$ {{saldo}}</span>
-</div>
-
-<div>
-Jackpot: 💎 <span id="jackpot">100</span>
-</div>
-
+  <div>
+    Saldo: <span id="saldo">R$ {{saldo}}</span>
+  </div>
+  <div>
+    Jackpot: 💎 <span id="jackpot">100</span>
+  </div>
 </div>
 
 <h1>🎰 Caça-Níquel</h1>
 
-<!-- SLOT -->
-
 <div class="slot">
-
-<div class="celula"><img id="c0" src="/static/slot/1.jpeg"></div>
-<div class="celula"><img id="c1" src="/static/slot/2.jpeg"></div>
-<div class="celula"><img id="c2" src="/static/slot/3.jpeg"></div>
-
-<div class="celula"><img id="c3" src="/static/slot/4.jpeg"></div>
-<div class="celula"><img id="c4" src="/static/slot/5.jpeg"></div>
-<div class="celula"><img id="c5" src="/static/slot/1.jpeg"></div>
-
-<div class="celula"><img id="c6" src="/static/slot/2.jpeg"></div>
-<div class="celula"><img id="c7" src="/static/slot/3.jpeg"></div>
-<div class="celula"><img id="c8" src="/static/slot/4.jpeg"></div>
-
+  <div class="celula"><img id="c0" src="/static/slot/1.jpeg"></div>
+  <div class="celula"><img id="c1" src="/static/slot/2.jpeg"></div>
+  <div class="celula"><img id="c2" src="/static/slot/3.jpeg"></div>
+  <div class="celula"><img id="c3" src="/static/slot/4.jpeg"></div>
+  <div class="celula"><img id="c4" src="/static/slot/5.jpeg"></div>
+  <div class="celula"><img id="c5" src="/static/slot/1.jpeg"></div>
+  <div class="celula"><img id="c6" src="/static/slot/2.jpeg"></div>
+  <div class="celula"><img id="c7" src="/static/slot/3.jpeg"></div>
+  <div class="celula"><img id="c8" src="/static/slot/4.jpeg"></div>
 </div>
 
-<!-- controles -->
-
 <div class="controls">
-
-<input id="aposta" type="number" value="10">
-
-<button onclick="girar()">🎰 GIRAR</button>
-
-<button onclick="musica()">🎵 Música</button>
-
+  <input id="aposta" type="number" value="10" min="1">
+  <button onclick="girar()">🎰 GIRAR</button>
+  <button onclick="musica()">🎵 Música</button>
 </div>
 
 <div id="resultado"></div>
 
 <audio id="som" loop>
-<source src="/static/audio/jogo2.mp3">
+  <source src="/static/audio/jogo2.mp3">
 </audio>
 
 <script>
-
-let music = false
+let music = false;
 
 function musica(){
-
-let s = document.getElementById("som")
-
-if(!music){
-s.play()
-music=true
-}else{
-s.pause()
-music=false
-}
-
+  let s = document.getElementById("som");
+  if(!music){
+    s.play();
+    music=true;
+  }else{
+    s.pause();
+    music=false;
+  }
 }
 
 function girar(){
+  let aposta = document.getElementById("aposta").value;
+  aposta = parseFloat(aposta);
+  if(aposta<=0){
+    alert("Digite uma aposta válida!");
+    return;
+  }
 
-let aposta = document.getElementById("aposta").value
+  // animação rápida
+  let tempo = 0;
+  let spin = setInterval(()=>{
+    for(let i=0;i<9;i++){
+      let r = Math.floor(Math.random()*6)+1;
+      document.getElementById("c"+i).src="/static/slot/"+r+".jpeg";
+    }
+    tempo += 100;
+    if(tempo>=2000) clearInterval(spin);
+  },100);
 
-let simbolos = [1,2,3,4,5,6]
+  // chamar backend
+  fetch("/api/slot",{
+    method:"POST",
+    body:new URLSearchParams({aposta: aposta})
+  })
+  .then(r=>r.json())
+  .then(data=>{
+    if(data.error){
+      alert(data.error);
+      return;
+    }
 
-let tempo = 0
+    // atualizar saldo e jackpot
+    document.getElementById("saldo").innerText="R$ "+data.saldo;
+    document.getElementById("jackpot").innerText=data.jackpot;
 
-let spin = setInterval(()=>{
+    // mostrar resultado linha do meio
+    let rolos = data.rolos;
+    document.getElementById("c3").src="/static/slot/"+rolos[0]+".jpeg";
+    document.getElementById("c4").src="/static/slot/"+rolos[1]+".jpeg";
+    document.getElementById("c5").src="/static/slot/"+rolos[2]+".jpeg";
 
-for(let i=0;i<9;i++){
-
-let r = Math.floor(Math.random()*6)+1
-
-document.getElementById("c"+i).src="/static/slot/"+r+".jpeg"
-
-}
-
-tempo += 100
-
-if(tempo >= 2000){
-clearInterval(spin)
-}
-
-},100)
-
-fetch("/api/slot",{
-method:"POST",
-body:new URLSearchParams({
-aposta: aposta
-})
-})
-.then(r=>r.json())
-.then(data=>{
-
-document.getElementById("saldo").innerText="R$ "+data.saldo
-document.getElementById("jackpot").innerText=data.jackpot
-
-let rolos = data.rolos
-
-// linha do meio resultado real
-document.getElementById("c3").src="/static/slot/"+rolos[0]+".jpeg"
-document.getElementById("c4").src="/static/slot/"+rolos[1]+".jpeg"
-document.getElementById("c5").src="/static/slot/"+rolos[2]+".jpeg"
-
-let res = document.getElementById("resultado")
-
-if(data.ganho>0){
-
-res.innerHTML="🎉 GANHOU R$ "+data.ganho
-
-}else{
-
-res.innerHTML="❌ Perdeu"
-
-}
-
-})
-
+    let res = document.getElementById("resultado");
+    if(data.ganho>0){
+      res.innerHTML="🎉 GANHOU R$ "+data.ganho;
+    }else{
+      res.innerHTML="❌ Perdeu";
+    }
+  })
+  .catch(err=>{
+    console.error(err);
+    alert("Erro ao processar o slot");
+  });
 }
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
