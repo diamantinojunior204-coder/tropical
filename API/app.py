@@ -107,46 +107,46 @@ def get_saldo():
     conn = conectar()
     c = conn.cursor()
 
-    c.execute("SELECT saldo FROM users WHERE id=%s", (session["user_id"],))
+    c.execute("SELECT saldo FROM users WHERE id=%s",(session["user_id"],))
     saldo = c.fetchone()[0]
 
     conn.close()
 
-    return round(saldo, 2)
+    return round(saldo,2)
 
 
 # ================================
 # PROCESSAR APOSTA
 # ================================
-def processar_aposta(user_id, jogo, aposta, calcular):
+def processar_aposta(user_id,jogo,aposta,calcular):
 
     conn = conectar()
     c = conn.cursor()
 
-    c.execute("SELECT saldo FROM users WHERE id=%s", (user_id,))
-    saldo = c.fetchone()[0]
+    c.execute("SELECT saldo FROM users WHERE id=%s",(user_id,))
+    saldo=c.fetchone()[0]
 
-    if aposta <= 0 or aposta > saldo:
+    if aposta<=0 or aposta>saldo:
         conn.close()
-        return {"error": "saldo insuficiente"}
+        return {"error":"saldo insuficiente"}
 
-    ganho, extra = calcular(aposta, c)
+    ganho,extra=calcular(aposta,c)
 
-    novo_saldo = saldo + ganho
+    novo_saldo=saldo+ganho
 
-    c.execute("UPDATE users SET saldo=%s WHERE id=%s", (novo_saldo, user_id))
+    c.execute("UPDATE users SET saldo=%s WHERE id=%s",(novo_saldo,user_id))
 
     c.execute("""
-    INSERT INTO apostas (user_id,jogo,aposta,ganho)
+    INSERT INTO apostas(user_id,jogo,aposta,ganho)
     VALUES(%s,%s,%s,%s)
-    """, (user_id, jogo, aposta, ganho))
+    """,(user_id,jogo,aposta,ganho))
 
     conn.commit()
     conn.close()
 
-    return {
-        "ganho": round(ganho, 2),
-        "saldo": round(novo_saldo, 2),
+    return{
+        "ganho":round(ganho,2),
+        "saldo":round(novo_saldo,2),
         **extra
     }
 
@@ -154,27 +154,27 @@ def processar_aposta(user_id, jogo, aposta, calcular):
 # ================================
 # LOGIN
 # ================================
-@app.route("/", methods=["GET","POST"])
+@app.route("/",methods=["GET","POST"])
 def login():
 
-    if request.method == "POST":
+    if request.method=="POST":
 
-        u = request.form["usuario"]
-        s = request.form["senha"]
+        u=request.form["usuario"]
+        s=request.form["senha"]
 
-        conn = conectar()
-        c = conn.cursor()
+        conn=conectar()
+        c=conn.cursor()
 
         c.execute("SELECT id,username,password,is_admin FROM users WHERE username=%s",(u,))
-        user = c.fetchone()
+        user=c.fetchone()
 
         conn.close()
 
-        if user and check_password_hash(user[2], s):
+        if user and check_password_hash(user[2],s):
 
-            session["user_id"] = user[0]
-            session["username"] = user[1]
-            session["is_admin"] = user[3]
+            session["user_id"]=user[0]
+            session["username"]=user[1]
+            session["is_admin"]=user[3]
 
             return redirect("/index")
 
@@ -186,15 +186,15 @@ def login():
 # ================================
 # CADASTRO
 # ================================
-@app.route("/cadastro", methods=["GET","POST"])
+@app.route("/cadastro",methods=["GET","POST"])
 def cadastro():
 
-    if request.method == "POST":
+    if request.method=="POST":
 
         try:
 
-            conn = conectar()
-            c = conn.cursor()
+            conn=conectar()
+            c=conn.cursor()
 
             c.execute("""
             INSERT INTO users(username,password)
@@ -224,7 +224,7 @@ def index():
     if "user_id" not in session:
         return redirect("/")
 
-    return render_template("index.html", saldo=get_saldo())
+    return render_template("index.html",saldo=get_saldo())
 
 
 # ================================
@@ -236,31 +236,31 @@ def admin():
     if not session.get("is_admin"):
         return redirect("/")
 
-    conn = conectar()
-    c = conn.cursor()
+    conn=conectar()
+    c=conn.cursor()
 
     c.execute("SELECT id,username,saldo,is_admin FROM users")
-    users = c.fetchall()
+    users=c.fetchall()
 
     c.execute("SELECT valor FROM jackpot WHERE id=1")
-    jackpot = c.fetchone()[0]
+    jackpot=c.fetchone()[0]
 
     conn.close()
 
-    return render_template("admin.html", users=users, jackpot=jackpot)
+    return render_template("admin.html",users=users,jackpot=jackpot)
 
 
 # ================================
-# ADICIONAR SALDO
+# ADD SALDO
 # ================================
-@app.route("/add_saldo", methods=["POST"])
+@app.route("/add_saldo",methods=["POST"])
 def add_saldo():
 
     if not session.get("is_admin"):
         return redirect("/")
 
-    conn = conectar()
-    c = conn.cursor()
+    conn=conectar()
+    c=conn.cursor()
 
     c.execute("""
     UPDATE users
@@ -275,76 +275,96 @@ def add_saldo():
 
 
 # ================================
-# PAGINAS DOS JOGOS
+# PÁGINAS DOS JOGOS
 # ================================
 @app.route("/slot")
 def slot_page():
     if "user_id" not in session:
         return redirect("/")
-    return render_template("slot.html", saldo=get_saldo())
-
-
-@app.route("/roleta")
-def roleta_page():
-    if "user_id" not in session:
-        return redirect("/")
-    return render_template("roleta.html", saldo=get_saldo())
+    return render_template("slot.html",saldo=get_saldo())
 
 
 @app.route("/cartas")
 def cartas_page():
     if "user_id" not in session:
         return redirect("/")
-    return render_template("cartas.html", saldo=get_saldo())
+    return render_template("cartas.html",saldo=get_saldo())
+
+
+@app.route("/roleta")
+def roleta_page():
+    if "user_id" not in session:
+        return redirect("/")
+    return render_template("roleta.html",saldo=get_saldo())
 
 
 # ================================
-# SLOT (COM JACKPOT)
+# SLOT PROFISSIONAL 5x3
 # ================================
-@app.route("/api/slot", methods=["POST"])
+@app.route("/api/slot",methods=["POST"])
 def api_slot():
 
     if "user_id" not in session:
-        return jsonify({"error": "login"}), 401
+        return jsonify({"error":"login"}),401
 
-    aposta = float(request.form["aposta"])
+    aposta=float(request.form["aposta"])
 
-    def calcular(aposta, c):
+    def calcular(aposta,c):
 
-        simbolos = ["1","2","3","4","5","6"]
+        simbolos=["🍒","🍋","🍀","⭐","💎","7"]
 
-        rolos = [random.choice(simbolos) for _ in range(3)]
+        grade=[[random.choice(simbolos) for _ in range(5)] for _ in range(3)]
 
-        ganho = -aposta
+        ganho=-aposta
 
         c.execute("SELECT valor FROM jackpot WHERE id=1")
-        jackpot = c.fetchone()[0]
+        jackpot=c.fetchone()[0]
 
-        jackpot += aposta * 0.05
+        jackpot+=aposta*0.03
 
-        if rolos[0] == rolos[1] == rolos[2]:
-            ganho = aposta * 3
+        linhas=[
+            grade[0],
+            grade[1],
+            grade[2],
+            [grade[0][0],grade[1][1],grade[2][2],grade[1][3],grade[0][4]],
+            [grade[2][0],grade[1][1],grade[0][2],grade[1][3],grade[2][4]]
+        ]
 
-        if rolos == ["6","6","6"]:
-            ganho = jackpot
-            jackpot = 100
+        for linha in linhas:
 
-        c.execute("UPDATE jackpot SET valor=%s WHERE id=1", (jackpot,))
+            if linha.count(linha[0])>=3:
+
+                simbolo=linha[0]
+
+                if simbolo=="🍒":
+                    ganho+=aposta*2
+                elif simbolo=="🍋":
+                    ganho+=aposta*3
+                elif simbolo=="🍀":
+                    ganho+=aposta*5
+                elif simbolo=="⭐":
+                    ganho+=aposta*10
+                elif simbolo=="💎":
+                    ganho+=aposta*20
+
+                if simbolo=="7":
+                    ganho+=jackpot
+                    jackpot=100
+
+        c.execute("UPDATE jackpot SET valor=%s WHERE id=1",(jackpot,))
 
         return ganho,{
-            "rolos": rolos,
-            "jackpot": round(jackpot,2)
+            "grade":grade,
+            "jackpot":round(jackpot,2)
         }
 
-    return jsonify(
-        processar_aposta(session["user_id"],"slot",aposta,calcular)
-    )
+    return jsonify(processar_aposta(session["user_id"],"slot",aposta,calcular))
 
 
 # ================================
 # CARTAS
 # ================================
-@app.route("/api/cartas", methods=["POST"])
+@app.route("/api/cartas",methods=["POST"])
 def api_cartas():
 
     if "user_id" not in session:
@@ -382,7 +402,7 @@ def logout():
 # ================================
 # START
 # ================================
-if __name__ == "__main__":
+if __name__=="__main__":
 
     app.run(
         host="0.0.0.0",
