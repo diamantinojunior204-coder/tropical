@@ -136,14 +136,13 @@ function musica(){
 }
 
 function girar(){
-  let aposta = document.getElementById("aposta").value;
-  aposta = parseFloat(aposta);
+  let aposta = parseFloat(document.getElementById("aposta").value);
   if(aposta<=0){
     alert("Digite uma aposta válida!");
     return;
   }
 
-  // animação rápida
+  // animação rápida dos 9 slots
   let tempo = 0;
   let spin = setInterval(()=>{
     for(let i=0;i<9;i++){
@@ -170,12 +169,15 @@ function girar(){
     document.getElementById("saldo").innerText="R$ "+data.saldo;
     document.getElementById("jackpot").innerText=data.jackpot;
 
-    // mostrar resultado linha do meio
+    // atualizar rolos do backend (linha do meio)
     let rolos = data.rolos;
-    document.getElementById("c3").src="/static/slot/"+rolos[0]+".jpeg";
-    document.getElementById("c4").src="/static/slot/"+rolos[1]+".jpeg";
-    document.getElementById("c5").src="/static/slot/"+rolos[2]+".jpeg";
+    if(rolos && rolos.length==3){
+      document.getElementById("c3").src="/static/slot/"+rolos[0]+".jpeg";
+      document.getElementById("c4").src="/static/slot/"+rolos[1]+".jpeg";
+      document.getElementById("c5").src="/static/slot/"+rolos[2]+".jpeg";
+    }
 
+    // mostrar resultado correto
     let res = document.getElementById("resultado");
     if(data.ganho>0){
       res.innerHTML="🎉 GANHOU R$ "+data.ganho;
