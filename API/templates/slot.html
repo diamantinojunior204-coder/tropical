@@ -30,15 +30,15 @@ body{
 .slot{
   margin-top:30px;
   display:grid;
-  grid-template-columns:repeat(5,80px);
-  grid-template-rows:repeat(3,80px);
+  grid-template-columns:repeat(3,100px);
+  grid-template-rows:repeat(3,100px);
   grid-gap:10px;
   justify-content:center;
 }
 
 .celula{
-  width:80px;
-  height:80px;
+  width:100px;
+  height:100px;
   background:black;
   border-radius:10px;
   display:flex;
@@ -48,8 +48,8 @@ body{
 }
 
 .celula img{
-  width:70px;
-  height:70px;
+  width:80px;
+  height:80px;
 }
 
 .win{
@@ -93,45 +93,52 @@ input{
   <div>Jackpot: 💎 <span id="jackpot">0</span></div>
 </div>
 
-<h1>🎰 Caça-Níquel</h1>
+<h1>🎰 Caça-Níquel 3x3</h1>
 
-<div class="slot" id="slot">
-  <!-- 3x5 = 15 células -->
+<div class="slot">
   <div class="celula"><img id="c0" src="/static/slot/1.jpeg"></div>
   <div class="celula"><img id="c1" src="/static/slot/2.jpeg"></div>
   <div class="celula"><img id="c2" src="/static/slot/3.jpeg"></div>
+
   <div class="celula"><img id="c3" src="/static/slot/4.jpeg"></div>
   <div class="celula"><img id="c4" src="/static/slot/5.jpeg"></div>
-
   <div class="celula"><img id="c5" src="/static/slot/6.jpeg"></div>
+
   <div class="celula"><img id="c6" src="/static/slot/1.jpeg"></div>
   <div class="celula"><img id="c7" src="/static/slot/2.jpeg"></div>
   <div class="celula"><img id="c8" src="/static/slot/3.jpeg"></div>
-  <div class="celula"><img id="c9" src="/static/slot/4.jpeg"></div>
-
-  <div class="celula"><img id="c10" src="/static/slot/5.jpeg"></div>
-  <div class="celula"><img id="c11" src="/static/slot/6.jpeg"></div>
-  <div class="celula"><img id="c12" src="/static/slot/1.jpeg"></div>
-  <div class="celula"><img id="c13" src="/static/slot/2.jpeg"></div>
-  <div class="celula"><img id="c14" src="/static/slot/3.jpeg"></div>
 </div>
 
 <div class="controls">
   <input id="aposta" type="number" value="10" min="1">
   <button onclick="girar()">🎰 GIRAR</button>
+  <button onclick="musica()">🎵 Música</button>
 </div>
 
 <div id="resultado"></div>
 
+<audio id="som" loop>
+  <source src="/static/audio/jogo2.mp3" type="audio/mpeg">
+</audio>
+
 <script>
+let music = false;
+function musica(){
+  let s = document.getElementById("som");
+  if(!music){
+    s.play(); music=true;
+  }else{
+    s.pause(); music=false;
+  }
+}
+
 function girar(){
   let aposta = parseFloat(document.getElementById("aposta").value);
   if(aposta<=0){ alert("Digite uma aposta válida!"); return; }
 
-  // animação rápida
   let tempo=0;
   let spin = setInterval(()=>{
-    for(let i=0;i<15;i++){
+    for(let i=0;i<9;i++){
       let r = Math.floor(Math.random()*6)+1;
       document.getElementById("c"+i).src="/static/slot/"+r+".jpeg";
       document.getElementById("c"+i).classList.remove("win");
@@ -151,24 +158,18 @@ function girar(){
     document.getElementById("saldo").innerText="R$ "+data.saldo;
     document.getElementById("jackpot").innerText=data.jackpot;
 
-    // grade do backend
-    let grade = data.grade; // 3x5 array
-    let linhas = grade.length;
-    let colunas = grade[0].length;
-
-    // atualizar imagens
-    for(let i=0;i<linhas;i++){
-      for(let j=0;j<colunas;j++){
-        let idx = i*colunas + j;
+    let grade = data.grade; // 3x3
+    for(let i=0;i<3;i++){
+      for(let j=0;j<3;j++){
+        let idx = i*3 + j;
         document.getElementById("c"+idx).src="/static/slot/"+grade[i][j]+".jpeg";
       }
     }
 
-    // destacar linhas vencedoras se tiver
     if(data.linhas_ganhas){
       data.linhas_ganhas.forEach(linha=>{
-        linha.forEach(celula_idx=>{
-          document.getElementById("c"+celula_idx).classList.add("win");
+        linha.forEach(idx=>{
+          document.getElementById("c"+idx).classList.add("win");
         });
       });
     }
@@ -186,5 +187,6 @@ function girar(){
   });
 }
 </script>
+
 </body>
 </html>
