@@ -327,28 +327,50 @@ def api_slot():
 # ================================
 # ROLETA
 # ================================
-@app.route("/api/roleta", methods=["POST"])
-def api_roleta():
+
+@app.route("/api/slot", methods=["POST"])
+def api_slot():
 
     if "user_id" not in session:
-        return jsonify({"error":"login"}),401
+        return jsonify({"error": "login"}), 401
 
-    aposta=float(request.form["aposta"])
+    aposta = float(request.form["aposta"])
 
-    def calcular(aposta,c):
+    def calcular(aposta, c):
 
-        numero=random.randint(0,36)
+        simbolos = ["1","2","3","4","5","6"]
 
-        ganho=-aposta
+        rolos = [random.choice(simbolos) for _ in range(3)]
 
-        if numero%2==0:
-            ganho=aposta*2
+        ganho = -aposta
 
-        return ganho,{"numero":numero}
+        # pegar jackpot atual
+        c.execute("SELECT valor FROM jackpot WHERE id=1")
+        jackpot = c.fetchone()[0]
 
-    return jsonify(processar_aposta(session["user_id"],"roleta",aposta,calcular))
+        # aumenta jackpot
+        jackpot += aposta * 0.05
 
+        # vitória normal
+        if rolos[0] == rolos[1] == rolos[2]:
+            ganho = aposta * 3
 
+        # super jackpot
+        if rolos == ["6","6","6"]:
+            ganho = jackpot
+            jackpot = 100
+
+        # salvar jackpot
+        c.execute("UPDATE jackpot SET valor=%s WHERE id=1", (jackpot,))
+
+        return ganho, {
+            "rolos": rolos,
+            "jackpot": round(jackpot, 2)
+        }
+
+    return jsonify(
+        processar_aposta(session["user_id"], "slot", aposta, calcular)
+    )
 # ================================
 # CARTAS
 # ================================
@@ -396,4 +418,5 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=int(os.environ.get("PORT",5000))
     )
+
 
