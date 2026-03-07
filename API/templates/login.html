@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login - Cassino</title>
 <style>
-body { font-family: Arial; background:#0f172a; color:white; display:flex; align-items:center; justify-content:center; height:100vh; }
-form { background:#1e293b; padding:20px; border-radius:10px; display:flex; flex-direction:column; gap:10px; width:300px; }
-input { padding:10px; border:none; border-radius:5px; }
-button { padding:10px; background:#2563eb; color:white; border:none; border-radius:5px; cursor:pointer; }
-button:hover { background:#1d4ed8; }
-a { color:#60a5fa; text-decoration:none; font-size:14px; text-align:center; }
+body {margin:0;font-family:Arial;background:#0f172a;color:white;display:flex;justify-content:center;align-items:center;height:100vh;}
+.container {background:rgba(0,0,0,0.7);padding:20px;border-radius:12px;width:90%;max-width:350px;}
+input {width:100%;padding:12px;margin:8px 0;border-radius:6px;border:none;}
+button {width:100%;padding:12px;margin-top:10px;background:orange;border:none;border-radius:6px;font-weight:bold;cursor:pointer;}
+button:hover{background:gold;}
+h2{text-align:center;margin-bottom:20px;}
+a{text-decoration:none;color:gold;}
 </style>
 </head>
 <body>
-<form method="POST">
-<h2>Login</h2>
+<div class="container">
+<h2>🎰 Cassino Login</h2>
+<form method="POST" action="/">
 <input type="text" name="usuario" placeholder="Usuário" required>
 <input type="password" name="senha" placeholder="Senha" required>
 <button type="submit">Entrar</button>
-<a href="/cadastro">Cadastrar</a>
 </form>
+<p>Não tem conta? <a href="/cadastro">Cadastre-se</a></p>
+</div>
 </body>
 </html>
+
