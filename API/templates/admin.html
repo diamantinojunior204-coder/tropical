@@ -2,138 +2,158 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Painel ADM 🎃</title>
+
+<title>Painel Admin</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
+
 body{
-  margin:0;
-  font-family: Arial, sans-serif;
-  background: radial-gradient(circle at top, #1b0b2e, #050008);
-  color:#fff;
+font-family:Arial;
+background:#111;
+color:white;
+padding:20px;
 }
 
-header{
-  padding:20px;
-  text-align:center;
-  background:#12001f;
-  box-shadow:0 0 15px rgba(255,140,0,.4);
-}
-
-header h1{
-  margin:0;
-  color:#ff8c00;
-}
-
-.container{
-  padding:20px;
+h1{
+color:gold;
 }
 
 table{
-  width:100%;
-  border-collapse:collapse;
-  background:rgba(0,0,0,.6);
-  border-radius:12px;
-  overflow:hidden;
+width:100%;
+border-collapse:collapse;
+margin-top:20px;
 }
 
-th, td{
-  padding:12px;
-  text-align:center;
-}
-
-th{
-  background:#1f0033;
-  color:#ff8c00;
-}
-
-tr:nth-child(even){
-  background:rgba(255,255,255,.03);
-}
-
-form{
-  display:flex;
-  gap:5px;
-  justify-content:center;
-}
-
-input[type="number"]{
-  width:80px;
-  padding:6px;
-  border-radius:6px;
-  border:none;
+td,th{
+padding:10px;
+border-bottom:1px solid #444;
+text-align:center;
 }
 
 button{
-  padding:6px 10px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-  background:#ff8c00;
-  font-weight:bold;
+background:gold;
+border:none;
+padding:6px 12px;
+cursor:pointer;
+border-radius:5px;
 }
 
 button:hover{
-  background:#ff4500;
+background:orange;
 }
 
-.logout{
-  margin-top:20px;
-  text-align:center;
+.card{
+background:#1b1b1b;
+padding:20px;
+border-radius:10px;
+margin-bottom:20px;
 }
 
-.logout a{
-  color:#ff8c00;
-  text-decoration:none;
-}
 </style>
-</head>
 
+</head>
 <body>
 
-<header>
-  <h1>🎰 Painel Administrativo</h1>
-  <p>Controle total do cassino</p>
-</header>
+<h1>Painel Administrativo</h1>
 
-<div class="container">
+<div class="card">
+
+<h2>Lucro do Cassino</h2>
+
+<canvas id="grafico"></canvas>
+
+</div>
+
+<div class="card">
+
+<h2>Usuários</h2>
 
 <table>
-  <tr>
-    <th>ID</th>
-    <th>Usuário</th>
-    <th>Saldo</th>
-    <th>Tipo</th>
-    <th>Adicionar Créditos</th>
-  </tr>
 
-  {% for u in users %}
-  <tr>
-    <td>{{ u[0] }}</td>
-    <td>{{ u[1] }}</td>
-    <td>R$ {{ "%.2f"|format(u[2]) }}</td>
-    <td>
-      {% if u[3] == 1 %}
-        👑 ADM
-      {% else %}
-        🎮 Jogador
-      {% endif %}
-    </td>
-    <td>
-      <form method="POST" action="/add_saldo">
-        <input type="hidden" name="user_id" value="{{ u[0] }}">
-        <input type="number" step="0.01" name="valor" placeholder="+R$" required>
-        <button>Adicionar</button>
-      </form>
-    </td>
-  </tr>
-  {% endfor %}
+<tr>
+<th>ID</th>
+<th>Usuário</th>
+<th>Saldo</th>
+<th>Ação</th>
+</tr>
+
+{% for u in users %}
+
+<tr>
+
+<td>{{u[0]}}</td>
+<td>{{u[1]}}</td>
+<td>R$ {{u[2]}}</td>
+
+<td>
+<button onclick="addSaldo({{u[0]}})">
+Adicionar saldo
+</button>
+</td>
+
+</tr>
+
+{% endfor %}
+
 </table>
 
-<div class="logout">
-  <a href="/logout">🚪 Sair</a>
 </div>
 
-</div>
+<script>
+
+function addSaldo(user){
+
+let valor = prompt("Valor para adicionar")
+
+if(!valor) return
+
+fetch("/api/add_saldo",{
+method:"POST",
+headers:{
+"Content-Type":"application/x-www-form-urlencoded"
+},
+body:"user_id="+user+"&valor="+valor
+})
+.then(r=>r.json())
+.then(d=>{
+location.reload()
+})
+
+}
+
+</script>
+
+<script>
+
+let ctx = document.getElementById("grafico")
+
+new Chart(ctx,{
+
+type:"line",
+
+data:{
+labels:["Hoje"],
+datasets:[{
+label:"Lucro",
+data:[{{lucro}}],
+borderColor:"gold",
+backgroundColor:"transparent"
+}]
+},
+
+options:{
+scales:{
+y:{
+beginAtZero:true
+}
+}
+}
+
+})
+
+</script>
 
 </body>
 </html>
