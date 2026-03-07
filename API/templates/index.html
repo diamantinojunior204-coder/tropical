@@ -1,135 +1,189 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🎰 Cassino Demo</title>
+<title>Tropical Diamante</title>
 
 <style>
+
 *{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:Arial, Helvetica, sans-serif;
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Segoe UI;
 }
 
-/* FUNDO COM IMAGEM */
 body{
-  min-height:100vh;
-  background:
-    linear-gradient(rgba(0,0,0,.75), rgba(0,0,0,.85)),
-    url("/static/img/menu.jpg") no-repeat center center fixed;
-  background-size:cover;
-  color:#fff;
-  display:flex;
-  flex-direction:column;
+
+height:100vh;
+background:url("/static/bg.jpg");
+background-size:cover;
+background-position:center;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+color:white;
 }
 
-/* HEADER */
-header{
-  padding:15px;
-  text-align:center;
-  background:rgba(0,0,0,.7);
-  border-bottom:1px solid #333;
-  backdrop-filter: blur(4px);
+/* overlay */
+body::before{
+content:"";
+position:absolute;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.65);
+backdrop-filter: blur(4px);
 }
 
-header h1{
-  font-size:22px;
-  color:gold;
+/* container */
+
+.menu{
+position:relative;
+width:95%;
+max-width:420px;
+
+background:rgba(0,0,0,0.7);
+border-radius:20px;
+
+padding:30px;
+
+box-shadow:0 0 25px #ff8c00;
+
+text-align:center;
+
+animation:fade 1s;
 }
 
-#saldo{
-  margin-top:5px;
-  font-size:16px;
+/* logo */
+
+.logo{
+font-size:32px;
+font-weight:bold;
+margin-bottom:10px;
 }
 
-/* MAIN */
-main{
-  flex:1;
-  padding:20px;
+.logo span{
+color:#ff8c00;
 }
 
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit, minmax(140px,1fr));
-  gap:15px;
+/* saldo */
+
+.saldo{
+
+background:#140024;
+padding:12px;
+border-radius:10px;
+margin-bottom:25px;
+
+font-size:18px;
+
+box-shadow:0 0 10px #ff8c00 inset;
 }
 
-/* CARDS */
-.card{
-  background:linear-gradient(145deg, rgba(40,40,40,.9), rgba(0,0,0,.9));
-  border-radius:15px;
-  padding:20px;
-  text-align:center;
-  cursor:pointer;
-  transition:.3s;
-  box-shadow:0 0 15px rgba(0,0,0,.7);
-  backdrop-filter: blur(6px);
+/* botoes */
+
+.btn{
+
+display:block;
+
+width:100%;
+
+padding:16px;
+
+margin:10px 0;
+
+border:none;
+border-radius:12px;
+
+font-size:18px;
+font-weight:bold;
+
+cursor:pointer;
+
+transition:.3s;
 }
 
-.card:hover{
-  transform:scale(1.05);
-  box-shadow:0 0 20px gold;
+/* cores */
+
+.slot{
+
+background:linear-gradient(45deg,#ff8c00,#ff4500);
 }
 
-.card span{
-  font-size:40px;
-  display:block;
-  margin-bottom:10px;
+.roleta{
+
+background:linear-gradient(45deg,#00c853,#00ff88);
 }
 
-.card h2{
-  font-size:16px;
+.cartas{
+
+background:linear-gradient(45deg,#2979ff,#00e5ff);
 }
 
-/* FOOTER */
-footer{
-  padding:10px;
-  text-align:center;
-  background:rgba(0,0,0,.7);
-  border-top:1px solid #333;
+.logout{
+
+background:#444;
 }
 
-a{
-  color:gold;
-  text-decoration:none;
+/* hover */
+
+.btn:hover{
+
+transform:scale(1.05);
+box-shadow:0 0 15px #fff;
 }
+
+/* animação */
+
+@keyframes fade{
+
+from{
+opacity:0;
+transform:translateY(30px);
+}
+
+to{
+opacity:1;
+transform:translateY(0);
+}
+
+}
+
 </style>
 </head>
 
 <body>
 
-<header>
-  <h1>🎰 DIAMANTE TROPICAL</h1>
-  <div id="saldo">Saldo: R$ {{ saldo }}</div>
-</header>
+<div class="menu">
 
-<main>
-  <div class="grid">
+<div class="logo">
+<span>TROPICAL</span> DIAMANTE
+</div>
 
-    <div class="card" onclick="location.href='/roleta'">
-      <span>🎰</span>
-      <h2>Roleta</h2>
-    </div>
+<div class="saldo">
+💰 Saldo: R$ {{saldo}}
+</div>
 
-    <div class="card" onclick="location.href='/cartas'">
-      <span>🃏</span>
-      <h2>Cartas</h2>
-    </div>
+<button class="btn slot" onclick="window.location='/slot'">
+🎰 Slot Halloween
+</button>
 
-    <div class="card" onclick="location.href='/slot'">
-      <span>💎</span>
-      <h2>Caça-Níquel</h2>
-    </div>
+<button class="btn roleta" onclick="window.location='/roleta'">
+🎡 Roleta Europeia
+</button>
 
-  </div>
-</main>
+<button class="btn cartas" onclick="window.location='/cartas'">
+🃏 Cartas Cassino
+</button>
 
-<footer>
-  <a href="/logout">Sair</a>
-</footer>
+<button class="btn logout" onclick="window.location='/logout'">
+🚪 Sair
+</button>
+
+</div>
 
 </body>
 </html>
-
