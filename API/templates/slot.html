@@ -83,6 +83,12 @@ input{
   padding:10px;
   width:120px;
 }
+
+#resultado{
+  margin-top:15px;
+  font-size:18px;
+  font-weight:bold;
+}
 </style>
 </head>
 
@@ -119,7 +125,7 @@ input{
 
 <audio id="som" loop>
   <source src="/static/audio/jogo2.mp3" type="audio/mpeg">
-</audio>
+
 
 <script>
 let music = false;
@@ -134,31 +140,50 @@ function musica(){
 
 function girar(){
   let aposta = parseFloat(document.getElementById("aposta").value);
-  if(aposta<=0){ alert("Digite uma aposta válida!"); return; }
+  if(aposta<=0 || isNaN(aposta)){ 
+    alert("Digite uma aposta válida!"); 
+    return; 
+  }
 
+  // Limpa resultado anterior e remove animação
+  document.getElementById("resultado").innerHTML = "";
+  for(let i=0;i<9;i++){
+    document.getElementById("c"+i).classList.remove("win");
+  }
+
+  // Efeito de giro visual
   let tempo=0;
   let spin = setInterval(()=>{
     for(let i=0;i<9;i++){
       let r = Math.floor(Math.random()*6)+1;
       document.getElementById("c"+i).src="/static/slot/"+r+".jpeg";
-      document.getElementById("c"+i).classList.remove("win");
     }
     tempo+=100;
     if(tempo>=2000) clearInterval(spin);
   },100);
 
+  // Comunicação com backend com cabeçalho correto
   fetch("/api/slot",{
     method:"POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body:new URLSearchParams({aposta:aposta})
   })
-  .then(r=>r.json())
+  .then(r=> {
+    if(!r.ok) throw new Error("Erro ao conectar com o backend");
+    return r.json();
+  })
   .then(data=>{
-    if(data.error){ alert(data.error); return; }
+    if(data.error){ 
+      alert(data.error); 
+      return; 
+    }
 
-    document.getElementById("saldo").innerText="R$ "+data.saldo;
-    document.getElementById("jackpot").innerText=data.jackpot;
+    // Atualiza saldo e jackpot
+    document.getElementById("saldo").innerText="R$ "+data.saldo.toFixed(2);
+    document.getElementById("jackpot").innerText=data.jackpot.toFixed(2);
 
-    let grade = data.grade; // 3x3
+    // Atualiza imagens com dados do backend
+    let grade = data.grade;
     for(let i=0;i<3;i++){
       for(let j=0;j<3;j++){
         let idx = i*3 + j;
@@ -166,6 +191,7 @@ function girar(){
       }
     }
 
+    // Aplica animação em linhas ganhas
     if(data.linhas_ganhas){
       data.linhas_ganhas.forEach(linha=>{
         linha.forEach(idx=>{
@@ -174,16 +200,19 @@ function girar(){
       });
     }
 
+    // Mostra resultado
     let res = document.getElementById("resultado");
     if(data.ganho>0){
-      res.innerHTML="🎉 GANHOU R$ "+data.ganho;
+      res.innerHTML="🎉 GANHOU R$ "+data.ganho.toFixed(2);
+      res.style.color = "gold";
     }else{
       res.innerHTML="❌ Perdeu";
+      res.style.color = "white";
     }
   })
   .catch(err=>{
     console.error(err);
-    alert("Erro ao processar o slot");
+    alert("Erro ao processar o jogo - verifique a conexão com o backend");
   });
 }
 </script>
