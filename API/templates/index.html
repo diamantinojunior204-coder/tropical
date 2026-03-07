@@ -5,21 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Menu - Cassino</title>
 <style>
-body { font-family: Arial; background:#0f172a; color:white; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; gap:15px; }
-a { padding:10px 20px; background:#2563eb; color:white; text-decoration:none; border-radius:5px; }
-a:hover { background:#1d4ed8; }
-h2 { margin-bottom:10px; }
+body {margin:0;font-family:Arial;background:#0f172a;color:white;}
+.topo{padding:10px;background:rgba(0,0,0,0.6);display:flex;justify-content:space-between;align-items:center;}
+.topo a{color:gold;text-decoration:none;font-weight:bold;margin-left:10px;}
+.jogos{display:flex;flex-direction:column;align-items:center;margin-top:50px;}
+.jogos a{display:block;margin:10px;background:orange;padding:15px 30px;border-radius:8px;color:black;text-decoration:none;font-weight:bold;}
+.jogos a:hover{background:gold;}
 </style>
 </head>
 <body>
-<h2>Bem-vindo {{ session['username'] }}!</h2>
-<p>Saldo: R$ {{ saldo }}</p>
-<a href="/slot">Slot</a>
-<a href="/roleta">Roleta</a>
-<a href="/cartas">Cartas</a>
-{% if session['is_admin']==1 %}
-<a href="/admin">Painel Admin</a>
-{% endif %}
-<a href="/logout">Sair</a>
+<div class="topo">
+<div>Olá, {{session.username}} | Saldo: R$ <span id="saldo">{{saldo}}</span></div>
+<div><a href="/logout">Sair</a> | <a href="/admin">Painel ADM</a></div>
+</div>
+<div class="jogos">
+<a href="/slot">🎰 Slot</a>
+<a href="/roleta">🎲 Roleta</a>
+<a href="/cartas">🃏 Cartas</a>
+</div>
 </body>
 </html>
