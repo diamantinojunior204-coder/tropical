@@ -30,14 +30,14 @@ body{
 .slot{
   margin-top:30px;
   display:grid;
-  grid-template-columns:repeat(3,100px);
+  grid-template-columns:repeat(5,80px);
   grid-gap:10px;
   justify-content:center;
 }
 
 .celula{
-  width:100px;
-  height:100px;
+  width:80px;
+  height:80px;
   background:black;
   border-radius:10px;
   display:flex;
@@ -47,7 +47,7 @@ body{
 }
 
 .celula img{
-  width:80px;
+  width:60px;
 }
 
 .controls{
@@ -98,15 +98,24 @@ input{
 <h1>🎰 Caça-Níquel</h1>
 
 <div class="slot">
+  <!-- Linha 0 -->
   <div class="celula"><img id="c0" src="/static/slot/1.jpeg"></div>
   <div class="celula"><img id="c1" src="/static/slot/2.jpeg"></div>
   <div class="celula"><img id="c2" src="/static/slot/3.jpeg"></div>
   <div class="celula"><img id="c3" src="/static/slot/4.jpeg"></div>
   <div class="celula"><img id="c4" src="/static/slot/5.jpeg"></div>
+  <!-- Linha 1 -->
   <div class="celula"><img id="c5" src="/static/slot/1.jpeg"></div>
   <div class="celula"><img id="c6" src="/static/slot/2.jpeg"></div>
   <div class="celula"><img id="c7" src="/static/slot/3.jpeg"></div>
   <div class="celula"><img id="c8" src="/static/slot/4.jpeg"></div>
+  <div class="celula"><img id="c9" src="/static/slot/5.jpeg"></div>
+  <!-- Linha 2 -->
+  <div class="celula"><img id="c10" src="/static/slot/1.jpeg"></div>
+  <div class="celula"><img id="c11" src="/static/slot/2.jpeg"></div>
+  <div class="celula"><img id="c12" src="/static/slot/3.jpeg"></div>
+  <div class="celula"><img id="c13" src="/static/slot/4.jpeg"></div>
+  <div class="celula"><img id="c14" src="/static/slot/5.jpeg"></div>
 </div>
 
 <div class="controls">
@@ -123,69 +132,71 @@ input{
 
 <script>
 let music = false;
-
 function musica(){
   let s = document.getElementById("som");
-  if(!music){
-    s.play();
-    music=true;
-  }else{
-    s.pause();
-    music=false;
-  }
+  if(!music){ s.play(); music=true; }else{ s.pause(); music=false; }
 }
 
 function girar(){
   let aposta = parseFloat(document.getElementById("aposta").value);
-  if(aposta<=0){
-    alert("Digite uma aposta válida!");
-    return;
-  }
+  if(aposta<=0){ alert("Digite uma aposta válida!"); return; }
 
-  // animação rápida dos 9 slots
-  let tempo = 0;
-  let spin = setInterval(()=>{
-    for(let i=0;i<9;i++){
-      let r = Math.floor(Math.random()*6)+1;
+  // animação rápida
+  let tempo=0;
+  let spin=setInterval(()=>{
+    for(let i=0;i<15;i++){
+      let r=Math.floor(Math.random()*6)+1;
       document.getElementById("c"+i).src="/static/slot/"+r+".jpeg";
     }
-    tempo += 100;
+    tempo+=100;
     if(tempo>=2000) clearInterval(spin);
   },100);
 
-  // chamar backend
   fetch("/api/slot",{
     method:"POST",
-    body:new URLSearchParams({aposta: aposta})
+    body:new URLSearchParams({aposta:aposta})
   })
   .then(r=>r.json())
   .then(data=>{
-    if(data.error){
-      alert(data.error);
-      return;
-    }
+    if(data.error){ alert(data.error); return; }
 
-    // atualizar saldo e jackpot
     document.getElementById("saldo").innerText="R$ "+data.saldo;
     document.getElementById("jackpot").innerText=data.jackpot;
 
-    // linha do meio real
-    let rolos = data.rolos;
-    document.getElementById("c3").src="/static/slot/"+rolos[0]+".jpeg";
-    document.getElementById("c4").src="/static/slot/"+rolos[1]+".jpeg";
-    document.getElementById("c5").src="/static/slot/"+rolos[2]+".jpeg";
+    let grade = data.grade; // [[linha0],[linha1],[linha2],[diag1],[diag2]]
+    
+    // atualizar todas as 15 células
+    for(let r=0;r<3;r++){
+      for(let c=0;c<5;c++){
+        let idx = r*5+c;
+        document.getElementById("c"+idx).src="/static/slot/"+grade[r][c]+".jpeg";
+        document.getElementById("c"+idx).classList.remove("win");
+      }
+    }
 
-    let res = document.getElementById("resultado");
+    // destacar linhas vencedoras
+    for(let i=0;i<grade.length;i++){
+      let linha = grade[i];
+      let first = linha[0];
+      if(linha.every(s=>s===first)){
+        // linha vencedora
+        let resIndices = [];
+        if(i<3){ for(let j=0;j<5;j++) resIndices.push(i*5+j); } // horizontais
+        else if(i==3){ resIndices=[0,6,12,8,4]; } // diagonal \
+        else { resIndices=[10,6,2,8,14]; } // diagonal /
+        resIndices.forEach(idx=>document.getElementById("c"+idx).classList.add("win"));
+      }
+    }
+
+    // mostrar resultado do ganho
+    let res=document.getElementById("resultado");
     if(data.ganho>0){
-      res.innerHTML="🎉 GANHOU R$ "+data.ganho;
+      res.innerHTML=`🎉 GANHOU R$ ${data.ganho}`;
     }else{
       res.innerHTML="❌ Perdeu";
     }
   })
-  .catch(err=>{
-    console.error(err);
-    alert("Erro ao processar o slot");
-  });
+  .catch(err=>{ console.error(err); alert("Erro ao processar o slot"); });
 }
 </script>
 
