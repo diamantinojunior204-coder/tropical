@@ -1,202 +1,222 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🎃 Slot Halloween</title>
+<title>🎰 Slot Cassino</title>
 
 <style>
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: radial-gradient(circle at top, #2b0033, #000);
-    color: #fff;
-    text-align: center;
+
+body{
+margin:0;
+font-family:Arial;
+background:url("/static/fundo.jpg");
+background-size:cover;
+color:white;
+text-align:center;
 }
 
-h1 {
-    margin-top: 15px;
-    color: orange;
-    text-shadow: 0 0 10px red;
+/* topo */
+
+.topo{
+padding:10px;
+background:rgba(0,0,0,0.6);
+display:flex;
+justify-content:space-between;
 }
 
-#saldoBox {
-    font-size: 18px;
-    margin: 10px;
+#saldo{
+font-weight:bold;
+color:gold;
 }
 
-.slot {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    width: 90%;
-    max-width: 320px;
-    margin: 20px auto;
+/* máquina */
+
+.slot{
+margin-top:30px;
+display:grid;
+grid-template-columns:repeat(3,100px);
+grid-gap:10px;
+justify-content:center;
 }
 
-.card {
-    background: #111;
-    border-radius: 14px;
-    border: 3px solid orange;
-    aspect-ratio: 1 / 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 0 15px orange;
+.celula{
+width:100px;
+height:100px;
+background:black;
+border-radius:10px;
+display:flex;
+align-items:center;
+justify-content:center;
+border:3px solid gold;
 }
 
-.card.spin {
-    animation: spin 0.15s infinite linear;
+.celula img{
+width:80px;
 }
 
-@keyframes spin {
-    from { transform: rotateX(0deg); }
-    to { transform: rotateX(360deg); }
+/* botões */
+
+.controls{
+margin-top:20px;
 }
 
-.card img {
-    width: 70%;
-    height: 70%;
+button{
+padding:12px 20px;
+font-size:16px;
+border:none;
+border-radius:8px;
+background:orange;
+cursor:pointer;
 }
 
-.controls {
-    margin: 15px;
+button:hover{
+background:gold;
 }
 
-input {
-    width: 120px;
-    padding: 10px;
-    font-size: 16px;
-    text-align: center;
-    border-radius: 10px;
-    border: none;
+input{
+padding:10px;
+width:120px;
 }
 
-button {
-    margin-top: 10px;
-    padding: 14px 40px;
-    font-size: 20px;
-    background: orange;
-    border: none;
-    border-radius: 12px;
-    box-shadow: 0 0 10px red;
-    cursor: pointer;
+/* vitória */
+
+.win{
+animation:piscar 0.5s infinite;
 }
 
-button:active {
-    transform: scale(0.95);
+@keyframes piscar{
+0%{box-shadow:0 0 10px gold;}
+50%{box-shadow:0 0 25px orange;}
+100%{box-shadow:0 0 10px gold;}
 }
 
-#resultado {
-    margin-top: 15px;
-    font-size: 20px;
-    min-height: 28px;
-}
-
-#jackpot {
-    margin-top: 5px;
-    color: gold;
-    font-size: 18px;
-}
 </style>
 </head>
 
 <body>
 
-<h1>🎃 Slot Halloween</h1>
+<div class="topo">
 
-<div id="saldoBox">
-    💰 Saldo: R$ <span id="saldo">{{ saldo }}</span>
+<div>
+Saldo: <span id="saldo">R$ {{saldo}}</span>
 </div>
 
-<!-- 🎰 MATRIZ 3x3 -->
-<div class="slot" id="slot">
-    {% for i in range(9) %}
-    <div class="card">
-        <img src="/static/img/back.jpeg">
-    </div>
-    {% endfor %}
+<div>
+Jackpot: 💎 <span id="jackpot">100</span>
 </div>
+
+</div>
+
+<h1>🎰 Caça-Níquel</h1>
+
+<!-- SLOT -->
+
+<div class="slot">
+
+<div class="celula"><img id="c0" src="/static/slot/1.png"></div>
+<div class="celula"><img id="c1" src="/static/slot/2.png"></div>
+<div class="celula"><img id="c2" src="/static/slot/3.png"></div>
+
+<div class="celula"><img id="c3" src="/static/slot/4.png"></div>
+<div class="celula"><img id="c4" src="/static/slot/5.png"></div>
+<div class="celula"><img id="c5" src="/static/slot/1.png"></div>
+
+<div class="celula"><img id="c6" src="/static/slot/2.png"></div>
+<div class="celula"><img id="c7" src="/static/slot/3.png"></div>
+<div class="celula"><img id="c8" src="/static/slot/4.png"></div>
+
+</div>
+
+<!-- controles -->
 
 <div class="controls">
-    <input type="number" id="aposta" placeholder="Aposta">
-    <br>
-    <button onclick="girar()">🎰 GIRAR</button>
+
+<input id="aposta" type="number" value="10">
+
+<button onclick="girar()">🎰 GIRAR</button>
+
+<button onclick="musica()">🎵 Música</button>
+
 </div>
 
 <div id="resultado"></div>
-<div id="jackpot"></div>
 
-<!-- 🎵 SOM -->
-<audio id="som" src="/static/audio/slot.mpeg" preload="auto"></audio>
+<audio id="som" loop>
+<source src="/static/music/cassino.mp3">
+</audio>
 
 <script>
-const cards = document.querySelectorAll(".card");
-const som = document.getElementById("som");
 
-const imagens = {
-    "🎃": "/static/img/abobora.jpeg",
-    "💀": "/static/img/caveira.jpeg",
-    "🦇": "/static/img/morcego.jpeg",
-    "🍬": "/static/img/doce.jpeg",
-    "💎": "/static/img/diamante.jpeg",
-    "🧙‍♀️": "/static/img/bruxa.jpeg"
-};
+let music = false
 
-function girar() {
-    const aposta = document.getElementById("aposta").value;
-    const resultado = document.getElementById("resultado");
-    const jackpot = document.getElementById("jackpot");
+function musica(){
 
-    resultado.textContent = "";
-    jackpot.textContent = "";
+let s = document.getElementById("som")
 
-    if (!aposta || aposta <= 0) {
-        resultado.textContent = "⚠️ Aposta inválida";
-        resultado.style.color = "orange";
-        return;
-    }
-
-    cards.forEach(c => c.classList.add("spin"));
-    som.currentTime = 0;
-    som.play();
-
-    setTimeout(() => {
-        fetch("/api/slot", {
-            method: "POST",
-            headers: {"Content-Type": "application/x-www-form-urlencoded"},
-            body: "aposta=" + aposta
-        })
-        .then(r => r.json())
-        .then(d => {
-            cards.forEach(c => c.classList.remove("spin"));
-
-            if (d.error) {
-                resultado.textContent = "❌ Saldo insuficiente";
-                resultado.style.color = "#ff4444";
-                return;
-            }
-
-            // Preenche 3x3 usando os 3 rolos
-            for (let i = 0; i < 9; i++) {
-                const s = d.rolos[i % d.rolos.length];
-                cards[i].innerHTML = `<img src="${imagens[s]}">`;
-            }
-
-            document.getElementById("saldo").textContent = d.saldo;
-
-            if (d.ganho > 0) {
-                resultado.textContent = "🎉 Ganhou R$ " + d.ganho;
-                resultado.style.color = "#00ff99";
-            } else {
-                resultado.textContent = "💀 Perdeu";
-                resultado.style.color = "#ff4444";
-            }
-
-            jackpot.textContent = "💰 Jackpot: R$ " + d.jackpot;
-        });
-    }, 1200);
+if(!music){
+s.play()
+music=true
+}else{
+s.pause()
+music=false
 }
+
+}
+
+function girar(){
+
+let aposta = document.getElementById("aposta").value
+
+fetch("/api/slot",{
+method:"POST",
+body:new URLSearchParams({
+aposta:aposta
+})
+})
+.then(r=>r.json())
+.then(data=>{
+
+if(data.error){
+alert("Saldo insuficiente")
+return
+}
+
+document.getElementById("saldo").innerText="R$ "+data.saldo
+document.getElementById("jackpot").innerText=data.jackpot
+
+let rolos=data.rolos
+
+document.getElementById("c3").src="/static/slot/"+rolos[0]+".png"
+document.getElementById("c4").src="/static/slot/"+rolos[1]+".png"
+document.getElementById("c5").src="/static/slot/"+rolos[2]+".png"
+
+let res=document.getElementById("resultado")
+
+if(data.ganho>0){
+
+res.innerHTML="🎉 GANHOU R$ "+data.ganho
+
+document.querySelectorAll(".celula").forEach(c=>{
+c.classList.add("win")
+})
+
+setTimeout(()=>{
+document.querySelectorAll(".celula").forEach(c=>{
+c.classList.remove("win")
+})
+},2000)
+
+}else{
+
+res.innerHTML="❌ Perdeu"
+
+}
+
+})
+
+}
+
 </script>
 
 </body>
