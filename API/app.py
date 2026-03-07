@@ -228,7 +228,7 @@ def index():
 
 
 # ================================
-# ADMIN
+# ADMIN COM LUCRO
 # ================================
 @app.route("/admin")
 def admin():
@@ -245,9 +245,24 @@ def admin():
     c.execute("SELECT valor FROM jackpot WHERE id=1")
     jackpot=c.fetchone()[0]
 
+    c.execute("SELECT COALESCE(SUM(aposta),0) FROM apostas")
+    total_apostado=c.fetchone()[0]
+
+    c.execute("SELECT COALESCE(SUM(ganho),0) FROM apostas")
+    total_pago=c.fetchone()[0]
+
+    lucro=total_apostado-total_pago
+
     conn.close()
 
-    return render_template("admin.html",users=users,jackpot=jackpot)
+    return render_template(
+        "admin.html",
+        users=users,
+        jackpot=round(jackpot,2),
+        total_apostado=round(total_apostado,2),
+        total_pago=round(total_pago,2),
+        lucro=round(lucro,2)
+    )
 
 
 # ================================
@@ -275,31 +290,7 @@ def add_saldo():
 
 
 # ================================
-# PÁGINAS DOS JOGOS
-# ================================
-@app.route("/slot")
-def slot_page():
-    if "user_id" not in session:
-        return redirect("/")
-    return render_template("slot.html",saldo=get_saldo())
-
-
-@app.route("/cartas")
-def cartas_page():
-    if "user_id" not in session:
-        return redirect("/")
-    return render_template("cartas.html",saldo=get_saldo())
-
-
-@app.route("/roleta")
-def roleta_page():
-    if "user_id" not in session:
-        return redirect("/")
-    return render_template("roleta.html",saldo=get_saldo())
-
-
-# ================================
-# SLOT PROFISSIONAL 5x3
+# SLOT
 # ================================
 @app.route("/api/slot",methods=["POST"])
 def api_slot():
@@ -308,90 +299,60 @@ def api_slot():
         return jsonify({"error":"login"}),401
 
     aposta=float(request.form["aposta"])
-    def calcular(aposta, c):
-
-    simbolos = ["🍒","🍋","🍀","⭐","💎","7"]
-
-    grade = [[random.choice(simbolos) for _ in range(5)] for _ in range(3)]
-
-    # começa já perdendo a aposta
-    ganho = -aposta
-
-    # pegar jackpot
-    c.execute("SELECT valor FROM jackpot WHERE id=1")
-    jackpot = c.fetchone()[0]
-
-    jackpot += aposta * 0.03
-
-    linhas = [
-        grade[0],
-        grade[1],
-        grade[2],
-        [grade[0][0],grade[1][1],grade[2][2],grade[1][3],grade[0][4]],
-        [grade[2][0],grade[1][1],grade[0][2],grade[1][3],grade[2][4]]
-    ]
-
-    for linha in linhas:
-
-        if linha.count(linha[0]) >= 3:
-
-            simbolo = linha[0]
-
-            premio = 0
-
-            if simbolo == "🍒":
-                premio = aposta * 2
-            elif simbolo == "🍋":
-                premio = aposta * 3
-            elif simbolo == "🍀":
-                premio = aposta * 5
-            elif simbolo == "⭐":
-                premio = aposta * 10
-            elif simbolo == "💎":
-                premio = aposta * 20
-
-            # adiciona prêmio ao ganho
-            ganho += premio
-
-            # jackpot
-            if simbolo == "7":
-                ganho += jackpot
-                jackpot = 100
-
-    c.execute("UPDATE jackpot SET valor=%s WHERE id=1", (jackpot,))
-
-    return ganho, {
-        "grade": grade,
-        "jackpot": round(jackpot, 2)
-    }
-    
-
-
-# ================================
-# CARTAS
-# ================================
-@app.route("/api/cartas",methods=["POST"])
-def api_cartas():
-
-    if "user_id" not in session:
-        return jsonify({"error":"login"}),401
-
-    aposta=float(request.form["aposta"])
 
     def calcular(aposta,c):
 
-        cartas=["A","K","Q","J","10","9"]
+        simbolos=["🍒","🍋","🍀","⭐","💎","7"]
 
-        mao=random.sample(cartas,3)
+        grade=[[random.choice(simbolos) for _ in range(5)] for _ in range(3)]
 
         ganho=-aposta
 
-        if len(set(mao))==1:
-            ganho=aposta*5
+        c.execute("SELECT valor FROM jackpot WHERE id=1")
+        jackpot=c.fetchone()[0]
 
-        return ganho,{"cartas":mao}
+        jackpot+=aposta*0.03
 
-    return jsonify(processar_aposta(session["user_id"],"cartas",aposta,calcular))
+        linhas=[
+            grade[0],
+            grade[1],
+            grade[2],
+            [grade[0][0],grade[1][1],grade[2][2],grade[1][3],grade[0][4]],
+            [grade[2][0],grade[1][1],grade[0][2],grade[1][3],grade[2][4]]
+        ]
+
+        for linha in linhas:
+
+            if linha.count(linha[0])>=3:
+
+                simbolo=linha[0]
+                premio=0
+
+                if simbolo=="🍒":
+                    premio=aposta*2
+                elif simbolo=="🍋":
+                    premio=aposta*3
+                elif simbolo=="🍀":
+                    premio=aposta*5
+                elif simbolo=="⭐":
+                    premio=aposta*10
+                elif simbolo=="💎":
+                    premio=aposta*20
+
+                ganho+=premio
+
+                if simbolo=="7":
+                    ganho+=jackpot
+                    jackpot=100
+
+        c.execute("UPDATE jackpot SET valor=%s WHERE id=1",(jackpot,))
+
+        return ganho,{
+            "grade":grade,
+            "jackpot":round(jackpot,2)
+        }
+
+    return jsonify(processar_aposta(session["user_id"],"slot",aposta,calcular))
 
 
 # ================================
@@ -401,7 +362,6 @@ def api_cartas():
 def logout():
 
     session.clear()
-
     return redirect("/")
 
 
