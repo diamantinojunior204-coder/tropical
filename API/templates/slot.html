@@ -4,34 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🎰 Slot Cassino</title>
-
 <style>
 body{
   margin:0;
   font-family:Arial;
-  background:url("/static/fundo.jpeg");
+  background:url("/static/fundo.jpeg") no-repeat center center fixed;
   background-size:cover;
   color:white;
   text-align:center;
 }
-
 .topo{
   padding:10px;
   background:rgba(0,0,0,0.6);
   display:flex;
   justify-content:space-between;
 }
-
-#saldo{
-  font-weight:bold;
-  color:gold;
-}
-
-#jackpot{
-  font-weight:bold;
-  color:deepskyblue;
-}
-
+#saldo{font-weight:bold;color:gold;}
+#jackpot{font-weight:bold;color:deepskyblue;}
 .slot{
   margin-top:30px;
   display:grid;
@@ -39,7 +28,6 @@ body{
   grid-gap:10px;
   justify-content:center;
 }
-
 .celula{
   width:100px;
   height:100px;
@@ -50,15 +38,8 @@ body{
   justify-content:center;
   border:3px solid gold;
 }
-
-.celula img{
-  width:80px;
-}
-
-.controls{
-  margin-top:20px;
-}
-
+.celula img{width:80px;}
+.controls{margin-top:20px;}
 button{
   padding:12px 20px;
   font-size:16px;
@@ -67,20 +48,11 @@ button{
   background:orange;
   cursor:pointer;
 }
-
-button:hover{
-  background:gold;
-}
-
-input{
-  padding:10px;
-  width:120px;
-}
-
+button:hover{background:gold;}
+input{padding:10px;width:120px;}
 .win{
   animation:piscar 0.5s infinite;
 }
-
 @keyframes piscar{
   0%{box-shadow:0 0 10px gold;}
   50%{box-shadow:0 0 25px orange;}
@@ -88,16 +60,11 @@ input{
 }
 </style>
 </head>
-
 <body>
 
 <div class="topo">
-  <div>
-    Saldo: <span id="saldo">R$ {{saldo}}</span>
-  </div>
-  <div>
-    Jackpot: 💎 <span id="jackpot">100</span>
-  </div>
+  <div>Saldo: <span id="saldo">R$ {{saldo}}</span></div>
+  <div>Jackpot: 💎 <span id="jackpot">100</span></div>
 </div>
 
 <h1>🎰 Caça-Níquel 3x3</h1>
@@ -128,80 +95,59 @@ input{
 
 <script>
 let music = false;
-
 function musica(){
   let s = document.getElementById("som");
-  if(!music){
-    s.play();
-    music = true;
-  } else {
-    s.pause();
-    music = false;
-  }
+  if(!music){ s.play(); music=true; } 
+  else{ s.pause(); music=false; }
 }
 
 function girar(){
   let aposta = parseFloat(document.getElementById("aposta").value);
-  if(aposta <= 0){
-    alert("Digite uma aposta válida!");
-    return;
-  }
+  if(aposta <= 0){ alert("Digite uma aposta válida!"); return; }
 
-  // animação rápida do giro
-  let tempo = 0;
-  let spin = setInterval(()=>{
+  // animação rápida
+  let tempo=0;
+  let spin=setInterval(()=>{
     for(let i=0;i<9;i++){
-      let r = Math.floor(Math.random()*6)+1;
+      let r=Math.floor(Math.random()*6)+1;
       document.getElementById("c"+i).src="/static/slot/"+r+".jpeg";
     }
-    tempo += 100;
-    if(tempo >= 1500) clearInterval(spin);
+    tempo+=100;
+    if(tempo>=1500) clearInterval(spin);
   },100);
 
-  // chamar backend
+  // backend
   fetch("/api/slot",{
     method:"POST",
-    body:new URLSearchParams({aposta: aposta})
+    body:new URLSearchParams({aposta:aposta})
   })
-  .then(r => r.json())
-  .then(data => {
-    if(data.error){
-      alert(data.error);
-      return;
-    }
+  .then(r=>r.json())
+  .then(data=>{
+    if(data.error){ alert(data.error); return; }
 
-    // atualizar saldo e jackpot
     document.getElementById("saldo").innerText="R$ "+data.saldo;
     document.getElementById("jackpot").innerText=data.jackpot;
 
-    // atualizar a grade real
-    let grade = data.grade.flat(); // grade 3x3 achatada
-    for(let i=0;i<9;i++){
-      document.getElementById("c"+i).src="/static/slot/"+grade[i]+".jpeg";
-    }
+    // grade real
+    let grade = data.grade.flat();
+    for(let i=0;i<9;i++) document.getElementById("c"+i).src="/static/slot/"+grade[i]+".jpeg";
 
-    let res = document.getElementById("resultado");
-
+    let res=document.getElementById("resultado");
     if(data.ganho>0){
       res.innerHTML="🎉 GANHOU R$ "+data.ganho;
 
       // piscar linhas vencedoras
-      data.linhas_ganhas.forEach(linha => {
-        linha.forEach(idx => {
-          let cel = document.getElementById("c"+idx);
+      data.linhas_ganhas.forEach(linha=>{
+        linha.forEach(idx=>{
+          let cel=document.getElementById("c"+idx);
           cel.classList.add("win");
           setTimeout(()=>cel.classList.remove("win"),2000);
         });
       });
 
-    } else {
-      res.innerHTML="❌ Perdeu";
-    }
+    } else res.innerHTML="❌ Perdeu";
   })
-  .catch(err=>{
-    console.error(err);
-    alert("Erro ao processar o slot");
-  });
+  .catch(err=>{ console.error(err); alert("Erro ao processar o slot"); });
 }
 </script>
 
