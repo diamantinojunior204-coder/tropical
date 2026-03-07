@@ -94,16 +94,17 @@ input{padding:10px;width:120px;}
 </audio>
 
 <script>
-let music = false;
+let music=false;
+
 function musica(){
-  let s = document.getElementById("som");
+  let s=document.getElementById("som");
   if(!music){ s.play(); music=true; } 
   else{ s.pause(); music=false; }
 }
 
 function girar(){
-  let aposta = parseFloat(document.getElementById("aposta").value);
-  if(aposta <= 0){ alert("Digite uma aposta válida!"); return; }
+  let aposta=parseFloat(document.getElementById("aposta").value);
+  if(aposta<=0){ alert("Digite uma aposta válida!"); return; }
 
   // animação rápida
   let tempo=0;
@@ -129,7 +130,7 @@ function girar(){
     document.getElementById("jackpot").innerText=data.jackpot;
 
     // grade real
-    let grade = data.grade.flat();
+    let grade=data.grade.flat();
     for(let i=0;i<9;i++) document.getElementById("c"+i).src="/static/slot/"+grade[i]+".jpeg";
 
     let res=document.getElementById("resultado");
@@ -137,13 +138,15 @@ function girar(){
       res.innerHTML="🎉 GANHOU R$ "+data.ganho;
 
       // piscar linhas vencedoras
-      data.linhas_ganhas.forEach(linha=>{
-        linha.forEach(idx=>{
-          let cel=document.getElementById("c"+idx);
-          cel.classList.add("win");
-          setTimeout(()=>cel.classList.remove("win"),2000);
+      if(data.linhas_ganhas){
+        data.linhas_ganhas.forEach(linha=>{
+          linha.forEach(idx=>{
+            let cel=document.getElementById("c"+idx);
+            cel.classList.add("win");
+            setTimeout(()=>cel.classList.remove("win"),2000);
+          });
         });
-      });
+      }
 
     } else res.innerHTML="❌ Perdeu";
   })
