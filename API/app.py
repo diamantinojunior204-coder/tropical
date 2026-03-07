@@ -16,6 +16,10 @@ app.secret_key = "segredo_super_cassino"
 def conectar():
 
     db_url = os.getenv("DATABASE_URL")
+
+    if not db_url:
+        raise Exception("DATABASE_URL não configurada")
+
     result = urlparse(db_url)
 
     conn = psycopg2.connect(
@@ -71,6 +75,7 @@ def criar_db():
         c.execute("INSERT INTO jackpot VALUES (1,100)")
 
     conn.commit()
+    c.close()
     conn.close()
 
 
@@ -92,6 +97,7 @@ def criar_admin():
         """, ("admin", generate_password_hash("admin123")))
 
     conn.commit()
+    c.close()
     conn.close()
 
 
@@ -110,6 +116,7 @@ def get_saldo():
     c.execute("SELECT saldo FROM users WHERE id=%s",(session["user_id"],))
     saldo = c.fetchone()[0]
 
+    c.close()
     conn.close()
 
     return round(saldo,2)
@@ -127,6 +134,7 @@ def processar_aposta(user_id,jogo,aposta,calcular):
     saldo=c.fetchone()[0]
 
     if aposta<=0 or aposta>saldo:
+        c.close()
         conn.close()
         return {"error":"saldo insuficiente"}
 
@@ -142,6 +150,8 @@ def processar_aposta(user_id,jogo,aposta,calcular):
     """,(user_id,jogo,aposta,ganho))
 
     conn.commit()
+
+    c.close()
     conn.close()
 
     return{
@@ -159,8 +169,8 @@ def login():
 
     if request.method=="POST":
 
-        u=request.form["usuario"]
-        s=request.form["senha"]
+        u=request.form.get("usuario")
+        s=request.form.get("senha")
 
         conn=conectar()
         c=conn.cursor()
@@ -168,6 +178,7 @@ def login():
         c.execute("SELECT id,username,password,is_admin FROM users WHERE username=%s",(u,))
         user=c.fetchone()
 
+        c.close()
         conn.close()
 
         if user and check_password_hash(user[2],s):
@@ -200,11 +211,13 @@ def cadastro():
             INSERT INTO users(username,password)
             VALUES(%s,%s)
             """,(
-                request.form["usuario"],
-                generate_password_hash(request.form["senha"])
+                request.form.get("usuario"),
+                generate_password_hash(request.form.get("senha"))
             ))
 
             conn.commit()
+
+            c.close()
             conn.close()
 
             return redirect("/")
@@ -228,137 +241,6 @@ def index():
 
 
 # ================================
-# ADMIN
-# ================================
-@app.route("/admin")
-def admin():
-
-    if not session.get("is_admin"):
-        return redirect("/")
-
-    conn=conectar()
-    c=conn.cursor()
-
-    c.execute("SELECT id,username,saldo FROM users")
-    users=c.fetchall()
-
-    c.execute("SELECT COALESCE(SUM(aposta),0) FROM apostas")
-    total_apostado=c.fetchone()[0]
-
-    c.execute("SELECT COALESCE(SUM(ganho),0) FROM apostas")
-    total_pago=c.fetchone()[0]
-
-    lucro = -total_pago
-
-    conn.close()
-
-    return render_template(
-        "admin.html",
-        users=users,
-        total_apostado=round(total_apostado,2),
-        total_pago=round(total_pago,2),
-        lucro=round(lucro,2)
-    )
-
-
-# ================================
-# SLOT
-# ================================
-@app.route("/api/slot",methods=["POST"])
-def api_slot():
-
-    if "user_id" not in session:
-        return jsonify({"error":"login"}),401
-
-    aposta=float(request.form["aposta"])
-
-    def calcular(aposta,c):
-
-        simbolos=["🍒","🍋","🍀","⭐","💎","7"]
-        rolos=[random.choice(simbolos) for _ in range(3)]
-
-        ganho=-aposta
-
-        if rolos[0]==rolos[1]==rolos[2]:
-
-            if rolos[0]=="🍒":
-                ganho=aposta*2
-            elif rolos[0]=="🍋":
-                ganho=aposta*3
-            elif rolos[0]=="🍀":
-                ganho=aposta*5
-            elif rolos[0]=="⭐":
-                ganho=aposta*10
-            elif rolos[0]=="💎":
-                ganho=aposta*20
-            elif rolos[0]=="7":
-                ganho=aposta*50
-
-        return ganho,{
-            "rolos":rolos
-        }
-
-    return jsonify(processar_aposta(session["user_id"],"slot",aposta,calcular))
-
-
-# ================================
-# ROLETA
-# ================================
-@app.route("/api/roleta",methods=["POST"])
-def api_roleta():
-
-    if "user_id" not in session:
-        return jsonify({"error":"login"}),401
-
-    aposta=float(request.form["aposta"])
-    escolha=request.form["cor"]
-
-    def calcular(aposta,c):
-
-        cor=random.choice(["vermelho","preto"])
-
-        ganho=-aposta
-
-        if cor==escolha:
-            ganho=aposta
-
-        return ganho,{
-            "resultado":cor
-        }
-
-    return jsonify(processar_aposta(session["user_id"],"roleta",aposta,calcular))
-
-
-# ================================
-# CARTAS
-# ================================
-@app.route("/api/cartas",methods=["POST"])
-def api_cartas():
-
-    if "user_id" not in session:
-        return jsonify({"error":"login"}),401
-
-    aposta=float(request.form["aposta"])
-
-    def calcular(aposta,c):
-
-        jogador=random.randint(1,13)
-        dealer=random.randint(1,13)
-
-        ganho=-aposta
-
-        if jogador>dealer:
-            ganho=aposta
-
-        return ganho,{
-            "jogador":jogador,
-            "dealer":dealer
-        }
-
-    return jsonify(processar_aposta(session["user_id"],"cartas",aposta,calcular))
-
-
-# ================================
 # LOGOUT
 # ================================
 @app.route("/logout")
@@ -366,14 +248,3 @@ def logout():
 
     session.clear()
     return redirect("/")
-
-
-# ================================
-# START
-# ================================
-if __name__=="__main__":
-
-    app.run(
-        host="0.0.0.0",
-        port=int(os.environ.get("PORT",5000))
-    )
