@@ -193,7 +193,50 @@ def login():
 
     return render_template("login.html")
 
+@app.route("/api/admin/add",methods=["POST"])
+def admin_add():
 
+    if not session.get("is_admin"):
+        return "erro"
+
+    user=request.form["username"]
+    valor=float(request.form["valor"])
+
+    conn=conectar()
+    c=conn.cursor()
+
+    c.execute(
+        "UPDATE users SET saldo=saldo+%s WHERE username=%s",
+        (valor,user)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return "ok"
+
+
+@app.route("/api/admin/remove",methods=["POST"])
+def admin_remove():
+
+    if not session.get("is_admin"):
+        return "erro"
+
+    user=request.form["username"]
+    valor=float(request.form["valor"])
+
+    conn=conectar()
+    c=conn.cursor()
+
+    c.execute(
+        "UPDATE users SET saldo=saldo-%s WHERE username=%s",
+        (valor,user)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return "ok"
 # ================================
 # CADASTRO
 # ================================
@@ -248,3 +291,4 @@ def logout():
 
     session.clear()
     return redirect("/")
+
