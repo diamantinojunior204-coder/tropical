@@ -64,7 +64,9 @@ input{ padding:10px; width:120px; }
   <div>Saldo: <span id="saldo">R$ {{saldo}}</span></div>
   <div>Jackpot: 💎 <span id="jackpot">100</span></div>
 </div>
+
 <h1>🎰 Caça-Níquel</h1>
+
 <div class="slot">
   <div class="celula"><img id="c0" src="/static/slot/1.jpeg"></div>
   <div class="celula"><img id="c1" src="/static/slot/2.jpeg"></div>
@@ -81,17 +83,18 @@ input{ padding:10px; width:120px; }
   <input id="aposta" type="number" value="10" min="1">
   <button onclick="girar()">🎰 GIRAR</button>
 </div>
+
 <div id="resultado"></div>
 
 <script>
 let simbolos=[1,2,3,4,5,6];
 
 function girar(){
-  let aposta = parseFloat(document.getElementById("aposta").value);
+  let aposta=parseFloat(document.getElementById("aposta").value);
   if(aposta<=0){ alert("Digite uma aposta válida!"); return; }
 
   let tempo=0;
-  let spin = setInterval(()=>{
+  let spin=setInterval(()=>{
     for(let i=0;i<9;i++){
       let r=Math.floor(Math.random()*6)+1;
       document.getElementById("c"+i).src="/static/slot/"+r+".jpeg";
@@ -103,7 +106,7 @@ function girar(){
   function mostrarResultado(){
     fetch("/api/slot",{
       method:"POST",
-      body:new URLSearchParams({aposta: aposta})
+      body:new URLSearchParams({aposta:aposta})
     })
     .then(r=>r.json())
     .then(data=>{
@@ -113,7 +116,7 @@ function girar(){
       document.getElementById("saldo").innerText="R$ "+data.saldo;
       document.getElementById("jackpot").innerText=data.jackpot;
 
-      // Mostrar grade correta
+      // Atualiza todas as imagens com a grade real
       let grade=data.grade.flat();
       for(let i=0;i<9;i++){
         document.getElementById("c"+i).src="/static/slot/"+grade[i]+".jpeg";
@@ -121,11 +124,13 @@ function girar(){
       }
 
       // Linha vencedora pisca
-      data.linhas_ganhas.forEach(linha=>{
-        linha.forEach(idx=>{
-          document.getElementById("c"+idx).classList.add("win");
+      if(data.linhas_ganhas){
+        data.linhas_ganhas.forEach(linha=>{
+          linha.forEach(idx=>{
+            document.getElementById("c"+idx).classList.add("win");
+          });
         });
-      });
+      }
 
       // Mensagem
       let res=document.getElementById("resultado");
