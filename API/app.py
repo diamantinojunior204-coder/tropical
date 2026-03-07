@@ -255,6 +255,9 @@ def cartas_page():
 # ================================
 # SLOT 3x3
 # ================================
+# ================================
+# SLOT 3x3
+# ================================
 @app.route("/api/slot", methods=["POST"])
 def api_slot():
 
@@ -310,8 +313,6 @@ def api_slot():
         }
 
     return jsonify(processar_aposta(session["user_id"], "slot", aposta, calcular))
-@app.route("/api/slot", methods=["POST"])
-d
 # ================================
 # ROLETA
 # ================================
@@ -365,5 +366,6 @@ def logout():
 # ================================
 if __name__=="__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT",5000)))
+
 
 
