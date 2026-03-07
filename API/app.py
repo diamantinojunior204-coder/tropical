@@ -16,7 +16,6 @@ app.secret_key = "segredo_super_cassino"
 def conectar():
 
     db_url = os.getenv("DATABASE_URL")
-
     result = urlparse(db_url)
 
     conn = psycopg2.connect(
@@ -274,10 +273,10 @@ def add_saldo():
 
     return redirect("/admin")
 
+
 # ================================
 # PAGINAS DOS JOGOS
 # ================================
-
 @app.route("/slot")
 def slot_page():
     if "user_id" not in session:
@@ -297,37 +296,11 @@ def cartas_page():
     if "user_id" not in session:
         return redirect("/")
     return render_template("cartas.html", saldo=get_saldo())
-# ================================
-# SLOT
-# ================================
-@app.route("/api/slot", methods=["POST"])
-def api_slot():
-
-    if "user_id" not in session:
-        return jsonify({"error":"login"}),401
-
-    aposta = float(request.form["aposta"])
-
-    def calcular(aposta,c):
-
-        simbolos=["🎃","💀","🦇","🍬","💎","🧙"]
-
-        rolos=[random.choice(simbolos) for _ in range(3)]
-
-        ganho=-aposta
-
-        if rolos[0]==rolos[1]==rolos[2]:
-            ganho=aposta*3
-
-        return ganho,{"rolos":rolos}
-
-    return jsonify(processar_aposta(session["user_id"],"slot",aposta,calcular))
 
 
 # ================================
-# ROLETA
+# SLOT (COM JACKPOT)
 # ================================
-
 @app.route("/api/slot", methods=["POST"])
 def api_slot():
 
@@ -344,33 +317,30 @@ def api_slot():
 
         ganho = -aposta
 
-        # pegar jackpot atual
         c.execute("SELECT valor FROM jackpot WHERE id=1")
         jackpot = c.fetchone()[0]
 
-        # aumenta jackpot
         jackpot += aposta * 0.05
 
-        # vitória normal
         if rolos[0] == rolos[1] == rolos[2]:
             ganho = aposta * 3
 
-        # super jackpot
         if rolos == ["6","6","6"]:
             ganho = jackpot
             jackpot = 100
 
-        # salvar jackpot
         c.execute("UPDATE jackpot SET valor=%s WHERE id=1", (jackpot,))
 
-        return ganho, {
+        return ganho,{
             "rolos": rolos,
-            "jackpot": round(jackpot, 2)
+            "jackpot": round(jackpot,2)
         }
 
     return jsonify(
-        processar_aposta(session["user_id"], "slot", aposta, calcular)
+        processar_aposta(session["user_id"],"slot",aposta,calcular)
     )
+
+
 # ================================
 # CARTAS
 # ================================
@@ -418,5 +388,3 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=int(os.environ.get("PORT",5000))
     )
-
-
