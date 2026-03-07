@@ -282,7 +282,40 @@ def index():
 
     return render_template("index.html",saldo=get_saldo())
 
+# ================================
+# SLOT PAGE
+# ================================
+@app.route("/slot")
+def slot():
 
+    if "user_id" not in session:
+        return redirect("/")
+
+    return render_template("slot.html",saldo=get_saldo())
+
+
+# ================================
+# ROLETA PAGE
+# ================================
+@app.route("/roleta")
+def roleta():
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    return render_template("roleta.html",saldo=get_saldo())
+
+
+# ================================
+# CARTAS PAGE
+# ================================
+@app.route("/cartas")
+def cartas():
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    return render_template("cartas.html",saldo=get_saldo())
 # ================================
 # LOGOUT
 # ================================
@@ -291,4 +324,5 @@ def logout():
 
     session.clear()
     return redirect("/")
+
 
