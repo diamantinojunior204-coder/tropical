@@ -1,221 +1,50 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
-
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<title>Painel Admin</title>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin - Cassino</title>
 <style>
-
-body{
-background:#0f0f0f;
-font-family:Arial;
-color:white;
-margin:0;
-padding:20px;
-}
-
-h1{
-text-align:center;
-color:gold;
-}
-
-.card{
-background:#1c1c1c;
-padding:20px;
-border-radius:12px;
-margin-bottom:20px;
-}
-
-.stats{
-display:flex;
-flex-wrap:wrap;
-gap:10px;
-}
-
-.stat{
-flex:1;
-background:#222;
-padding:15px;
-border-radius:10px;
-text-align:center;
-}
-
-.stat h3{
-margin:5px 0;
-color:gold;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-margin-top:10px;
-}
-
-th,td{
-padding:10px;
-text-align:center;
-border-bottom:1px solid #333;
-}
-
-input{
-padding:10px;
-border:none;
-border-radius:8px;
-background:#2a2a2a;
-color:white;
-}
-
-button{
-padding:10px 15px;
-background:gold;
-border:none;
-border-radius:8px;
-cursor:pointer;
-}
-
-button:hover{
-background:#ffd700;
-}
-
-.form{
-display:flex;
-gap:10px;
-flex-wrap:wrap;
-margin-top:10px;
-}
-
+body { font-family: Arial; background:#0f172a; color:white; padding:20px; }
+h2 { color:#facc15; }
+table { width:100%; border-collapse:collapse; margin-bottom:20px; }
+th, td { border:1px solid #334155; padding:8px; text-align:center; }
+th { background:#1e293b; }
+input, button { padding:5px; margin:2px; border-radius:5px; border:none; }
+button { background:#16a34a; color:white; cursor:pointer; }
+button:hover { background:#15803d; }
+form { display:flex; justify-content:center; gap:5px; }
 </style>
-
 </head>
-
 <body>
+<h2>Painel Admin</h2>
 
-<h1>⚙ Painel Admin</h1>
-
-<div class="card">
-
-<div class="stats">
-
-<div class="stat">
-<h3>Total Apostado</h3>
-<p>R$ {{total_apostado}}</p>
-</div>
-
-<div class="stat">
-<h3>Total Pago</h3>
-<p>R$ {{total_pago}}</p>
-</div>
-
-<div class="stat">
-<h3>Lucro</h3>
-<p>R$ {{lucro}}</p>
-</div>
-
-</div>
-
-</div>
-
-<div class="card">
-
-<h2>Adicionar saldo</h2>
-
-<div class="form">
-
-<input id="user_add" placeholder="Usuário">
-
-<input id="valor_add" placeholder="Valor">
-
-<button onclick="add()">Adicionar</button>
-
-</div>
-
-</div>
-
-<div class="card">
-
-<h2>Remover saldo</h2>
-
-<div class="form">
-
-<input id="user_rem" placeholder="Usuário">
-
-<input id="valor_rem" placeholder="Valor">
-
-<button onclick="rem()">Remover</button>
-
-</div>
-
-</div>
-
-<div class="card">
-
-<h2>Usuários</h2>
-
+<h3>Usuários</h3>
 <table>
-
 <tr>
-<th>ID</th>
-<th>Usuário</th>
-<th>Saldo</th>
+<th>ID</th><th>Usuário</th><th>Saldo</th><th>Ações</th>
 </tr>
-
-{% for u in users %}
-
+{% for user in users %}
 <tr>
-<td>{{u[0]}}</td>
-<td>{{u[1]}}</td>
-<td>R$ {{u[2]}}</td>
+<td>{{ user[0] }}</td>
+<td>{{ user[1] }}</td>
+<td>R$ {{ user[2] }}</td>
+<td>
+<form method="POST" action="/add_saldo">
+<input type="hidden" name="user_id" value="{{ user[0] }}">
+<input type="number" name="valor" step="0.01" placeholder="R$" required>
+<button type="submit">Adicionar/Remover</button>
+</form>
+</td>
 </tr>
-
 {% endfor %}
-
 </table>
 
-</div>
+<h3>Estatísticas</h3>
+<p>Total Apostado: R$ {{ total_apostado }}</p>
+<p>Total Pago: R$ {{ total_pago }}</p>
+<p>Lucro: R$ {{ lucro }}</p>
 
-<script>
-
-function add(){
-
-fetch("/api/admin/add",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/x-www-form-urlencoded"
-},
-
-body:"username="+
-document.getElementById("user_add").value+
-"&valor="+
-document.getElementById("valor_add").value
-
-}).then(()=>location.reload())
-
-}
-
-function rem(){
-
-fetch("/api/admin/remove",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/x-www-form-urlencoded"
-},
-
-body:"username="+
-document.getElementById("user_rem").value+
-"&valor="+
-document.getElementById("valor_rem").value
-
-}).then(()=>location.reload())
-
-}
-
-</script>
-
+<a href="/index">Voltar</a>
 </body>
 </html>
