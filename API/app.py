@@ -308,57 +308,63 @@ def api_slot():
         return jsonify({"error":"login"}),401
 
     aposta=float(request.form["aposta"])
+    def calcular(aposta, c):
 
-    def calcular(aposta,c):
+    simbolos = ["🍒","🍋","🍀","⭐","💎","7"]
 
-        simbolos=["🍒","🍋","🍀","⭐","💎","7"]
+    grade = [[random.choice(simbolos) for _ in range(5)] for _ in range(3)]
 
-        grade=[[random.choice(simbolos) for _ in range(5)] for _ in range(3)]
+    # começa já perdendo a aposta
+    ganho = -aposta
 
-        ganho=-aposta
+    # pegar jackpot
+    c.execute("SELECT valor FROM jackpot WHERE id=1")
+    jackpot = c.fetchone()[0]
 
-        c.execute("SELECT valor FROM jackpot WHERE id=1")
-        jackpot=c.fetchone()[0]
+    jackpot += aposta * 0.03
 
-        jackpot+=aposta*0.03
+    linhas = [
+        grade[0],
+        grade[1],
+        grade[2],
+        [grade[0][0],grade[1][1],grade[2][2],grade[1][3],grade[0][4]],
+        [grade[2][0],grade[1][1],grade[0][2],grade[1][3],grade[2][4]]
+    ]
 
-        linhas=[
-            grade[0],
-            grade[1],
-            grade[2],
-            [grade[0][0],grade[1][1],grade[2][2],grade[1][3],grade[0][4]],
-            [grade[2][0],grade[1][1],grade[0][2],grade[1][3],grade[2][4]]
-        ]
+    for linha in linhas:
 
-        for linha in linhas:
+        if linha.count(linha[0]) >= 3:
 
-            if linha.count(linha[0])>=3:
+            simbolo = linha[0]
 
-                simbolo=linha[0]
+            premio = 0
 
-                if simbolo=="🍒":
-                    ganho+=aposta*2
-                elif simbolo=="🍋":
-                    ganho+=aposta*3
-                elif simbolo=="🍀":
-                    ganho+=aposta*5
-                elif simbolo=="⭐":
-                    ganho+=aposta*10
-                elif simbolo=="💎":
-                    ganho+=aposta*20
+            if simbolo == "🍒":
+                premio = aposta * 2
+            elif simbolo == "🍋":
+                premio = aposta * 3
+            elif simbolo == "🍀":
+                premio = aposta * 5
+            elif simbolo == "⭐":
+                premio = aposta * 10
+            elif simbolo == "💎":
+                premio = aposta * 20
 
-                if simbolo=="7":
-                    ganho+=jackpot
-                    jackpot=100
+            # adiciona prêmio ao ganho
+            ganho += premio
 
-        c.execute("UPDATE jackpot SET valor=%s WHERE id=1",(jackpot,))
+            # jackpot
+            if simbolo == "7":
+                ganho += jackpot
+                jackpot = 100
 
-        return ganho,{
-            "grade":grade,
-            "jackpot":round(jackpot,2)
-        }
+    c.execute("UPDATE jackpot SET valor=%s WHERE id=1", (jackpot,))
 
-    return jsonify(processar_aposta(session["user_id"],"slot",aposta,calcular))
+    return ganho, {
+        "grade": grade,
+        "jackpot": round(jackpot, 2)
+    }
+    
 
 
 # ================================
@@ -408,3 +414,4 @@ if __name__=="__main__":
         host="0.0.0.0",
         port=int(os.environ.get("PORT",5000))
     )
+
