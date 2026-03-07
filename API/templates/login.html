@@ -1,83 +1,25 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Login</title>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - Cassino</title>
 <style>
-
-body{
-background:linear-gradient(135deg,#0f0f0f,#1c1c1c);
-font-family:Arial;
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
-color:white;
-}
-
-.card{
-background:#181818;
-padding:30px;
-border-radius:15px;
-width:90%;
-max-width:350px;
-text-align:center;
-box-shadow:0 0 20px rgba(255,215,0,0.3);
-}
-
-h2{
-color:gold;
-}
-
-input{
-width:100%;
-padding:12px;
-margin:10px 0;
-border:none;
-border-radius:8px;
-background:#2a2a2a;
-color:white;
-}
-
-button{
-width:100%;
-padding:12px;
-background:gold;
-border:none;
-border-radius:8px;
-font-weight:bold;
-}
-
-a{
-color:#aaa;
-}
-
+body { font-family: Arial; background:#0f172a; color:white; display:flex; align-items:center; justify-content:center; height:100vh; }
+form { background:#1e293b; padding:20px; border-radius:10px; display:flex; flex-direction:column; gap:10px; width:300px; }
+input { padding:10px; border:none; border-radius:5px; }
+button { padding:10px; background:#2563eb; color:white; border:none; border-radius:5px; cursor:pointer; }
+button:hover { background:#1d4ed8; }
+a { color:#60a5fa; text-decoration:none; font-size:14px; text-align:center; }
 </style>
-
 </head>
-
 <body>
-
-<div class="card">
-
-<h2>🎰 Cassino</h2>
-
 <form method="POST">
-
-<input name="usuario" placeholder="Usuário" required>
-
-<input name="senha" type="password" placeholder="Senha" required>
-
-<button>Entrar</button>
-
+<h2>Login</h2>
+<input type="text" name="usuario" placeholder="Usuário" required>
+<input type="password" name="senha" placeholder="Senha" required>
+<button type="submit">Entrar</button>
+<a href="/cadastro">Cadastrar</a>
 </form>
-
-<br>
-
-<a href="/cadastro">Criar conta</a>
-
-</div>
-
 </body>
 </html>
