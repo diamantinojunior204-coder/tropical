@@ -9,7 +9,7 @@
 body{
   margin:0;
   font-family:Arial;
-  background:url("/static/fundo.jpeg");
+  background:url("/static/fundo.jpeg") no-repeat center center fixed;
   background-size:cover;
   color:white;
   text-align:center;
@@ -31,6 +31,7 @@ body{
   margin-top:30px;
   display:grid;
   grid-template-columns:repeat(5,80px);
+  grid-template-rows:repeat(3,80px);
   grid-gap:10px;
   justify-content:center;
 }
@@ -47,7 +48,18 @@ body{
 }
 
 .celula img{
-  width:60px;
+  width:70px;
+  height:70px;
+}
+
+.win{
+  animation:piscar 0.5s infinite;
+}
+
+@keyframes piscar{
+0%{box-shadow:0 0 10px gold;}
+50%{box-shadow:0 0 25px orange;}
+100%{box-shadow:0 0 10px gold;}
 }
 
 .controls{
@@ -71,82 +83,58 @@ input{
   padding:10px;
   width:120px;
 }
-
-.win{
-  animation:piscar 0.5s infinite;
-}
-
-@keyframes piscar{
-  0%{box-shadow:0 0 10px gold;}
-  50%{box-shadow:0 0 25px orange;}
-  100%{box-shadow:0 0 10px gold;}
-}
 </style>
 </head>
 
 <body>
 
 <div class="topo">
-  <div>
-    Saldo: <span id="saldo">R$ {{saldo}}</span>
-  </div>
-  <div>
-    Jackpot: 💎 <span id="jackpot">100</span>
-  </div>
+  <div>Saldo: <span id="saldo">R$ {{saldo}}</span></div>
+  <div>Jackpot: 💎 <span id="jackpot">0</span></div>
 </div>
 
 <h1>🎰 Caça-Níquel</h1>
 
-<div class="slot">
-  <!-- Linha 0 -->
+<div class="slot" id="slot">
+  <!-- 3x5 = 15 células -->
   <div class="celula"><img id="c0" src="/static/slot/1.jpeg"></div>
   <div class="celula"><img id="c1" src="/static/slot/2.jpeg"></div>
   <div class="celula"><img id="c2" src="/static/slot/3.jpeg"></div>
   <div class="celula"><img id="c3" src="/static/slot/4.jpeg"></div>
   <div class="celula"><img id="c4" src="/static/slot/5.jpeg"></div>
-  <!-- Linha 1 -->
-  <div class="celula"><img id="c5" src="/static/slot/1.jpeg"></div>
-  <div class="celula"><img id="c6" src="/static/slot/2.jpeg"></div>
-  <div class="celula"><img id="c7" src="/static/slot/3.jpeg"></div>
-  <div class="celula"><img id="c8" src="/static/slot/4.jpeg"></div>
-  <div class="celula"><img id="c9" src="/static/slot/5.jpeg"></div>
-  <!-- Linha 2 -->
-  <div class="celula"><img id="c10" src="/static/slot/1.jpeg"></div>
-  <div class="celula"><img id="c11" src="/static/slot/2.jpeg"></div>
-  <div class="celula"><img id="c12" src="/static/slot/3.jpeg"></div>
-  <div class="celula"><img id="c13" src="/static/slot/4.jpeg"></div>
-  <div class="celula"><img id="c14" src="/static/slot/5.jpeg"></div>
+
+  <div class="celula"><img id="c5" src="/static/slot/6.jpeg"></div>
+  <div class="celula"><img id="c6" src="/static/slot/1.jpeg"></div>
+  <div class="celula"><img id="c7" src="/static/slot/2.jpeg"></div>
+  <div class="celula"><img id="c8" src="/static/slot/3.jpeg"></div>
+  <div class="celula"><img id="c9" src="/static/slot/4.jpeg"></div>
+
+  <div class="celula"><img id="c10" src="/static/slot/5.jpeg"></div>
+  <div class="celula"><img id="c11" src="/static/slot/6.jpeg"></div>
+  <div class="celula"><img id="c12" src="/static/slot/1.jpeg"></div>
+  <div class="celula"><img id="c13" src="/static/slot/2.jpeg"></div>
+  <div class="celula"><img id="c14" src="/static/slot/3.jpeg"></div>
 </div>
 
 <div class="controls">
   <input id="aposta" type="number" value="10" min="1">
   <button onclick="girar()">🎰 GIRAR</button>
-  <button onclick="musica()">🎵 Música</button>
 </div>
 
 <div id="resultado"></div>
 
-<audio id="som" loop>
-  <source src="/static/audio/jogo2.mp3">
-</audio>
-
 <script>
-let music = false;
-function musica(){
-  let s = document.getElementById("som");
-  if(!music){ s.play(); music=true; }else{ s.pause(); music=false; }
-}
-
 function girar(){
   let aposta = parseFloat(document.getElementById("aposta").value);
   if(aposta<=0){ alert("Digite uma aposta válida!"); return; }
 
   // animação rápida
   let tempo=0;
-  let spin=setInterval(()=>{
+  let spin = setInterval(()=>{
     for(let i=0;i<15;i++){
-      let r=Math.floor(Math.random()*6)+1;
+      let r = Math.floor(Math.random()*6)+1;
       document.getElementById("c"+i).src="/static/slot/"+r+".jpeg";
+      document.getElementById("c"+i).classList.remove("win");
     }
     tempo+=100;
     if(tempo>=2000) clearInterval(spin);
@@ -163,42 +151,40 @@ function girar(){
     document.getElementById("saldo").innerText="R$ "+data.saldo;
     document.getElementById("jackpot").innerText=data.jackpot;
 
-    let grade = data.grade; // [[linha0],[linha1],[linha2],[diag1],[diag2]]
-    
-    // atualizar todas as 15 células
-    for(let r=0;r<3;r++){
-      for(let c=0;c<5;c++){
-        let idx = r*5+c;
-        document.getElementById("c"+idx).src="/static/slot/"+grade[r][c]+".jpeg";
-        document.getElementById("c"+idx).classList.remove("win");
+    // grade do backend
+    let grade = data.grade; // 3x5 array
+    let linhas = grade.length;
+    let colunas = grade[0].length;
+
+    // atualizar imagens
+    for(let i=0;i<linhas;i++){
+      for(let j=0;j<colunas;j++){
+        let idx = i*colunas + j;
+        document.getElementById("c"+idx).src="/static/slot/"+grade[i][j]+".jpeg";
       }
     }
 
-    // destacar linhas vencedoras
-    for(let i=0;i<grade.length;i++){
-      let linha = grade[i];
-      let first = linha[0];
-      if(linha.every(s=>s===first)){
-        // linha vencedora
-        let resIndices = [];
-        if(i<3){ for(let j=0;j<5;j++) resIndices.push(i*5+j); } // horizontais
-        else if(i==3){ resIndices=[0,6,12,8,4]; } // diagonal \
-        else { resIndices=[10,6,2,8,14]; } // diagonal /
-        resIndices.forEach(idx=>document.getElementById("c"+idx).classList.add("win"));
-      }
+    // destacar linhas vencedoras se tiver
+    if(data.linhas_ganhas){
+      data.linhas_ganhas.forEach(linha=>{
+        linha.forEach(celula_idx=>{
+          document.getElementById("c"+celula_idx).classList.add("win");
+        });
+      });
     }
 
-    // mostrar resultado do ganho
-    let res=document.getElementById("resultado");
+    let res = document.getElementById("resultado");
     if(data.ganho>0){
-      res.innerHTML=`🎉 GANHOU R$ ${data.ganho}`;
+      res.innerHTML="🎉 GANHOU R$ "+data.ganho;
     }else{
       res.innerHTML="❌ Perdeu";
     }
   })
-  .catch(err=>{ console.error(err); alert("Erro ao processar o slot"); });
+  .catch(err=>{
+    console.error(err);
+    alert("Erro ao processar o slot");
+  });
 }
 </script>
-
 </body>
 </html>
