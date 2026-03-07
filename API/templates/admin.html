@@ -1,157 +1,88 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html>
 <head>
-<meta charset="UTF-8">
-
-<title>Painel Admin</title>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 
 body{
-font-family:Arial;
 background:#111;
 color:white;
-padding:20px;
-}
-
-h1{
-color:gold;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-margin-top:20px;
-}
-
-td,th{
-padding:10px;
-border-bottom:1px solid #444;
+font-family:Arial;
 text-align:center;
 }
 
+input{
+padding:10px;
+margin:5px;
+}
+
 button{
+padding:10px;
 background:gold;
 border:none;
-padding:6px 12px;
-cursor:pointer;
 border-radius:5px;
-}
-
-button:hover{
-background:orange;
-}
-
-.card{
-background:#1b1b1b;
-padding:20px;
-border-radius:10px;
-margin-bottom:20px;
 }
 
 </style>
 
 </head>
+
 <body>
 
-<h1>Painel Administrativo</h1>
+<h2>Painel Admin</h2>
 
-<div class="card">
+<h3>Adicionar saldo</h3>
 
-<h2>Lucro do Cassino</h2>
+<input id="user" placeholder="Usuário">
 
-<canvas id="grafico"></canvas>
+<input id="valor" placeholder="Valor">
 
-</div>
+<button onclick="add()">Adicionar</button>
 
-<div class="card">
+<br><br>
 
-<h2>Usuários</h2>
+<h3>Remover saldo</h3>
 
-<table>
+<input id="user2" placeholder="Usuário">
 
-<tr>
-<th>ID</th>
-<th>Usuário</th>
-<th>Saldo</th>
-<th>Ação</th>
-</tr>
+<input id="valor2" placeholder="Valor">
 
-{% for u in users %}
-
-<tr>
-
-<td>{{u[0]}}</td>
-<td>{{u[1]}}</td>
-<td>R$ {{u[2]}}</td>
-
-<td>
-<button onclick="addSaldo({{u[0]}})">
-Adicionar saldo
-</button>
-</td>
-
-</tr>
-
-{% endfor %}
-
-</table>
-
-</div>
+<button onclick="rem()">Remover</button>
 
 <script>
 
-function addSaldo(user){
+function add(){
 
-let valor = prompt("Valor para adicionar")
+fetch("/api/admin/add",{
 
-if(!valor) return
-
-fetch("/api/add_saldo",{
 method:"POST",
+
 headers:{
 "Content-Type":"application/x-www-form-urlencoded"
 },
-body:"user_id="+user+"&valor="+valor
-})
-.then(r=>r.json())
-.then(d=>{
-location.reload()
+
+body="username="+user.value+"&valor="+valor.value
+
 })
 
 }
 
-</script>
+function rem(){
 
-<script>
+fetch("/api/admin/remove",{
 
-let ctx = document.getElementById("grafico")
+method:"POST",
 
-new Chart(ctx,{
-
-type:"line",
-
-data:{
-labels:["Hoje"],
-datasets:[{
-label:"Lucro",
-data:[{{lucro}}],
-borderColor:"gold",
-backgroundColor:"transparent"
-}]
+headers:{
+"Content-Type":"application/x-www-form-urlencoded"
 },
 
-options:{
-scales:{
-y:{
-beginAtZero:true
-}
-}
-}
+body="username="+user2.value+"&valor="+valor2.value
 
 })
+
+}
 
 </script>
 
