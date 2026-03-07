@@ -168,15 +168,24 @@ function girar(){
 
 let aposta = document.getElementById("aposta").value
 
-// animação de giro
+let simbolos = [1,2,3,4,5,6]
+
+let tempo = 0
+
 let spin = setInterval(()=>{
 
-for(let i=3;i<=5;i++){
+for(let i=0;i<9;i++){
 
 let r = Math.floor(Math.random()*6)+1
 
 document.getElementById("c"+i).src="/static/slot/"+r+".jpeg"
 
+}
+
+tempo += 100
+
+if(tempo >= 2000){
+clearInterval(spin)
 }
 
 },100)
@@ -190,22 +199,12 @@ aposta: aposta
 .then(r=>r.json())
 .then(data=>{
 
-clearInterval(spin)
-
-if(data.error){
-alert("Saldo insuficiente")
-return
-}
-
-// atualizar saldo
 document.getElementById("saldo").innerText="R$ "+data.saldo
-
-// atualizar jackpot
 document.getElementById("jackpot").innerText=data.jackpot
 
 let rolos = data.rolos
 
-// mostrar resultado final
+// linha do meio resultado real
 document.getElementById("c3").src="/static/slot/"+rolos[0]+".jpeg"
 document.getElementById("c4").src="/static/slot/"+rolos[1]+".jpeg"
 document.getElementById("c5").src="/static/slot/"+rolos[2]+".jpeg"
@@ -223,13 +222,14 @@ res.innerHTML="❌ Perdeu"
 }
 
 })
-}
 
+}
 
 </script>
 
 </body>
 </html>
+
 
 
 
