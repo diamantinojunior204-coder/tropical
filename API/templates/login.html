@@ -1,159 +1,75 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Halloween Cassino 🎃</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Login Cassino</title>
 
 <style>
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family: 'Segoe UI', sans-serif;
-}
 
 body{
-  min-height:100vh;
-  background:
-    linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.85)),
-    url("/static/img/Diamantino.jpg") no-repeat center center;
-  background-size: cover;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#fff;
-  padding:20px;
+background:#0d0d0d;
+font-family:Arial;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+color:white;
 }
 
-/* Container */
-.login-box{
-  width:100%;
-  max-width:360px;
-  padding:30px 25px;
-  background: rgba(0,0,0,0.75);
-  border-radius:18px;
-  box-shadow: 0 0 30px rgba(255,140,0,0.45);
-  animation: fadeIn 0.8s ease;
+.card{
+background:#1b1b1b;
+padding:30px;
+border-radius:10px;
+width:90%;
+max-width:350px;
+text-align:center;
 }
 
-/* Logo */
-.logo{
-  text-align:center;
-  font-size:28px;
-  font-weight:bold;
-  margin-bottom:8px;
-}
-
-.logo span{
-  color:#ff8c00;
-}
-
-/* Sub */
-.subtitle{
-  text-align:center;
-  font-size:14px;
-  opacity:.85;
-  margin-bottom:25px;
-}
-
-/* Inputs */
 input{
-  width:100%;
-  padding:14px;
-  margin-bottom:15px;
-  border:none;
-  border-radius:12px;
-  background:#12001f;
-  color:#fff;
-  font-size:15px;
+width:100%;
+padding:12px;
+margin:10px 0;
+border:none;
+border-radius:5px;
 }
 
-input::placeholder{
-  color:#bbb;
-}
-
-input:focus{
-  outline:none;
-  box-shadow:0 0 8px #ff8c00;
-}
-
-/* Botão */
 button{
-  width:100%;
-  padding:15px;
-  background: linear-gradient(135deg, #ff8c00, #ff4500);
-  border:none;
-  border-radius:14px;
-  font-size:16px;
-  font-weight:bold;
-  color:#000;
-  cursor:pointer;
-  transition:.3s;
+width:100%;
+padding:12px;
+background:gold;
+border:none;
+border-radius:5px;
+font-size:16px;
 }
 
-button:active{
-  transform: scale(0.96);
+a{
+color:gold;
 }
 
-/* Link */
-.link{
-  text-align:center;
-  margin-top:18px;
-  font-size:14px;
-}
-
-.link a{
-  color:#ff8c00;
-  text-decoration:none;
-  font-weight:bold;
-}
-
-.link a:hover{
-  text-decoration:underline;
-}
-
-/* Animação */
-@keyframes fadeIn{
-  from{opacity:0; transform: translateY(25px);}
-  to{opacity:1; transform: translateY(0);}
-}
-
-/* Ajustes Mobile */
-@media (max-width:480px){
-  .logo{
-    font-size:24px;
-  }
-
-  .subtitle{
-    font-size:13px;
-  }
-
-  button{
-    font-size:15px;
-  }
-}
 </style>
 </head>
 
 <body>
 
-<div class="login-box">
-  <div class="logo"><span>TROPICAL</span>DIAMANTE</div>
-  <div class="subtitle">Entre no jogo… se tiver coragem 🎃</div>
+<div class="card">
 
-  <form method="POST">
-    <input type="text" name="usuario" placeholder="Usuário" required>
-    <input type="password" name="senha" placeholder="Senha" required>
-    <button type="submit">🎰 ENTRAR</button>
-  </form>
+<h2>🎰 Cassino</h2>
 
-  <div class="link">
-    Não tem conta? <a href="/cadastro">Criar agora</a>
-  </div>
+<form action="/api/login" method="POST">
+
+<input name="username" placeholder="Usuário" required>
+
+<input name="password" type="password" placeholder="Senha" required>
+
+<button>Entrar</button>
+
+</form>
+
+<br>
+
+<a href="/cadastro">Criar conta</a>
+
 </div>
 
 </body>
 </html>
-
-
