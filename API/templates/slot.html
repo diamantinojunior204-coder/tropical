@@ -142,7 +142,7 @@ function girar(){
     return;
   }
 
-  // animação rápida dos 9 slots
+  // animação rápida dos rolos
   let tempo = 0;
   let spin = setInterval(()=>{
     for(let i=0;i<9;i++){
@@ -169,15 +169,15 @@ function girar(){
     document.getElementById("saldo").innerText="R$ "+data.saldo;
     document.getElementById("jackpot").innerText=data.jackpot;
 
-    // atualizar rolos do backend (linha do meio)
-    let rolos = data.rolos;
-    if(rolos && rolos.length==3){
-      document.getElementById("c3").src="/static/slot/"+rolos[0]+".jpeg";
-      document.getElementById("c4").src="/static/slot/"+rolos[1]+".jpeg";
-      document.getElementById("c5").src="/static/slot/"+rolos[2]+".jpeg";
+    // atualizar linha do meio real usando grade do backend
+    let grade = data.grade; // grade é matriz 3x5
+    if(grade && grade.length==3){
+      document.getElementById("c3").src="/static/slot/"+grade[1][0]+".jpeg";
+      document.getElementById("c4").src="/static/slot/"+grade[1][1]+".jpeg";
+      document.getElementById("c5").src="/static/slot/"+grade[1][2]+".jpeg";
     }
 
-    // mostrar resultado correto
+    // mostrar resultado
     let res = document.getElementById("resultado");
     if(data.ganho>0){
       res.innerHTML="🎉 GANHOU R$ "+data.ganho;
