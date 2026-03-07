@@ -249,34 +249,54 @@ def cartas_page():
 # ================================
 # SLOT PROFISSIONAL
 # ================================
+# ================================
+# SLOT PROFISSIONAL
+# ================================
 @app.route("/api/slot", methods=["POST"])
 def api_slot():
+
     if "user_id" not in session:
-        return jsonify({"error":"login"}),401
+        return jsonify({"error":"login"}), 401
 
     aposta = float(request.form["aposta"])
 
     def calcular(aposta, c):
-        simbolos = ["🍒","🍋","🍀","⭐","💎","7"]
-        rolos = [random.choice(simbolos) for _ in range(3)]
+
+        simbolos = ["1", "2", "3", "4", "5", "6"]  # símbolos correspondentes às imagens
+        grade = [[random.choice(simbolos) for _ in range(3)] for _ in range(3)]  # 3x3
+
         ganho = -aposta
 
-        if rolos[0] == rolos[1] == rolos[2]:
-            if rolos[0] == "🍒":
-                ganho = aposta*2
-            elif rolos[0] == "🍋":
-                ganho = aposta*3
-            elif rolos[0] == "🍀":
-                ganho = aposta*5
-            elif rolos[0] == "⭐":
-                ganho = aposta*10
-            elif rolos[0] == "💎":
-                ganho = aposta*20
-            elif rolos[0] == "7":
-                ganho = aposta*50
+        # pegar jackpot atual
+        c.execute("SELECT valor FROM jackpot WHERE id=1")
+        jackpot = c.fetchone()[0]
 
-        return ganho, {"rolos": rolos}
+        jackpot += aposta * 0.03  # adicionar parte da aposta ao jackpot
 
+        # verificar linha do meio (linha 1)
+        linha = grade[1]
+        if linha[0] == linha[1] == linha[2]:
+            simbolo = linha[0]
+            premio = 0
+            if simbolo == "1": premio = aposta * 2
+            elif simbolo == "2": premio = aposta * 3
+            elif simbolo == "3": premio = aposta * 5
+            elif simbolo == "4": premio = aposta * 10
+            elif simbolo == "5": premio = aposta * 20
+            elif simbolo == "6":  # jackpot
+                ganho += jackpot
+                jackpot = 100
+            ganho += premio
+
+        # atualizar jackpot no banco
+        c.execute("UPDATE jackpot SET valor=%s WHERE id=1", (jackpot,))
+
+        return ganho, {
+            "rolos": linha,  # envia apenas a linha do meio pro frontend
+            "jackpot": round(jackpot, 2)
+        }
+
+    # processa a aposta usando seu processar_aposta existente
     return jsonify(processar_aposta(session["user_id"], "slot", aposta, calcular))
 
 # ================================
@@ -332,3 +352,4 @@ def logout():
 # ================================
 if __name__=="__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT",5000)))
+
