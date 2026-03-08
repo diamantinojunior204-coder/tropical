@@ -161,146 +161,103 @@ font-weight:bold;
 <audio id="somWin" src="/static/win.mp3"></audio>
 
 <script>
+let girando = false;
 
-let girando=false;
+function girar() {
+    if (girando) return;
 
-function girar(){
+    let aposta = parseFloat(document.getElementById("aposta").value);
+    if (!aposta || aposta <= 0) {
+        alert("Digite uma aposta válida!");
+        return;
+    }
 
-if(girando) return;
+    girando = true;
 
-let aposta=parseFloat(document.getElementById("aposta").value);
+    // animação da alavanca
+    let alavanca = document.getElementById("alavanca");
+    alavanca.classList.add("puxar");
+    setTimeout(() => alavanca.classList.remove("puxar"), 600);
 
-if(!aposta || aposta<=0){
-alert("Digite uma aposta válida!");
-return;
+    // toca som de giro
+    let somGiro = document.getElementById("somGiro");
+    somGiro.currentTime = 0;
+    somGiro.play();
+
+    // animação temporária dos slots
+    let tempo = 0;
+    let spin = setInterval(() => {
+        for (let i = 0; i < 9; i++) {
+            let r = Math.floor(Math.random() * 6) + 1;
+            document.getElementById("c" + i).src = "/static/slot/" + r + ".jpeg";
+        }
+        tempo += 100;
+        if (tempo >= 2000) { // 2s de giro
+            clearInterval(spin);
+            mostrarResultado(aposta);
+        }
+    }, 100);
 }
 
-girando=true;
+function mostrarResultado(aposta) {
+    fetch("/api/slot", {
+        method: "POST",
+        body: new URLSearchParams({ aposta: aposta })
+    })
+    .then(r => {
+        if (!r.ok) throw new Error("Erro servidor");
+        return r.json();
+    })
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+            girando = false;
+            return;
+        }
 
-let alavanca=document.getElementById("alavanca");
-alavanca.classList.add("puxar");
+        // atualiza saldo e jackpot
+        document.getElementById("saldo").innerText = "R$ " + data.saldo;
+        document.getElementById("jackpot").innerText = data.jackpot;
 
-setTimeout(()=>{
-alavanca.classList.remove("puxar");
-},600);
+        // atualiza imagens dos slots
+        let grade = (data.grade || []).flat();
+        for (let i = 0; i < 9; i++) {
+            if (grade[i]) {
+                document.getElementById("c" + i).src = "/static/slot/" + grade[i] + ".jpeg";
+            }
+            document.getElementById("c" + i).classList.remove("win");
+        }
 
-document.getElementById("somGiro").currentTime=0;
-document.getElementById("somGiro").play();
+        // destaca linhas vencedoras
+        if (data.linhas_ganhas) {
+            data.linhas_ganhas.forEach(linha => {
+                linha.forEach(idx => {
+                    document.getElementById("c" + idx).classList.add("win");
+                });
+            });
+        }
 
-let tempo=0;
+        // resultado e som de vitória
+        let res = document.getElementById("resultado");
+        if (parseFloat(data.ganho) > 0) {
+            document.getElementById("somWin").play();
+            res.innerHTML = "🎉 GANHOU R$ " + data.ganho;
+        } else {
+            res.innerHTML = "❌ Perdeu";
+        }
 
-let spin=setInterval(()=>{
-
-for(let i=0;i<9;i++){
-
-let r=Math.floor(Math.random()*6)+1;
-
-document.getElementById("c"+i).src="/static/slot/"+r+".jpeg";
-
-}
-
-tempo+=100;
-
-if(tempo>=2000){
-
-clearInterval(spin);
-
-mostrarResultado();
-
-}
-
-},100);
-
-function mostrarResultado(){
-
-fetch("/api/slot",{
-method:"POST",
-body:new URLSearchParams({aposta:aposta})
-})
-.then(r=>{
-
-if(!r.ok){
-throw new Error("Erro servidor");
-}
-
-return r.json();
-
-})
-.then(data=>{
-
-if(data.error){
-
-alert(data.error);
-girando=false;
-return;
-
-}
-
-document.getElementById("saldo").innerText="R$ "+data.saldo;
-
-document.getElementById("jackpot").innerText=data.jackpot;
-
-let grade=(data.grade || []).flat();
-
-for(let i=0;i<9;i++){
-
-if(grade[i]){
-
-document.getElementById("c"+i).src="/static/slot/"+grade[i]+".jpeg";
-
-}
-
-document.getElementById("c"+i).classList.remove("win");
-
-}
-
-if(data.linhas_ganhas){
-
-data.linhas_ganhas.forEach(linha=>{
-
-linha.forEach(idx=>{
-
-document.getElementById("c"+idx).classList.add("win");
-
-});
-
-});
-
-}
-
-let res=document.getElementById("resultado");
-
-if(data.ganho>0){
-
-document.getElementById("somWin").play();
-
-res.innerHTML="🎉 GANHOU R$ "+data.ganho;
-
-}else{
-
-res.innerHTML="❌ Perdeu";
-
-}
-
-girando=false;
-
-})
-.catch(err=>{
-
-console.error(err);
-
-alert("Erro ao processar o slot");
-
-girando=false;
-
-});
-
-}
-
+        girando = false;
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Erro ao processar o slot");
+        girando = false;
+    });
 }
 
 </script>
 
 </body>
 </html>
+
 
