@@ -219,7 +219,27 @@ def index():
 
 # ===============================
 # SLOT
-# ===============================
+# ==============================
+@app.route("/slot")
+def slot():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    conn = conectar()
+    c = conn.cursor()
+
+    c.execute("SELECT saldo FROM users WHERE id=%s",(session["user_id"],))
+    row = c.fetchone()
+
+    if row:
+        saldo = dinheiro(row[0])
+    else:
+        saldo = 0
+
+    conn.close()
+
+    return render_template("slot.html", saldo=saldo)
 @app.route("/api/slot", methods=["POST"])
 def api_slot():
 
@@ -402,5 +422,6 @@ def set_saldo():
 # ===============================
 if __name__=="__main__":
     app.run(host="0.0.0.0",port=int(os.environ.get("PORT",5000)))
+
 
 
