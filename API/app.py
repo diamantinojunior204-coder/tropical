@@ -217,9 +217,55 @@ def api_slot():
         return ganho, {"grade": rolos, "linhas_ganhas": linhas_ganhas}
 
     return jsonify(processar_aposta(session["user_id"], "slot", aposta, calcular))
+#admin
+@app.route("/admin")
+def admin():
+    # só admin pode acessar
+    if session.get("is_admin") != 1:
+        return redirect("/")
 
+    conn = conectar()
+    c = conn.cursor()
+
+    # lista todos os usuários
+    c.execute("SELECT id, username, saldo FROM users ORDER BY id")
+    users = c.fetchall()
+
+    # total apostado
+    c.execute("SELECT COALESCE(SUM(aposta),0) FROM apostas")
+    total_apostado = c.fetchone()[0]
+
+    # total pago
+    c.execute("SELECT COALESCE(SUM(ganho),0) FROM apostas")
+    total_pago = c.fetchone()[0]
+
+    lucro = total_apostado - total_pago
+
+    conn.close()
+
+    return render_template(
+        "admin.html",
+        users=users,
+        total_apostado=round(total_apostado,2),
+        total_pago=round(total_pago,2),
+        lucro=round(lucro,2)
+    )
+    #adicionar saldo
+@app.route("/add_saldo", methods=["POST"])
+def add_saldo():
+    if session.get("is_admin") != 1:
+        return redirect("/")
+    conn = conectar()
+    c = conn.cursor()
+    c.execute("""
+        UPDATE users SET saldo = saldo + %s WHERE id=%s
+    """, (float(request.form["valor"]), request.form["user_id"]))
+    conn.commit()
+    conn.close()
+    return redirect("/admin")    
 # ================================
 # START
 # ================================
 if __name__=="__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT",5000)))
+
