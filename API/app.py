@@ -1,92 +1,225 @@
-from flask import Flask, render_template, request, jsonify, session, redirect
+import os
 import random
-import psycopg2  # ou mysql.connector, dependendo do seu DB
+import psycopg2
+from urllib.parse import urlparse
+
+from flask import Flask, render_template, request, redirect, session, jsonify
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.secret_key = "uma_chave_secreta_qualquer"
+app.secret_key = "segredo_super_cassino"  # chave secreta da sessão
 
-# Função de conexão (ajuste conforme seu DB)
+# ================================
+# CONEXÃO POSTGRES
+# ================================
 def conectar():
-    return psycopg2.connect(
-        host="localhost",
-        database="seubanco",
-        user="seuusuario",
-        password="suasenha"
+    db_url = os.getenv("DATABASE_URL")
+    result = urlparse(db_url)
+    conn = psycopg2.connect(
+        database=result.path[1:],
+        user=result.username,
+        password=result.password,
+        host=result.hostname,
+        port=result.port
     )
+    return conn
 
-# Função para formatar o dinheiro
-def dinheiro(valor):
-    return f"{valor:.2f}"
-
-# Rota da página do slot
-@app.route("/slot")
-def slot():
-    if "user_id" not in session:
-        return redirect("/login")
-
+# ================================
+# CRIAR BANCO E ADMIN
+# ================================
+def criar_db():
     conn = conectar()
     c = conn.cursor()
-    c.execute("SELECT saldo FROM users WHERE id=%s", (session["user_id"],))
-    row = c.fetchone()
-    if row:
-        saldo = float(row[0])
-    else:
-        saldo = 0
-    conn.close()
-
-    # jackpot inicial (pode ser dinâmico ou fixo)
-    jackpot = 10000.0
-
-    return render_template("slot.html", saldo=dinheiro(saldo), jackpot=dinheiro(jackpot))
-
-# Rota API do slot (POST)
-@app.route("/api/slot", methods=["POST"])
-def api_slot():
-    if "user_id" not in session:
-        return jsonify({"error": "login"}), 401
-
-    aposta = float(request.form.get("aposta", 0))
-    conn = conectar()
-    c = conn.cursor()
-
-    # busca saldo atual
-    c.execute("SELECT saldo FROM users WHERE id=%s", (session["user_id"],))
-    row = c.fetchone()
-    if row:
-        saldo = float(row[0])
-    else:
-        saldo = 0
-
-    # verifica se o usuário tem saldo suficiente
-    if aposta > saldo:
-        conn.close()
-        return jsonify({"error": "saldo insuficiente"}), 400
-
-    # símbolos do slot
-    simbolos = ["🍒","🍋","🍀","⭐","💎","7"]
-    grade = [random.choice(simbolos) for _ in range(3)]
-
-    ganho = 0
-    jackpot = 10000.0  # jackpot inicial, pode armazenar no DB se quiser persistir
-
-    # verifica se ganhou o jackpot (3 símbolos iguais)
-    if grade[0] == grade[1] == grade[2]:
-        ganho = aposta * 10
-        jackpot -= ganho  # diminui jackpot se ganhar
-
-    saldo += ganho - aposta  # atualiza saldo
-
-    # atualiza saldo no DB
-    c.execute("UPDATE users SET saldo=%s WHERE id=%s", (saldo, session["user_id"]))
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS users(
+        id SERIAL PRIMARY KEY,
+        username TEXT UNIQUE,
+        password TEXT,
+        saldo FLOAT DEFAULT 100,
+        is_admin INTEGER DEFAULT 0
+    )
+    """)
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS apostas(
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER,
+        jogo TEXT,
+        aposta FLOAT,
+        ganho FLOAT,
+        data TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS jackpot(
+        id INTEGER PRIMARY KEY,
+        valor FLOAT
+    )
+    """)
+    c.execute("SELECT * FROM jackpot WHERE id=1")
+    if not c.fetchone():
+        c.execute("INSERT INTO jackpot VALUES (1,10000)")
     conn.commit()
     conn.close()
 
-    return jsonify({
-        "grade": grade,
-        "ganho": dinheiro(ganho),
-        "saldo": dinheiro(saldo),
-        "jackpot": dinheiro(jackpot)
-    })
+def criar_admin():
+    conn = conectar()
+    c = conn.cursor()
+    c.execute("SELECT id FROM users WHERE is_admin=1")
+    if not c.fetchone():
+        c.execute("""
+        INSERT INTO users(username,password,is_admin,saldo)
+        VALUES(%s,%s,1,1000)
+        """, ("admin", generate_password_hash("admin123")))
+    conn.commit()
+    conn.close()
 
-if __name__ == "__main__":
-    app.run(debug=True)
+criar_db()
+criar_admin()
+
+# ================================
+# FUNÇÃO SALDO
+# ================================
+def get_saldo():
+    conn = conectar()
+    c = conn.cursor()
+    c.execute("SELECT saldo FROM users WHERE id=%s", (session["user_id"],))
+    saldo = c.fetchone()[0]
+    conn.close()
+    return round(saldo,2)
+
+# ================================
+# PROCESSAR APOSTA
+# ================================
+def processar_aposta(user_id, jogo, aposta, calcular):
+    conn = conectar()
+    c = conn.cursor()
+    c.execute("SELECT saldo FROM users WHERE id=%s", (user_id,))
+    saldo = c.fetchone()[0]
+
+    if aposta <= 0 or aposta > saldo:
+        conn.close()
+        return {"error": "saldo insuficiente"}
+
+    ganho, extra = calcular(aposta, c)
+    novo_saldo = saldo + ganho
+
+    c.execute("UPDATE users SET saldo=%s WHERE id=%s", (novo_saldo, user_id))
+    c.execute("""
+    INSERT INTO apostas(user_id,jogo,aposta,ganho)
+    VALUES(%s,%s,%s,%s)
+    """, (user_id, jogo, aposta, ganho))
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "ganho": round(ganho,2),
+        "saldo": round(novo_saldo,2),
+        **extra
+    }
+
+# ================================
+# LOGIN
+# ================================
+@app.route("/", methods=["GET","POST"])
+def login():
+    if request.method=="POST":
+        u = request.form["usuario"]
+        s = request.form["senha"]
+
+        conn = conectar()
+        c = conn.cursor()
+        c.execute("SELECT id,username,password,is_admin FROM users WHERE username=%s", (u,))
+        user = c.fetchone()
+        conn.close()
+
+        if user and check_password_hash(user[2], s):
+            session["user_id"] = user[0]
+            session["username"] = user[1]
+            session["is_admin"] = user[3]
+            return redirect("/index")
+        return "Login inválido"
+    return render_template("login.html")
+
+# ================================
+# CADASTRO
+# ================================
+@app.route("/cadastro", methods=["GET","POST"])
+def cadastro():
+    if request.method=="POST":
+        try:
+            conn = conectar()
+            c = conn.cursor()
+            c.execute("""
+            INSERT INTO users(username,password)
+            VALUES(%s,%s)
+            """,(
+                request.form["usuario"],
+                generate_password_hash(request.form["senha"])
+            ))
+            conn.commit()
+            conn.close()
+            return redirect("/")
+        except:
+            return "Usuário já existe"
+    return render_template("cadastro.html")
+
+# ================================
+# MENU / INDEX
+# ================================
+@app.route("/index")
+def index():
+    if "user_id" not in session:
+        return redirect("/")
+    return render_template("index.html", saldo=get_saldo())
+
+# ================================
+# LOGOUT
+# ================================
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/")
+
+# ================================
+# PÁGINA SLOT
+# ================================
+@app.route("/slot")
+def slot_page():
+    if "user_id" not in session:
+        return redirect("/")
+    return render_template("slot.html", saldo=get_saldo(), jackpot=10000)
+
+# ================================
+# API SLOT
+# ================================
+@app.route("/api/slot", methods=["POST"])
+def api_slot():
+    if "user_id" not in session:
+        return jsonify({"error":"login"}),401
+
+    aposta = float(request.form["aposta"])
+
+    def calcular(aposta, c):
+        simbolos = [1,2,3,4,5,6]  # IDs das imagens 1.jpeg ... 6.jpeg
+        rolos = [random.choice(simbolos) for _ in range(9)]  # 9 slots
+        ganho = -aposta
+
+        # exemplo: se os três primeiros rolos iguais ganha
+        if rolos[0]==rolos[1]==rolos[2]:
+            ganho = aposta*10
+
+        # linhas ganhas (apenas primeira linha por enquanto)
+        linhas_ganhas=[]
+        if rolos[0]==rolos[1]==rolos[2]:
+            linhas_ganhas.append([0,1,2])
+
+        return ganho, {"grade": rolos, "linhas_ganhas": linhas_ganhas}
+
+    return jsonify(processar_aposta(session["user_id"], "slot", aposta, calcular))
+
+# ================================
+# START
+# ================================
+if __name__=="__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT",5000)))
