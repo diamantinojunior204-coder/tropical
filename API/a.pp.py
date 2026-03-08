@@ -8,7 +8,26 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.secret_key = "segredo_super_cassino"  # chave secreta da sessão
+#corrigir banco 
+@app.route("/fixsaldo")
+def fixsaldo():
 
+    conn = conectar()
+    c = conn.cursor()
+
+    c.execute("""
+    ALTER TABLE users
+    ALTER COLUMN saldo TYPE NUMERIC(10,2)
+    """)
+
+    c.execute("""
+    UPDATE users SET saldo = ROUND(saldo,2)
+    """)
+
+    conn.commit()
+    conn.close()
+
+    return "Saldo corrigido"
 # ================================
 # CONEXÃO POSTGRES
 # ================================
@@ -355,6 +374,7 @@ def logout():
 # ================================
 if __name__=="__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT",5000)))
+
 
 
 
