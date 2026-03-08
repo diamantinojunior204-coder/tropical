@@ -220,73 +220,97 @@ def index():
 # ===============================
 # SLOT
 # ===============================
-@app.route("/slot")
-def slot_page():
-
-    if "user_id" not in session:
-        return redirect("/")
-
-    return render_template("slot.html", saldo=get_saldo())
-
-
 @app.route("/api/slot", methods=["POST"])
 def api_slot():
 
     if "user_id" not in session:
         return jsonify({"error":"login"}),401
 
-    aposta = float(request.form["aposta"])
+    try:
 
-    def calcular(aposta, c):
+        aposta = float(request.form.get("aposta",0))
 
-        simbolos = ["🍒","🍋","🍀","⭐","💎","7"]
+        if aposta <= 0:
+            return jsonify({"error":"aposta inválida"})
 
-        grade = [[random.choice(simbolos) for _ in range(3)] for _ in range(3)]
+        def calcular(aposta, c):
 
-        ganho = -aposta
-        linhas_ganhas = []
+            simbolos = ["🍒","🍋","🍀","⭐","💎","7"]
 
-        c.execute("SELECT valor FROM jackpot WHERE id=1")
-        jackpot = dinheiro(c.fetchone()[0])
+            grade = [[random.choice(simbolos) for _ in range(3)] for _ in range(3)]
 
-        jackpot += dinheiro(aposta * 0.03)
+            ganho = -aposta
+            linhas_ganhas = []
 
-        for i,linha in enumerate(grade):
+            c.execute("SELECT valor FROM jackpot WHERE id=1")
 
-            if linha.count(linha[0]) == 3:
+            row = c.fetchone()
 
-                linhas_ganhas.append([i*3,i*3+1,i*3+2])
+            if row:
+                jackpot = dinheiro(row[0])
+            else:
+                jackpot = 100
 
-                simbolo = linha[0]
+            jackpot += dinheiro(aposta * 0.03)
 
-                premio = 0
+            for i,linha in enumerate(grade):
 
-                if simbolo=="🍒": premio=aposta*2
-                elif simbolo=="🍋": premio=aposta*3
-                elif simbolo=="🍀": premio=aposta*5
-                elif simbolo=="⭐": premio=aposta*10
-                elif simbolo=="💎": premio=aposta*20
+                if linha.count(linha[0]) == 3:
 
-                elif simbolo=="7":
-                    premio = jackpot
-                    jackpot = 100
+                    linhas_ganhas.append([i*3,i*3+1,i*3+2])
 
-                ganho += premio
+                    simbolo = linha[0]
 
-        c.execute("UPDATE jackpot SET valor=%s WHERE id=1",(dinheiro(jackpot),))
+                    premio = 0
 
-        simbolo_num = {"🍒":1,"🍋":2,"🍀":3,"⭐":4,"💎":5,"7":6}
+                    if simbolo=="🍒": premio=aposta*2
+                    elif simbolo=="🍋": premio=aposta*3
+                    elif simbolo=="🍀": premio=aposta*5
+                    elif simbolo=="⭐": premio=aposta*10
+                    elif simbolo=="💎": premio=aposta*20
 
-        grade_num = [[simbolo_num[s] for s in l] for l in grade]
+                    elif simbolo=="7":
+                        premio = jackpot
+                        jackpot = 100
 
-        return ganho,{
-            "grade":grade_num,
-            "linhas_ganhas":linhas_ganhas,
-            "jackpot": dinheiro(jackpot)
-        }
+                    ganho += premio
 
-    return jsonify(processar_aposta(session["user_id"],"slot",aposta,calcular))
+            c.execute(
+                "UPDATE jackpot SET valor=%s WHERE id=1",
+                (dinheiro(jackpot),)
+            )
 
+            simbolo_num = {
+                "🍒":1,
+                "🍋":2,
+                "🍀":3,
+                "⭐":4,
+                "💎":5,
+                "7":6
+            }
+
+            grade_num = [[simbolo_num[s] for s in l] for l in grade]
+
+            return ganho,{
+                "grade":grade_num,
+                "linhas_ganhas":linhas_ganhas,
+                "jackpot": dinheiro(jackpot)
+            }
+
+        resultado = processar_aposta(
+            session["user_id"],
+            "slot",
+            aposta,
+            calcular
+        )
+
+        return jsonify(resultado)
+
+    except Exception as e:
+
+        print("ERRO SLOT:", e)
+
+        return jsonify({"error":"erro servidor"}),500
 
 # ===============================
 # ADMIN
@@ -378,4 +402,5 @@ def set_saldo():
 # ===============================
 if __name__=="__main__":
     app.run(host="0.0.0.0",port=int(os.environ.get("PORT",5000)))
+
 
