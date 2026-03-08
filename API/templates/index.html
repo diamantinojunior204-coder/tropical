@@ -3,23 +3,144 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Menu - Cassino</title>
+<title>Cassino</title>
+
 <style>
-body {margin:0;font-family:Arial;background:#0f172a;color:white;}
-.topo{padding:10px;background:rgba(0,0,0,0.6);display:flex;justify-content:space-between;align-items:center;}
-.topo a{color:gold;text-decoration:none;font-weight:bold;margin-left:10px;}
-.jogos{display:flex;flex-direction:column;align-items:center;margin-top:50px;}
-.jogos a{display:block;margin:10px;background:orange;padding:15px 30px;border-radius:8px;color:black;text-decoration:none;font-weight:bold;}
-.jogos a:hover{background:gold;}
+
+body{
+margin:0;
+font-family:Arial;
+background:url("/static/fundo.jpeg");
+background-size:cover;
+background-position:center;
+color:white;
+height:100vh;
+display:flex;
+flex-direction:column;
+}
+
+/* TOPO */
+
+.topo{
+padding:10px 15px;
+background:rgba(0,0,0,0.65);
+display:flex;
+flex-direction:column;
+align-items:center;
+text-align:center;
+gap:5px;
+}
+
+.topo a{
+color:gold;
+text-decoration:none;
+font-weight:bold;
+margin:0 5px;
+}
+
+.links{
+margin-top:5px;
+}
+
+/* AREA CENTRAL */
+
+.jogos{
+flex:1;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+padding:20px;
+}
+
+/* TITULO */
+
+.titulo{
+font-size:32px;
+margin-bottom:40px;
+text-shadow:0 0 10px black;
+}
+
+/* BOTAO SLOT */
+
+.botao-slot{
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+font-size:26px;
+font-weight:bold;
+
+width:80%;
+max-width:280px;
+height:80px;
+
+border-radius:14px;
+
+background:linear-gradient(145deg,#ff9800,#ffc107);
+
+color:black;
+
+text-decoration:none;
+
+box-shadow:
+0 0 15px rgba(255,200,0,0.7),
+0 5px 10px rgba(0,0,0,0.6);
+
+transition:all 0.25s;
+
+}
+
+.botao-slot:active{
+transform:scale(0.95);
+}
+
+/* RESPONSIVO TABLET */
+
+@media(min-width:600px){
+
+.topo{
+flex-direction:row;
+justify-content:space-between;
+text-align:left;
+}
+
+.botao-slot{
+width:220px;
+}
+
+}
+
 </style>
+
 </head>
+
 <body>
+
 <div class="topo">
-<div>Olá, {{session.username}} | Saldo: R$ <span id="saldo">{{saldo}}</span></div>
-<div><a href="/logout">Sair</a> | <a href="/admin">Painel ADM</a></div>
+
+<div>
+Olá, {{session.username}}<br>
+Saldo: R$ <span id="saldo">{{saldo}}</span>
 </div>
+
+<div class="links">
+<a href="/admin">Painel ADM</a> |
+<a href="/logout">Sair</a>
+</div>
+
+</div>
+
 <div class="jogos">
-<a href="/slot">🎰 Slot</a>
+
+<div class="titulo">🎰 Cassino</div>
+
+<a class="botao-slot" href="/slot">
+🎰 JOGAR SLOT
+</a>
+
 </div>
+
 </body>
 </html>
