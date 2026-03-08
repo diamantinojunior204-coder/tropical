@@ -201,22 +201,26 @@ def api_slot():
     aposta = float(request.form["aposta"])
 
     def calcular(aposta, c):
-        simbolos = [1,2,3,4,5,6]  # IDs das imagens 1.jpeg ... 6.jpeg
-        rolos = [random.choice(simbolos) for _ in range(9)]  # 9 slots
+        simbolos = [1,2,3,4,5,6]
+        rolos = [random.choice(simbolos) for _ in range(9)]
         ganho = -aposta
 
-        # exemplo: se os três primeiros rolos iguais ganha
+        linhas_ganhas = []
         if rolos[0]==rolos[1]==rolos[2]:
             ganho = aposta*10
-
-        # linhas ganhas (apenas primeira linha por enquanto)
-        linhas_ganhas=[]
-        if rolos[0]==rolos[1]==rolos[2]:
             linhas_ganhas.append([0,1,2])
 
-        return ganho, {"grade": rolos, "linhas_ganhas": linhas_ganhas}
+        # pega jackpot do banco
+        conn = conectar()
+        cur = conn.cursor()
+        cur.execute("SELECT valor FROM jackpot WHERE id=1")
+        jackpot_val = cur.fetchone()[0]
+        conn.close()
+
+        return ganho, {"grade": rolos, "linhas_ganhas": linhas_ganhas, "jackpot": round(jackpot_val,2)}
 
     return jsonify(processar_aposta(session["user_id"], "slot", aposta, calcular))
+
 #admin
 @app.route("/admin")
 def admin():
@@ -255,17 +259,29 @@ def admin():
 def add_saldo():
     if session.get("is_admin") != 1:
         return redirect("/")
+
+    valor = request.form.get("valor")
+    user_id = request.form.get("user_id")
+
+    try:
+        valor = float(valor)
+        user_id = int(user_id)
+    except:
+        return "Valor ou usuário inválido", 400
+
     conn = conectar()
     c = conn.cursor()
     c.execute("""
         UPDATE users SET saldo = saldo + %s WHERE id=%s
-    """, (float(request.form["valor"]), request.form["user_id"]))
+    """, (valor, user_id))
     conn.commit()
     conn.close()
-    return redirect("/admin")    
+    return redirect("/admin")
+
 # ================================
 # START
 # ================================
 if __name__=="__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT",5000)))
+
 
