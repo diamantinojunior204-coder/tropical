@@ -321,7 +321,28 @@ def admin():
         lucro=lucro
     )
 
+@app.route("/admin/add_credito", methods=["POST"])
+def add_credito():
 
+    if session.get("is_admin") != 1:
+        return redirect("/")
+
+    user_id = request.form["user_id"]
+    valor = float(request.form["valor"])
+
+    conn = conectar()
+    c = conn.cursor()
+
+    c.execute("""
+    UPDATE users
+    SET saldo = saldo + %s
+    WHERE id=%s
+    """,(valor,user_id))
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/admin")
 # ===============================
 # LOGOUT
 # ===============================
@@ -330,9 +351,31 @@ def logout():
     session.clear()
     return redirect("/")
 
+@app.route("/admin/set_saldo", methods=["POST"])
+def set_saldo():
 
+    if session.get("is_admin") != 1:
+        return redirect("/")
+
+    user_id = request.form["user_id"]
+    valor = float(request.form["valor"])
+
+    conn = conectar()
+    c = conn.cursor()
+
+    c.execute("""
+    UPDATE users
+    SET saldo=%s
+    WHERE id=%s
+    """,(dinheiro(valor),user_id))
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/admin")
 # ===============================
 # START
 # ===============================
 if __name__=="__main__":
     app.run(host="0.0.0.0",port=int(os.environ.get("PORT",5000)))
+
