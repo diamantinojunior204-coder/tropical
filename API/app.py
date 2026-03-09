@@ -109,37 +109,77 @@ def get_saldo():
     saldo = c.fetchone()[0]
     conn.close()
     return round(saldo,2)
-
 # ================================
-# PROCESSAR APOSTA
+# PROCESSAR APOSTA (versão segura)
 # ================================
 def processar_aposta(user_id, jogo, aposta, calcular):
+
     conn = conectar()
     c = conn.cursor()
+
+    # buscar saldo
     c.execute("SELECT saldo FROM users WHERE id=%s", (user_id,))
-    saldo = c.fetchone()[0]
+    row = c.fetchone()
+
+    if not row:
+        conn.close()
+        return {"error": "usuario nao encontrado"}
+
+    saldo = round(float(row[0]), 2)
+
+    # validar aposta
+    try:
+        aposta = round(float(aposta), 2)
+    except:
+        conn.close()
+        return {"error": "aposta invalida"}
 
     if aposta <= 0 or aposta > saldo:
         conn.close()
         return {"error": "saldo insuficiente"}
 
-    ganho, extra = calcular(aposta, c)
-    novo_saldo = saldo + ganho
+    # calcular resultado do jogo
+    try:
+        ganho, extra = calcular(aposta, c)
+    except Exception as e:
+        conn.close()
+        print("Erro no cálculo:", e)
+        return {"error": "erro no jogo"}
 
-    c.execute("UPDATE users SET saldo=%s WHERE id=%s", (novo_saldo, user_id))
+    ganho = round(float(ganho), 2)
+
+    # novo saldo
+    novo_saldo = round(saldo + ganho, 2)
+
+    # atualizar saldo
+    c.execute(
+        "UPDATE users SET saldo=%s WHERE id=%s",
+        (novo_saldo, user_id)
+    )
+
+    # registrar aposta
     c.execute("""
-    INSERT INTO apostas(user_id,jogo,aposta,ganho)
-    VALUES(%s,%s,%s,%s)
+        INSERT INTO apostas(user_id, jogo, aposta, ganho)
+        VALUES(%s, %s, %s, %s)
     """, (user_id, jogo, aposta, ganho))
 
     conn.commit()
     conn.close()
 
+    # garantir que extra não tenha floats quebrados
+    if isinstance(extra, dict):
+        extra = {
+            k: round(v, 2) if isinstance(v, float) else v
+            for k, v in extra.items()
+        }
+
     return {
-        "ganho": round(ganho,2),
-        "saldo": round(novo_saldo,2),
+        "ganho": ganho,
+        "saldo": novo_saldo,
         **extra
     }
+    
+
 
 # ================================
 # LOGIN
@@ -374,3 +414,4 @@ def logout():
 # ================================
 if __name__=="__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT",5000)))
+
