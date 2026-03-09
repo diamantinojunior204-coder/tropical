@@ -8,7 +8,26 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.secret_key = "segredo_super_cassino"  # chave secreta da sessão
+#corrigir banco 
+@app.route("/fixsaldo")
+def fixsaldo():
 
+    conn = conectar()
+    c = conn.cursor()
+
+    c.execute("""
+    ALTER TABLE users
+    ALTER COLUMN saldo TYPE NUMERIC(10,2)
+    """)
+
+    c.execute("""
+    UPDATE users SET saldo = ROUND(saldo,2)
+    """)
+
+    conn.commit()
+    conn.close()
+
+    return "Saldo corrigido"
 # ================================
 # CONEXÃO POSTGRES
 # ================================
@@ -249,37 +268,60 @@ def cartas_page():
 # ================================
 # SLOT PROFISSIONAL
 # ================================
+
 @app.route("/api/slot", methods=["POST"])
 def api_slot():
     if "user_id" not in session:
-        return jsonify({"error":"login"}),401
+        return jsonify({"error": "login"}), 401
 
     aposta = float(request.form["aposta"])
 
     def calcular(aposta, c):
-        simbolos = ["🍒","🍋","🍀","⭐","💎","7"]
-        rolos = [random.choice(simbolos) for _ in range(3)]
+        simbolos = ["🍒", "🍋", "🍀", "⭐", "💎", "7"]
+
+        # Gerar grade 3x3 aleatória
+        grade = [[random.choice(simbolos) for _ in range(3)] for _ in range(3)]
+
         ganho = -aposta
+        linhas_ganhas = []
 
-        if rolos[0] == rolos[1] == rolos[2]:
-            if rolos[0] == "🍒":
-                ganho = aposta*2
-            elif rolos[0] == "🍋":
-                ganho = aposta*3
-            elif rolos[0] == "🍀":
-                ganho = aposta*5
-            elif rolos[0] == "⭐":
-                ganho = aposta*10
-            elif rolos[0] == "💎":
-                ganho = aposta*20
-            elif rolos[0] == "7":
-                ganho = aposta*50
+        # Consultar jackpot atual
+        c.execute("SELECT valor FROM jackpot WHERE id=1")
+        jackpot = c.fetchone()[0]
 
-        return ganho, {"rolos": rolos}
+        # Atualizar jackpot com 3% da aposta
+        jackpot += aposta * 0.03
+
+        # Checar linhas horizontais
+        for i, linha in enumerate(grade):
+            if linha.count(linha[0]) == 3:
+                linhas_ganhas.append([i*3, i*3+1, i*3+2])
+                simbolo = linha[0]
+                premio = 0
+                if simbolo == "🍒": premio = aposta * 2
+                elif simbolo == "🍋": premio = aposta * 3
+                elif simbolo == "🍀": premio = aposta * 5
+                elif simbolo == "⭐": premio = aposta * 10
+                elif simbolo == "💎": premio = aposta * 20
+                elif simbolo == "7":
+                    premio = jackpot
+                    jackpot = 100  # reset do jackpot
+                ganho += premio
+
+        # Atualizar jackpot no banco
+        c.execute("UPDATE jackpot SET valor=%s WHERE id=1", (jackpot,))
+
+        # Transformar a grade para números correspondentes às imagens
+        simbolo_para_num = {"🍒":1, "🍋":2, "🍀":3, "⭐":4, "💎":5, "7":6}
+        grade_numerica = [[simbolo_para_num[s] for s in linha] for linha in grade]
+
+        return ganho, {
+            "grade": grade_numerica,
+            "linhas_ganhas": linhas_ganhas,
+            "jackpot": round(jackpot, 2)
+        }
 
     return jsonify(processar_aposta(session["user_id"], "slot", aposta, calcular))
-
-# ================================
 # ROLETA
 # ================================
 @app.route("/api/roleta", methods=["POST"])
