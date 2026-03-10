@@ -3,27 +3,103 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login - Cassino</title>
+
+<title>Login Cassino</title>
+
 <style>
-body {margin:0;font-family:Arial;background:#0f172a;color:white;display:flex;justify-content:center;align-items:center;height:100vh;}
-.container {background:rgba(0,0,0,0.7);padding:20px;border-radius:12px;width:90%;max-width:350px;}
-input {width:100%;padding:12px;margin:8px 0;border-radius:6px;border:none;}
-button {width:100%;padding:12px;margin-top:10px;background:orange;border:none;border-radius:6px;font-weight:bold;cursor:pointer;}
-button:hover{background:gold;}
-h2{text-align:center;margin-bottom:20px;}
-a{text-decoration:none;color:gold;}
+
+body{
+margin:0;
+font-family:Arial;
+background:linear-gradient(135deg,#0f172a,#020617);
+height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+color:white;
+}
+
+.box{
+
+background:rgba(0,0,0,0.7);
+padding:40px;
+border-radius:12px;
+width:320px;
+text-align:center;
+box-shadow:0 0 25px rgba(0,0,0,0.6);
+
+}
+
+h1{
+margin-bottom:20px;
+}
+
+input{
+
+width:100%;
+padding:12px;
+margin:10px 0;
+border:none;
+border-radius:6px;
+font-size:16px;
+
+}
+
+button{
+
+width:100%;
+padding:12px;
+margin-top:10px;
+border:none;
+border-radius:6px;
+font-size:16px;
+background:orange;
+cursor:pointer;
+font-weight:bold;
+
+}
+
+button:hover{
+background:gold;
+}
+
+a{
+color:gold;
+text-decoration:none;
+}
+
 </style>
 </head>
+
 <body>
-<div class="container">
-<h2>🎰 Cassino Login</h2>
-<form method="POST" action="/">
+
+<div class="box">
+
+<h1>🎰 Login</h1>
+
+<form method="POST">
+
 <input type="text" name="usuario" placeholder="Usuário" required>
+
 <input type="password" name="senha" placeholder="Senha" required>
+
+<!-- mantém redirecionamento -->
+<input type="hidden" name="next" value="{{ request.args.get('next','') }}">
+
 <button type="submit">Entrar</button>
+
 </form>
-<p>Não tem conta? <a href="/cadastro">Cadastre-se</a></p>
+
+<p style="margin-top:15px">
+Não tem conta?
+<a href="/cadastro">Criar conta</a>
+</p>
+
+<p>
+<a href="/">⬅ Voltar</a>
+</p>
+
 </div>
+
 </body>
 </html>
-
