@@ -1,1 +1,233 @@
-jjkj
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Cassino Online</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial;
+}
+
+body{
+background:#0f0f0f;
+color:white;
+padding-bottom:80px;
+}
+
+/* TOPO */
+
+.header{
+background:black;
+padding:15px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.logo{
+font-size:20px;
+font-weight:bold;
+color:#ff7a00;
+}
+
+.login{
+background:#ff7a00;
+padding:8px 14px;
+border-radius:6px;
+}
+
+/* BANNER */
+
+.banner{
+width:100%;
+padding:10px;
+}
+
+.banner img{
+width:100%;
+border-radius:10px;
+}
+
+/* TITULO */
+
+.titulo{
+padding:15px;
+font-size:18px;
+font-weight:bold;
+}
+
+/* GRID */
+
+.jogos{
+
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:12px;
+padding:10px;
+
+}
+
+/* CARD */
+
+.card{
+
+position:relative;
+overflow:hidden;
+border-radius:10px;
+
+}
+
+.card img{
+width:100%;
+display:block;
+transition:0.3s;
+}
+
+.card:hover img{
+transform:scale(1.08);
+}
+
+/* NOME */
+
+.nome{
+
+position:absolute;
+bottom:0;
+width:100%;
+background:linear-gradient(transparent,rgba(0,0,0,0.9));
+padding:6px;
+font-size:13px;
+text-align:center;
+
+}
+
+/* MENU INFERIOR */
+
+.menu{
+
+position:fixed;
+bottom:0;
+width:100%;
+background:#111;
+display:flex;
+justify-content:space-around;
+padding:10px 0;
+
+}
+
+.menu div{
+
+text-align:center;
+font-size:13px;
+color:#bbb;
+
+}
+
+.menu div:hover{
+
+color:#ff7a00;
+
+}
+
+/* RESPONSIVO */
+
+@media(max-width:700px){
+
+.jogos{
+grid-template-columns:repeat(2,1fr);
+}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- TOPO -->
+
+<div class="header">
+
+<div class="logo">DIAMANTE TROPICAL</div>
+
+<div class="login">Login</div>
+
+</div>
+
+<!-- BANNER -->
+
+<div class="banner">
+<img src="banner.jpg">
+</div>
+
+<!-- JOGOS -->
+
+<div class="titulo">🔥 Jogos Populares</div>
+
+<div class="jogos">
+
+<a href="https://diamantinojunior204-coder.github.io/tropical/">
+<div class="card">
+<img src="img/jogo1.jpg">
+<div class="nome">Gates of Olympus</div>
+</div>
+</a>
+
+<a href="LINK_DO_JOGO">
+<div class="card">
+<img src="img/jogo2.jpg">
+<div class="nome">Fortune Mouse</div>
+</div>
+</a>
+
+<a href="LINK_DO_JOGO">
+<div class="card">
+<img src="img/jogo3.jpg">
+<div class="nome">Fortune Gems</div>
+</div>
+</a>
+
+<a href="LINK_DO_JOGO">
+<div class="card">
+<img src="img/jogo4.jpg">
+<div class="nome">Onça Sortuda</div>
+</div>
+</a>
+
+<a href="LINK_DO_JOGO">
+<div class="card">
+<img src="img/jogo5.jpg">
+<div class="nome">Money Pot</div>
+</div>
+</a>
+
+<a href="LINK_DO_JOGO">
+<div class="card">
+<img src="img/jogo6.jpg">
+<div class="nome">Wild Sevens</div>
+</div>
+</a>
+
+</div>
+
+<!-- MENU -->
+
+<div class="menu">
+
+<div>🏠<br>Início</div>
+<div>💰<br>Depósito</div>
+<div>🎁<br>Promoções</div>
+<div>⚽<br>Esportes</div>
+<div>👤<br>Perfil</div>
+
+</div>
+
+</body>
+</html>
