@@ -184,7 +184,34 @@ def processar_aposta(user_id, jogo, aposta, calcular):
 def home():
     return render_template("home.html")
 
+#==========Add creditos======
+@app.route("/add_saldo", methods=["POST"])
+def add_saldo():
 
+    if session.get("is_admin") != 1:
+        return redirect("/login")
+
+    try:
+        user_id = int(request.form["user_id"])
+        valor = float(request.form["valor"])
+    except:
+        return "Dados inválidos"
+
+    if valor <= 0:
+        return "Valor inválido"
+
+    conn = conectar()
+    c = conn.cursor()
+
+    c.execute(
+        "UPDATE users SET saldo = saldo + %s WHERE id=%s",
+        (valor, user_id)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/admin")
 # ================================
 # LOGIN
 # ================================
@@ -460,3 +487,4 @@ def logout():
 # ================================
 if __name__=="__main__":
     app.run(host="0.0.0.0",port=int(os.environ.get("PORT",5000)))
+
