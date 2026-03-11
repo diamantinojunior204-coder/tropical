@@ -323,7 +323,13 @@ def cartas_page():
 
     return render_template("cartas.html",saldo=get_saldo())
 
+@app.route("/frutas")
+def frutas():
 
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    return render_template("frutas.html")
 # ================================
 # SLOT
 # ================================
@@ -440,7 +446,41 @@ def api_cartas():
 
     return jsonify(processar_aposta(session["user_id"],"cartas",aposta,calcular))
 
+#===========frutas================
+@app.route("/api/spin", methods=["POST"])
+def api_spin():
 
+    if "user_id" not in session:
+        return jsonify({"error": "login"}), 401
+
+    aposta = float(request.form["aposta"])
+
+    simbolos = [
+        "apple","apricot","banana","big_win","cherry",
+        "grapes","lemon","lucky_seven","orange","pear",
+        "strawberry","watermelon"
+    ]
+
+    resultado = [
+        random.choice(simbolos),
+        random.choice(simbolos),
+        random.choice(simbolos)
+    ]
+
+    ganho = 0
+
+    # exemplo de pagamento
+    if resultado[0] == resultado[1] == resultado[2]:
+        ganho = aposta * 10
+
+    # atualizar saldo aqui
+    saldo = atualizar_saldo(session["user_id"], aposta, ganho)
+
+    return jsonify({
+        "resultado": resultado,
+        "ganho": ganho,
+        "saldo": saldo
+    })
 # ================================
 # ADMIN
 # ================================
@@ -541,6 +581,7 @@ def fix_apostas():
 # ================================
 if __name__=="__main__":
     app.run(host="0.0.0.0",port=int(os.environ.get("PORT",5000)))
+
 
 
 
