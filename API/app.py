@@ -498,10 +498,28 @@ def fix_nan():
     conn.close()
 
     return "Saldos corrigidos"
+#========corrigir jackpot ======
+@app.route("/fix_jackpot")
+def fix_jackpot():
+
+    conn = conectar()
+    c = conn.cursor()
+
+    c.execute("""
+    UPDATE jackpot
+    SET valor = 100
+    WHERE valor::text = 'NaN'
+    """)
+
+    conn.commit()
+    conn.close()
+
+    return "Jackpot corrigido"
 # ================================
 # START
 # ================================
 if __name__=="__main__":
     app.run(host="0.0.0.0",port=int(os.environ.get("PORT",5000)))
+
 
 
