@@ -152,6 +152,10 @@ def processar_aposta(user_id, jogo, aposta, calcular):
         return {"error":"saldo insuficiente"}
 
     ganho, extra = calcular(aposta, c)
+    import math
+
+    if math.isnan(ganho) or math.isinf(ganho):
+       ganho = 0
 
     ganho = round(float(ganho),2)
 
@@ -515,11 +519,29 @@ def fix_jackpot():
     conn.close()
 
     return "Jackpot corrigido"
+#=======corrigir apostas=====
+@app.route("/fix_apostas")
+def fix_apostas():
+
+    conn = conectar()
+    c = conn.cursor()
+
+    c.execute("""
+    UPDATE apostas
+    SET ganho = 0
+    WHERE ganho::text = 'NaN'
+    """)
+
+    conn.commit()
+    conn.close()
+
+    return "Apostas corrigidas"
 # ================================
 # START
 # ================================
 if __name__=="__main__":
     app.run(host="0.0.0.0",port=int(os.environ.get("PORT",5000)))
+
 
 
 
