@@ -481,10 +481,27 @@ def logout():
 
     return redirect("/")
 
+#==========corrigir usuário======
+@app.route("/fix_nan")
+def fix_nan():
 
+    conn = conectar()
+    c = conn.cursor()
+
+    c.execute("""
+    UPDATE users
+    SET saldo = 0
+    WHERE saldo::text = 'NaN'
+    """)
+
+    conn.commit()
+    conn.close()
+
+    return "Saldos corrigidos"
 # ================================
 # START
 # ================================
 if __name__=="__main__":
     app.run(host="0.0.0.0",port=int(os.environ.get("PORT",5000)))
+
 
