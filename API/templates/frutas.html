@@ -2,10 +2,11 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🍓 Slot Frutas</title>
 
-<link rel="stylesheet" href="style.css">
-<script src="script.js" defer></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
 
 <style>
 
@@ -25,12 +26,39 @@ font-family:Arial;
 text-align:center;
 color:white;
 font-size:22px;
-margin-bottom:15px;
+margin-bottom:20px;
+background:rgba(0,0,0,0.6);
+padding:20px;
+border-radius:10px;
 }
 
 #saldo{
 font-weight:bold;
 color:#00ff88;
+}
+
+#container{
+text-align:center;
+}
+
+.start-button{
+margin-top:20px;
+font-size:22px;
+padding:15px 40px;
+border:none;
+border-radius:10px;
+background:orange;
+cursor:pointer;
+font-weight:bold;
+}
+
+.start-button:hover{
+background:gold;
+}
+
+input[type="number"]{
+font-size:18px;
+padding:5px;
 }
 
 </style>
@@ -42,11 +70,14 @@ color:#00ff88;
 <div>
 
 <div id="painel">
+
 💰 Saldo: R$ <span id="saldo">{{saldo}}</span>
+
 <br><br>
 
 Aposta:
-<input type="number" id="aposta" value="1" min="1" style="font-size:18px;width:80px;">
+<input type="number" id="aposta" value="1" min="1">
+
 </div>
 
 
@@ -81,24 +112,19 @@ Aposta:
 
 </div>
 
-<!-- SOM DO GIRO -->
+
+<!-- SOM -->
 <audio id="somGiro" src="/static/som/girar.mp3"></audio>
 
 <script>
-
-/* função que substitui spin() */
 
 function girar(botao){
 
 let aposta = document.getElementById("aposta").value
 
-/* tocar som */
-
 let audio = document.getElementById("somGiro")
 audio.currentTime = 0
 audio.play()
-
-/* chama backend */
 
 fetch("/api/spin",{
 method:"POST",
@@ -113,8 +139,6 @@ aposta:aposta
 .then(data => {
 
 setResult(data.resultado)
-
-/* atualizar saldo */
 
 document.getElementById("saldo").innerText = data.saldo
 
