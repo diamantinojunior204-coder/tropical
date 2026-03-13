@@ -1,150 +1,131 @@
-<!DOCTYPE html>
-<html lang="pt-br">
+<!DOCTYPE html><html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cassino</title>
-
-<style>
+<title>Cassino Online</title><style>
 
 body{
-margin:0;
-font-family:Arial;
-background:url("/static/fundo.jpg");
-background-size:cover;
-background-position:center;
-color:white;
-height:100vh;
-display:flex;
-flex-direction:column;
+    margin:0;
+    font-family:Arial, Helvetica, sans-serif;
+    background:url("/static/fundo.jpg");
+    background-size:cover;
+    background-position:center;
+    background-attachment:fixed;
+    color:white;
+    text-align:center;
 }
 
-/* TOPO */
+/* camada escura */
+
+body::before{
+    content:"";
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.6);
+    z-index:-1;
+}
+
+/* topo */
 
 .topo{
-padding:10px 15px;
-background:rgba(0,0,0,0.65);
-display:flex;
-flex-direction:column;
-align-items:center;
-text-align:center;
-gap:5px;
+    background:rgba(0,0,0,0.7);
+    padding:15px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
 }
 
-.topo a{
-color:gold;
-text-decoration:none;
-font-weight:bold;
-margin:0 5px;
+.usuario{
+    font-size:18px;
 }
 
-.links{
-margin-top:5px;
+.saldo{
+    font-size:20px;
+    color:#22c55e;
+    font-weight:bold;
 }
 
-/* AREA CENTRAL */
+/* botão deposito */
 
-.jogos{
-flex:1;
-display:flex;
-flex-direction:column;
-justify-content:center;
-align-items:center;
-padding:20px;
+.depositar{
+    background:linear-gradient(45deg,#22c55e,#16a34a);
+    padding:10px 20px;
+    border-radius:8px;
+    text-decoration:none;
+    color:white;
+    font-weight:bold;
 }
 
-/* TITULO */
+/* jogos */
 
 .titulo{
-font-size:32px;
-margin-bottom:40px;
-text-shadow:0 0 10px black;
+    margin-top:30px;
+    font-size:30px;
 }
 
-/* BOTAO SLOT */
-
-.botao-slot{
-
-display:flex;
-align-items:center;
-justify-content:center;
-
-font-size:26px;
-font-weight:bold;
-
-width:80%;
-max-width:280px;
-height:80px;
-
-border-radius:14px;
-
-background:linear-gradient(145deg,#ff9800,#ffc107);
-
-color:black;
-
-text-decoration:none;
-
-box-shadow:
-0 0 15px rgba(255,200,0,0.7),
-0 5px 10px rgba(0,0,0,0.6);
-
-transition:all 0.25s;
-
+.jogos{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:20px;
+    margin-top:30px;
 }
 
-.botao-slot:active{
-transform:scale(0.95);
+.card{
+    background:rgba(15,23,42,0.9);
+    width:170px;
+    padding:20px;
+    border-radius:12px;
+    text-decoration:none;
+    color:white;
+    box-shadow:0 0 15px rgba(0,0,0,0.6);
+    transition:0.3s;
 }
 
-/* RESPONSIVO TABLET */
-
-@media(min-width:600px){
-
-.topo{
-flex-direction:row;
-justify-content:space-between;
-text-align:left;
+.card:hover{
+    transform:scale(1.05);
 }
 
-.botao-slot{
-width:220px;
+.card span{
+    font-size:45px;
 }
 
+.card h3{
+    margin-top:10px;
 }
 
-</style>
+/* logout */
 
-</head>
+.logout{
+    margin-top:40px;
+}
 
-<body>
+.logout a{
+    color:#f87171;
+    text-decoration:none;
+}
 
-<div class="topo">
-
-<div>
-Olá, {{session.username}}<br>
-Saldo: R$ <span id="saldo">{{saldo}}</span>
-</div>
-
-<div class="links">
-<a href="/admin">TROPICAL</a> |
-<a href="/logout">Sair</a>
-</div>
-
-</div>
-
-<div class="jogos">
-
-<div class="titulo">🎰 CassinoDiamante Tropical</div>
-
-<a class="botao-slot" href="/slot">
-⚰️ JOGAR SLOT
-</a>
-  
-<a class="botao-slot" href="/frutas">
-🍓 JOGAR SLOT Frutas
-</a>
-
-</div>
-
-</body>
+</style></head><body><!-- musica ambiente --><audio autoplay loop>
+<source src="/static/musica.mp3" type="audio/mpeg">
+</audio><div class="topo"><div class="usuario">
+👤 Olá {{session.username}}
+</div><div class="saldo">
+💰 Saldo: R$ {{saldo}}
+</div><a class="depositar" href="/depositar">
+💳 Depositar
+</a></div><h2 class="titulo">🎰 Jogos</h2><div class="jogos"><a class="card" href="/slot">
+<span>🎰</span>
+<h3>Slot</h3>
+</a><a class="card" href="/roleta">
+<span>🎡</span>
+<h3>Roleta</h3>
+</a><a class="card" href="/cartas">
+<span>🃏</span>
+<h3>Cartas</h3>
+</a></div><div class="logout">
+<a href="/logout">🚪 Sair</a>
+</div></body>
 </html>
