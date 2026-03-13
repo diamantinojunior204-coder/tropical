@@ -12,7 +12,7 @@
 
 body{
 margin:0;
-height:100vh;
+min-height:100vh;
 display:flex;
 justify-content:center;
 align-items:center;
@@ -20,15 +20,22 @@ background-image:url("/static/img/fundo.jpg");
 background-size:cover;
 background-position:center;
 font-family:Arial;
+padding:10px;
+box-sizing:border-box;
+}
+
+#game{
+width:100%;
+max-width:420px;
 }
 
 #painel{
 text-align:center;
 color:white;
-font-size:22px;
-margin-bottom:20px;
+font-size:18px;
+margin-bottom:15px;
 background:rgba(0,0,0,0.6);
-padding:20px;
+padding:15px;
 border-radius:10px;
 }
 
@@ -39,12 +46,40 @@ color:#00ff88;
 
 #container{
 text-align:center;
+width:100%;
+}
+
+.window-border{
+width:100%;
+overflow:hidden;
+}
+
+.window{
+display:flex;
+justify-content:center;
+}
+
+.outer-col{
+width:60px;
+overflow:hidden;
+}
+
+.col{
+display:flex;
+flex-direction:column;
+align-items:center;
+}
+
+.icon img{
+width:50px;
+height:50px;
 }
 
 .start-button{
 margin-top:20px;
-font-size:22px;
-padding:15px 40px;
+font-size:20px;
+padding:15px;
+width:100%;
 border:none;
 border-radius:10px;
 background:orange;
@@ -52,13 +87,41 @@ cursor:pointer;
 font-weight:bold;
 }
 
-.start-button:hover{
-background:gold;
+.start-button:active{
+transform:scale(0.97);
 }
 
 input[type="number"]{
 font-size:18px;
-padding:5px;
+padding:8px;
+width:80px;
+text-align:center;
+border-radius:6px;
+border:none;
+margin-top:5px;
+}
+
+/* telas maiores */
+
+@media (min-width:600px){
+
+#painel{
+font-size:22px;
+}
+
+.icon img{
+width:70px;
+height:70px;
+}
+
+.outer-col{
+width:80px;
+}
+
+.start-button{
+font-size:22px;
+}
+
 }
 
 </style>
@@ -67,7 +130,7 @@ padding:5px;
 
 <body>
 
-<div>
+<div id="game">
 
 <div id="painel">
 
@@ -75,7 +138,7 @@ padding:5px;
 
 <br><br>
 
-Aposta:
+Aposta:<br>
 <input type="number" id="aposta" value="1" min="1">
 
 </div>
