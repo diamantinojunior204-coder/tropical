@@ -81,6 +81,17 @@ def criar_db():
         data TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
+    # saque
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS saques(
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER,
+        valor NUMERIC(10,2),
+        chave_pix TEXT,
+        status TEXT DEFAULT 'pendente',
+        data TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
 
     # GARANTIR JACKPOT
     c.execute("SELECT * FROM jackpot WHERE id=1")
@@ -746,6 +757,41 @@ def pix():
         return redirect("/")
 
     return render_template("pix.html")
+#=====sacar pix======
+@app.route("/sacar", methods=["GET","POST"])
+def sacar():
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    if request.method == "POST":
+
+        valor = float(request.form["valor"])
+        chave = request.form["pix"]
+
+        conn = conectar()
+        c = conn.cursor()
+
+        # saldo atual
+        c.execute("SELECT saldo FROM users WHERE id=%s",(session["user_id"],))
+        saldo = float(c.fetchone()[0])
+
+        if valor > saldo:
+            conn.close()
+            return "Saldo insuficiente"
+
+        # registrar saque
+        c.execute("""
+        INSERT INTO saques(user_id,valor,chave_pix)
+        VALUES(%s,%s,%s)
+        """,(session["user_id"],valor,chave))
+
+        conn.commit()
+        conn.close()
+
+        return redirect("/index")
+
+    return render_template("sacar.html")
 #===================================
 # START
 # ================================
