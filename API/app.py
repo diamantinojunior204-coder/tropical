@@ -327,7 +327,7 @@ def cartas_page():
 def frutas():
 
     if "user_id" not in session:
-        return redirect(url_for("login"))
+        return redirect("/login")
 
     return render_template("frutas.html")
 # ================================
