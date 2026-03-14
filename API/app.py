@@ -609,7 +609,6 @@ def admin():
         depositos=depositos,
         saques=saques,
         total_apostado=round(total_apostado, 2),
-        total_apostado=round(total_apostado, 2),
         total_pago=round(total_pago, 2),
         lucro=round(lucro, 2)
     
