@@ -573,15 +573,23 @@ def admin():
     # usuários
     c.execute("SELECT id,username,saldo FROM users ORDER BY id")
     users = c.fetchall()
-
-    # estatísticas
+    #statistica2
     c.execute("SELECT COALESCE(SUM(aposta),0) FROM apostas")
-    total_apostado = c.fetchone()[0]
+    total_apostado = float(c.fetchone()[0] or 0)
 
     c.execute("SELECT COALESCE(SUM(ganho),0) FROM apostas")
-    total_pago = c.fetchone()[0]
+    total_pago = float(c.fetchone()[0] or 0)
 
     lucro = total_apostado - total_pago
+
+    # estatísticas
+    #c.execute("SELECT COALESCE(SUM(aposta),0) FROM apostas")
+    #total_apostado = c.fetchone()[0]
+
+    #c.execute("SELECT COALESCE(SUM(ganho),0) FROM apostas")
+    #total_pago = c.fetchone()[0]
+
+    #lucro = total_apostado - total_pago
 
     # depósitos PIX
     c.execute("""
@@ -672,6 +680,23 @@ def fix_apostas():
     UPDATE apostas
     SET ganho = 0
     WHERE ganho::text = 'NaN'
+    """)
+
+    conn.commit()
+    conn.close()
+
+    return "Apostas corrigidas"
+#=========corrigir=======info lucro
+@app.route("/fix_apostas2")
+def fix_apostas2():
+
+    conn = conectar()
+    c = conn.cursor()
+
+    c.execute("""
+    UPDATE apostas
+    SET aposta = 0
+    WHERE aposta::text = 'NaN'
     """)
 
     conn.commit()
