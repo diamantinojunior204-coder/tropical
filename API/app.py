@@ -569,12 +569,23 @@ def admin():
     total_pago=c.fetchone()[0]
 
     lucro=total_apostado-total_pago
+    #=========Deposito pix========
+    c.execute("""
+    SELECT depositos.id, users.username, depositos.valor, depositos.status, depositos.data
+    FROM depositos
+    JOIN users ON users.id = depositos.user_id
+    ORDER BY depositos.id DESC
+    """)
 
+    depositos = c.fetchall()
     conn.close()
+    #======render tem==
 
     return render_template(
         "admin.html",
         users=users,
+        depositos=depositos,
+        
         total_apostado=round(total_apostado,2),
         total_pago=round(total_pago,2),
         lucro=round(lucro,2)
