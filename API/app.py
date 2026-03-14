@@ -564,53 +564,55 @@ def api_spin():
 @app.route("/admin")
 def admin():
 
-    if session.get("is_admin")!=1:
+    if session.get("is_admin") != 1:
         return redirect("/login")
 
-    conn=conectar()
-    c=conn.cursor()
+    conn = conectar()
+    c = conn.cursor()
 
+    # usuários
     c.execute("SELECT id,username,saldo FROM users ORDER BY id")
-    users=c.fetchall()
+    users = c.fetchall()
 
+    # estatísticas
     c.execute("SELECT COALESCE(SUM(aposta),0) FROM apostas")
-    total_apostado=c.fetchone()[0]
+    total_apostado = c.fetchone()[0]
 
     c.execute("SELECT COALESCE(SUM(ganho),0) FROM apostas")
-    total_pago=c.fetchone()[0]
+    total_pago = c.fetchone()[0]
 
-    lucro=total_apostado-total_pago
-    #=========Deposito pix========
+    lucro = total_apostado - total_pago
+
+    # depósitos PIX
     c.execute("""
     SELECT depositos.id, users.username, depositos.valor, depositos.status, depositos.data
     FROM depositos
     JOIN users ON users.id = depositos.user_id
     ORDER BY depositos.id DESC
     """)
-    #sacar
+    depositos = c.fetchall()
+
+    # saques
     c.execute("""
     SELECT saques.id, users.username, saques.valor, saques.chave_pix, saques.status
     FROM saques
     JOIN users ON users.id = saques.user_id
     ORDER BY saques.id DESC
     """)
+    saques = c.fetchall()
 
-saques = c.fetchall()
-
-    depositos = c.fetchall()
     conn.close()
-    #======render tem==
 
     return render_template(
         "admin.html",
         users=users,
         depositos=depositos,
         saques=saques,
-        
-        total_apostado=round(total_apostado,2),
-        total_pago=round(total_pago,2),
-        lucro=round(lucro,2)
-    )
+        total_apostado=round(total_apostado, 2),
+        total_apostado=round(total_apostado, 2),
+        total_pago=round(total_pago, 2),
+        lucro=round(lucro, 2)
+    
 
 
 # ================================
