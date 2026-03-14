@@ -587,6 +587,15 @@ def admin():
     JOIN users ON users.id = depositos.user_id
     ORDER BY depositos.id DESC
     """)
+    #sacar
+    c.execute("""
+    SELECT saques.id, users.username, saques.valor, saques.chave_pix, saques.status
+    FROM saques
+    JOIN users ON users.id = saques.user_id
+    ORDER BY saques.id DESC
+    """)
+
+saques = c.fetchall()
 
     depositos = c.fetchall()
     conn.close()
@@ -596,6 +605,7 @@ def admin():
         "admin.html",
         users=users,
         depositos=depositos,
+        saques=saques,
         
         total_apostado=round(total_apostado,2),
         total_pago=round(total_pago,2),
@@ -792,6 +802,41 @@ def sacar():
         return redirect("/index")
 
     return render_template("sacar.html")
+#=========aprovar saque===
+@app.route("/aprovar_saque/<int:id>")
+def aprovar_saque(id):
+
+    if session.get("is_admin") != 1:
+        return redirect("/")
+
+    conn = conectar()
+    c = conn.cursor()
+
+    c.execute("SELECT user_id,valor,status FROM saques WHERE id=%s",(id,))
+    saque = c.fetchone()
+
+    if saque:
+
+        user_id, valor, status = saque
+
+        if status == "pendente":
+
+            c.execute("""
+            UPDATE users
+            SET saldo = saldo - %s
+            WHERE id=%s
+            """,(valor,user_id))
+
+            c.execute("""
+            UPDATE saques
+            SET status='pago'
+            WHERE id=%s
+            """,(id,))
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/admin")
 #===================================
 # START
 # ================================
