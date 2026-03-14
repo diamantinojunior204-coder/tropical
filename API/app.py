@@ -569,19 +569,38 @@ def admin():
 
     conn = conectar()
     c = conn.cursor()
-
     # usuários
     c.execute("SELECT id,username,saldo FROM users ORDER BY id")
     users = c.fetchall()
 
-    #statistica2
+    # total apostado
     c.execute("SELECT COALESCE(SUM(aposta),0) FROM apostas")
-    total_apostado = float(c.fetchone()[0] or 0)
+    total_apostado = c.fetchone()[0] or 0
+    total_apostado = float(total_apostado)
 
-    c.execute("SELECT COALESCE(SUM(ganho),0) FROM apostas")
-    total_pago = float(c.fetchone()[0] or 0)
+    # total pago (somente ganhos positivos)
+    c.execute("""
+    SELECT COALESCE(SUM(ganho),0)
+    FROM apostas
+    WHERE ganho > 0
+    """)
+    total_pago = c.fetchone()[0] or 0
+    total_pago = float(total_pago)
 
+    # lucro cassino
     lucro = total_apostado - total_pago
+    # usuários
+    #c.execute("SELECT id,username,saldo FROM users ORDER BY id")
+    #users = c.fetchall()
+
+    #statistica2
+    #c.execute("SELECT COALESCE(SUM(aposta),0) FROM apostas")
+    #total_apostado = float(c.fetchone()[0] or 0)
+
+    #c.execute("SELECT COALESCE(SUM(ganho),0) FROM apostas")
+    #total_pago = float(c.fetchone()[0] or 0)
+
+    #lucro = total_apostado - total_pago
 
     # estatísticas
     #c.execute("SELECT COALESCE(SUM(aposta),0) FROM apostas")
