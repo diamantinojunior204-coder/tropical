@@ -678,7 +678,67 @@ def depositar():
         return redirect("/pix")
 
     return render_template("depositar.html")
-# ================================
+#=======aprovar pix======
+@app.route("/aprovar_pix/<int:id>")
+def aprovar_pix(id):
+
+    if session.get("is_admin") != 1:
+        return redirect("/")
+
+    conn = conectar()
+    c = conn.cursor()
+
+    # pegar deposito
+    c.execute("SELECT user_id, valor, status FROM depositos WHERE id=%s",(id,))
+    dep = c.fetchone()
+
+    if not dep:
+        conn.close()
+        return redirect("/admin")
+
+    user_id, valor, status = dep
+
+    if status == "pendente":
+
+        # adicionar saldo
+        c.execute("""
+        UPDATE users
+        SET saldo = saldo + %s
+        WHERE id=%s
+        """,(valor,user_id))
+
+        # atualizar deposito
+        c.execute("""
+        UPDATE depositos
+        SET status='pago'
+        WHERE id=%s
+        """,(id,))
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/admin")
+#=====reprovar pix======
+@app.route("/recusar_pix/<int:id>")
+def recusar_pix(id):
+
+    if session.get("is_admin") != 1:
+        return redirect("/")
+
+    conn = conectar()
+    c = conn.cursor()
+
+    c.execute("""
+    UPDATE depositos
+    SET status='recusado'
+    WHERE id=%s
+    """,(id,))
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/admin")
+#===================================
 # START
 # ================================
 if __name__=="__main__":
