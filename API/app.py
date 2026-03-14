@@ -627,6 +627,31 @@ def fix_apostas():
     conn.close()
 
     return "Apostas corrigidas"
+#==========deposito===============
+@app.route("/depositar", methods=["GET","POST"])
+def depositar():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if request.method == "POST":
+
+        valor = float(request.form["valor"])
+
+        conn = conectar()
+        c = conn.cursor()
+
+        c.execute("""
+        INSERT INTO depositos(user_id,valor)
+        VALUES(%s,%s)
+        """,(session["user_id"],valor))
+
+        conn.commit()
+        conn.close()
+
+        return redirect("/pix")
+
+    return render_template("depositar.html")
 # ================================
 # START
 # ================================
