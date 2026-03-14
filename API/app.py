@@ -602,17 +602,20 @@ def admin():
     saques = c.fetchall()
 
     conn.close()
-
     return render_template(
-        "admin.html",
-        users=users,
-        depositos=depositos,
-        saques=saques,
-        total_apostado=round(total_apostado, 2),
-        total_pago=round(total_pago, 2),
-        lucro=round(lucro, 2)
-    
+    "admin.html",
+    users=users,
+    depositos=depositos,
+    saques=saques,
+    total_apostado=round(total_apostado, 2),
+    total_pago=round(total_pago, 2),
+    lucro=round(lucro, 2)
+    )
 
+
+
+    
+    
 
 # ================================
 # LOGOUT
