@@ -573,23 +573,15 @@ def admin():
     # usuários
     c.execute("SELECT id,username,saldo FROM users ORDER BY id")
     users = c.fetchall()
-    #statistica3
-    c.execute("""
-    SELECT COALESCE(SUM(ganho),0)
-    FROM apostas
-    WHERE ganho > 0
-    """)
-    total_pago = float(c.fetchone()[0])
 
-    lucro = float(total_apostado) - total_pago
     #statistica2
-    #c.execute("SELECT COALESCE(SUM(aposta),0) FROM apostas")
-    #total_apostado = float(c.fetchone()[0] or 0)
+    c.execute("SELECT COALESCE(SUM(aposta),0) FROM apostas")
+    total_apostado = float(c.fetchone()[0] or 0)
 
-    #c.execute("SELECT COALESCE(SUM(ganho),0) FROM apostas")
-    #total_pago = float(c.fetchone()[0] or 0)
+    c.execute("SELECT COALESCE(SUM(ganho),0) FROM apostas")
+    total_pago = float(c.fetchone()[0] or 0)
 
-    #lucro = total_apostado - total_pago
+    lucro = total_apostado - total_pago
 
     # estatísticas
     #c.execute("SELECT COALESCE(SUM(aposta),0) FROM apostas")
