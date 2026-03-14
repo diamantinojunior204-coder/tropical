@@ -4,31 +4,109 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Painel ADM - Cassino</title>
+
 <style>
-body {margin:0;font-family:Arial;background:#0f172a;color:white;}
-.container{padding:20px;}
-h2{text-align:center;}
-table{width:100%;border-collapse:collapse;margin-top:20px;}
-th,td{padding:10px;border:1px solid gold;text-align:center;}
-th{background:orange;color:black;}
-input{width:80px;padding:5px;border-radius:4px;border:none;}
-button{padding:5px 10px;border:none;border-radius:4px;background:orange;color:black;cursor:pointer;}
-button:hover{background:gold;}
+
+body{
+margin:0;
+font-family:Arial;
+background:#0f172a;
+color:white;
+}
+
+.container{
+padding:20px;
+}
+
+h2{
+text-align:center;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:20px;
+}
+
+th,td{
+padding:10px;
+border:1px solid gold;
+text-align:center;
+}
+
+th{
+background:orange;
+color:black;
+}
+
+input{
+width:80px;
+padding:5px;
+border-radius:4px;
+border:none;
+}
+
+button{
+padding:5px 10px;
+border:none;
+border-radius:4px;
+background:orange;
+color:black;
+cursor:pointer;
+}
+
+button:hover{
+background:gold;
+}
+
+.aprovar{
+background:green;
+color:white;
+}
+
+.recusar{
+background:red;
+color:white;
+}
+
 </style>
+
 </head>
+
 <body>
+
 <div class="container">
+
 <h2>🛠 Painel Administrativo</h2>
-<p>Total Apostado: R$ {{total_apostado}} | Total Pago: R$ {{total_pago}} | Lucro: R$ {{lucro}}</p>
+
+<p>
+Total Apostado: R$ {{total_apostado}} |
+Total Pago: R$ {{total_pago}} |
+Lucro: R$ {{lucro}}
+</p>
+
+<h3>👥 Usuários</h3>
+
 <table>
+
 <tr>
-<th>ID</th><th>Usuário</th><th>Saldo</th><th>Adicionar Créditos</th><th>Remover Créditos</th>
+<th>ID</th>
+<th>Usuário</th>
+<th>Saldo</th>
+<th>Adicionar Créditos</th>
+<th>Remover Créditos</th>
 </tr>
+
 {% for u in users %}
+
 <tr>
+
 <td>{{u[0]}}</td>
+
 <td>{{u[1]}}</td>
+
 <td>R$ {{u[2]}}</td>
+
 <td>
 <form method="POST" action="/add_saldo">
 <input type="hidden" name="user_id" value="{{u[0]}}">
@@ -36,6 +114,7 @@ button:hover{background:gold;}
 <button type="submit">Adicionar</button>
 </form>
 </td>
+
 <td>
 <form method="POST" action="/remover_saldo">
 <input type="hidden" name="user_id" value="{{u[0]}}">
@@ -43,10 +122,71 @@ button:hover{background:gold;}
 <button type="submit">Remover</button>
 </form>
 </td>
+
 </tr>
+
 {% endfor %}
+
 </table>
+
+<h3>💰 Depósitos PIX</h3>
+
+<table>
+
+<tr>
+<th>ID</th>
+<th>Usuário</th>
+<th>Valor</th>
+<th>Status</th>
+<th>Data</th>
+<th>Ação</th>
+</tr>
+
+{% for d in depositos %}
+
+<tr>
+
+<td>{{d[0]}}</td>
+
+<td>{{d[1]}}</td>
+
+<td>R$ {{d[2]}}</td>
+
+<td>{{d[3]}}</td>
+
+<td>{{d[4]}}</td>
+
+<td>
+
+{% if d[3] == "pendente" %}
+
+<a href="/aprovar_pix/{{d[0]}}">
+<button class="aprovar">Aprovar</button>
+</a>
+
+<a href="/recusar_pix/{{d[0]}}">
+<button class="recusar">Recusar</button>
+</a>
+
+{% else %}
+
+✔
+
+{% endif %}
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+<br>
+
 <a href="/index">Voltar</a>
+
 </div>
+
 </body>
 </html>
