@@ -40,6 +40,7 @@ def criar_db():
     conn = conectar()
     c = conn.cursor()
 
+    # USERS
     c.execute("""
     CREATE TABLE IF NOT EXISTS users(
         id SERIAL PRIMARY KEY,
@@ -50,6 +51,7 @@ def criar_db():
     )
     """)
 
+    # APOSTAS
     c.execute("""
     CREATE TABLE IF NOT EXISTS apostas(
         id SERIAL PRIMARY KEY,
@@ -61,6 +63,7 @@ def criar_db():
     )
     """)
 
+    # JACKPOT
     c.execute("""
     CREATE TABLE IF NOT EXISTS jackpot(
         id INTEGER PRIMARY KEY,
@@ -68,6 +71,18 @@ def criar_db():
     )
     """)
 
+    # DEPÓSITOS PIX
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS depositos(
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER,
+        valor NUMERIC(10,2),
+        status TEXT DEFAULT 'pendente',
+        data TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    # GARANTIR JACKPOT
     c.execute("SELECT * FROM jackpot WHERE id=1")
 
     if not c.fetchone():
