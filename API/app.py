@@ -738,6 +738,14 @@ def recusar_pix(id):
     conn.close()
 
     return redirect("/admin")
+#=========rota pix ======
+@app.route("/pix")
+def pix():
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    return render_template("pix.html")
 #===================================
 # START
 # ================================
