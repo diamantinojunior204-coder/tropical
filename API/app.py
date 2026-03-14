@@ -886,21 +886,7 @@ def aprovar_saque(id):
     conn.close()
 
     return redirect("/admin")
-#excluir tabela
-@app.route("/resetar_cassino")
-def resetar_cassino():
-    conn = conectar()
-    c = conn.cursor()
 
-    c.execute("TRUNCATE TABLE users RESTART IDENTITY CASCADE")
-    c.execute("TRUNCATE TABLE apostas RESTART IDENTITY CASCADE")
-    c.execute("TRUNCATE TABLE historico RESTART IDENTITY CASCADE")
-    c.execute("TRUNCATE TABLE jackpot RESTART IDENTITY CASCADE")
-
-    conn.commit()
-    conn.close()
-
-    return "Cassino resetado!"
 # excluir usuário 
 @app.route("/excluir_usuario/<int:id>")
 def excluir_usuario(id):
@@ -913,6 +899,25 @@ def excluir_usuario(id):
     conn.close()
 
     return redirect("/admin")
+# excluir cassino  
+@app.route("/resetar_cassino")
+def resetar_cassino():
+    try:
+        conn = conectar()
+        c = conn.cursor()
+
+        c.execute("TRUNCATE TABLE users RESTART IDENTITY CASCADE")
+        c.execute("TRUNCATE TABLE apostas RESTART IDENTITY CASCADE")
+        c.execute("TRUNCATE TABLE historico RESTART IDENTITY CASCADE")
+        c.execute("TRUNCATE TABLE jackpot RESTART IDENTITY CASCADE")
+
+        conn.commit()
+        conn.close()
+
+        return "✅ Cassino resetado!"
+
+    except Exception as e:
+        return f"Erro: {e}"
 #===================================
 # START
 # ================================
