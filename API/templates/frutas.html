@@ -174,7 +174,7 @@ Aposta:<br>
 </div>
 
 </div>
-
+<div id="mensagem_ganho"></div>
 
 <!-- SOM -->
 <audio id="somGiro" src="/static/som/girar.mp3"></audio>
@@ -205,8 +205,10 @@ setResult(data.resultado)
 
 document.getElementById("saldo").innerText = data.saldo
 
-if(data.ganho > 0){
-alert("🎉 Você ganhou R$ "+data.ganho)
+
+  if(data.ganho > 0){
+document.getElementById("mensagem_ganho").innerHTML =
+"<div style='background:#16a34a;color:white;padding:10px;border-radius:10px;font-size:18px;'>🎉 Você ganhou R$ "+data.ganho+"</div>";
 }
 
 })
