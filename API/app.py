@@ -92,6 +92,20 @@ def criar_db():
         data TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
+    #======controleRTP=======
+    CREATE TABLE users (
+     id SERIAL PRIMARY KEY,
+      username TEXT,
+      saldo FLOAT DEFAULT 100
+    );
+    CREATE TABLE estatisticas (
+     id INTEGER PRIMARY KEY,
+     total_apostado FLOAT DEFAULT 0,
+     total_pago FLOAT DEFAULT 0
+    );
+    INSERT INTO estatisticas (id,total_apostado,total_pago)
+    VALUES (1,0,0);
+    #======fimRTP======
 
     # GARANTIR JACKPOT
     c.execute("SELECT * FROM jackpot WHERE id=1")
@@ -562,55 +576,141 @@ def api_spin():
             calcular
         )
     )
+#receita ========RTP
 
+
+def calcular_slot(aposta,c):
+
+    simbolos=["forte","folha","moeda","Diamantino","saco"]
+
+    c.execute("SELECT total_apostado,total_pago FROM estatisticas WHERE id=1")
+    stats=c.fetchone()
+
+    total_apostado=stats[0]
+    total_pago=stats[1]
+
+    rtp=0
+    if total_apostado>0:
+        rtp=total_pago/total_apostado
+
+    RTP_ALVO=0.90
+
+    # gera resultado
+    resultado=[
+        random.choice(simbolos),
+        random.choice(simbolos),
+        random.choice(simbolos)
+    ]
+
+    # controla RTP
+    if rtp>RTP_ALVO:
+
+        while resultado[0]==resultado[1]==resultado[2]:
+            resultado[2]=random.choice(simbolos)
+
+    ganho=0
+
+    # pagamentos
+    if resultado[0]==resultado[1]==resultado[2]:
+
+        if resultado[0]=="Diamantino":
+            ganho=aposta*50
+        else:
+            ganho=aposta*20
+
+    elif "Diamantino" in resultado:
+        ganho=aposta*10
+
+    return resultado,ganho    
 #============Diamantino======
-
-@app.route("/api/diamantino", methods=["POST"])
+@app.route("/api/diamantino",methods=["POST"])
 def api_diamantino():
 
-    if "user_id" not in session:
-        return jsonify({"error":"login"}),401
+    data=request.get_json()
 
-    data = request.get_json()
+    aposta=float(data["aposta"])
 
-    aposta = float(data["aposta"])
+    user_id=session["user_id"]
 
-    def calcular(aposta,c):
+    conn=conectar()
+    c=conn.cursor()
 
-        simbolos=["forte","folha","moeda","Diamantino","saco"]
+    # saldo
+    c.execute("SELECT saldo FROM users WHERE id=%s",(user_id,))
+    saldo=c.fetchone()[0]
 
-        resultado=[
-            random.choice(simbolos),
-            random.choice(simbolos),
-            random.choice(simbolos)
-        ]
+    if saldo<aposta:
+        return jsonify({"erro":"saldo insuficiente"})
 
-        ganho=-aposta
+    resultado,ganho=calcular_slot(aposta,c)
+
+    saldo=saldo-aposta+ganho
+
+    # atualizar saldo
+    c.execute("UPDATE users SET saldo=%s WHERE id=%s",(saldo,user_id))
+
+    # atualizar estatísticas
+    c.execute("""
+    UPDATE estatisticas
+    SET total_apostado = total_apostado + %s,
+        total_pago = total_pago + %s
+    WHERE id=1
+    """,(aposta,ganho))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "resultado":resultado,
+        "ganho":ganho,
+        "saldo":saldo
+    })
+#@app.route("/api/diamantino", methods=["POST"])
+#def api_diamantino():
+
+  #  if "user_id" not in session:
+      #  return jsonify({"error":"login"}),401
+
+   # data = request.get_json()
+
+    #aposta = float(data["aposta"])
+
+    #def calcular(aposta,c):
+
+        #simbolos=["forte","folha","moeda","Diamantino","saco"]
+
+       # resultado=[
+           # random.choice(simbolos),
+           # random.choice(simbolos),
+            #random.choice(simbolos)
+       # ]
+
+        #ganho=-aposta
 
         # JACKPOT
-        if resultado[0]==resultado[1]==resultado[2]:
+       # if resultado[0]==resultado[1]==resultado[2]:
 
-            if resultado[0]=="Diamantino":
+           # if resultado[0]=="Diamantino":
                 ganho+=aposta*50
-            else:
-                ganho+=aposta*20
+            #else:
+              #  ganho+=aposta*20
 
         # BONUS
-        elif "Diamantino" in resultado:
-            ganho+=aposta*10
+       # elif "Diamantino" in resultado:
+        #    ganho+=aposta*10
 
-        return ganho,{
-            "resultado":resultado
-        }
+       # return ganho,{
+     #       "resultado":resultado
+     #   }
 
-    resultado=processar_aposta(
-        session["user_id"],
-        "diamantino",
-        aposta,
-        calcular
-    )
+   # resultado=processar_aposta(
+     #   session["user_id"],
+     #   "diamantino",
+      #  aposta,
+    #    calcular
+  #  )
 
-    return jsonify(resultado)
+   # return jsonify(resultado)
 # ================================
 # ADMIN
 # ================================
