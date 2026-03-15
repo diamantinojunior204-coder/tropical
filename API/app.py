@@ -93,18 +93,39 @@ def criar_db():
     )
     """)
     #======controleRTP=======
-    CREATE TABLE users (
-     id SERIAL PRIMARY KEY,
-      username TEXT,
-      saldo FLOAT DEFAULT 100
-    );
-    CREATE TABLE estatisticas (
-     id INTEGER PRIMARY KEY,
-     total_apostado FLOAT DEFAULT 0,
-     total_pago FLOAT DEFAULT 0
-    );
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username TEXT,
+    saldo FLOAT DEFAULT 100
+    )
+    """)
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS estatisticas (
+    id INTEGER PRIMARY KEY,
+    total_apostado FLOAT DEFAULT 0,
+    total_pago FLOAT DEFAULT 0
+    )
+    """)
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS apostas (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER,
+    jogo TEXT,
+    aposta FLOAT,
+    ganho FLOAT,
+    data TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    # inserir estatística inicial
+    c.execute("""
     INSERT INTO estatisticas (id,total_apostado,total_pago)
-    VALUES (1,0,0);
+    VALUES (1,0,0)
+    ON CONFLICT (id) DO NOTHING
+    """)
     #======fimRTP======
 
     # GARANTIR JACKPOT
