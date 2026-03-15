@@ -802,7 +802,22 @@ def admin():
     ORDER BY saques.id DESC
     """)
     saques = c.fetchall()
+    conn = conectar()
+    c = conn.cursor()
 
+    # estatísticas do cassino
+    c.execute("SELECT total_apostado,total_pago FROM estatisticas WHERE id=1")
+    stats = c.fetchone()
+
+    total_apostado = stats[0]
+    total_pago = stats[1]
+
+    lucro = total_apostado - total_pago
+
+    rtp = 0
+    if total_apostado > 0:
+        rtp = (total_pago / total_apostado) * 100
+    
     conn.close()
     return render_template(
     "admin.html",
@@ -812,6 +827,10 @@ def admin():
     total_apostado=round(total_apostado, 2),
     total_pago=round(total_pago, 2),
     lucro=round(lucro, 2)
+    total_apostado=total_apostado,
+    total_pago=total_pago,
+    lucro=lucro,
+    rtp=rtp    
     )
 
 
