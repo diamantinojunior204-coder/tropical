@@ -356,6 +356,13 @@ def frutas():
         return redirect("/login")
 
     return render_template("frutas.html")
+ @app.route("/diamantino")
+def diamantino():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    return render_template("diamantino.html", saldo=get_saldo())   
 # ================================
 # SLOT
 # ================================
@@ -556,7 +563,51 @@ def api_spin():
         )
     )
 
+#============Diamantino======
+@app.route("/api/diamantino", methods=["POST"])
+def api_diamantino():
 
+    if "user_id" not in session:
+        return jsonify({"error":"login"}),401
+
+    data = request.get_json()
+    aposta = float(data["aposta"])
+
+    def calcular(aposta, c):
+
+        simbolos = ["forte","folha","moeda","Diamantino","saco"]
+
+        resultado = [
+            random.choice(simbolos),
+            random.choice(simbolos),
+            random.choice(simbolos)
+        ]
+
+        ganho = -aposta
+
+        if resultado[0] == resultado[1] == resultado[2]:
+
+            if resultado[0] == "Diamantino":
+                ganho += aposta * 50
+            else:
+                ganho += aposta * 20
+
+        elif "Diamantino" in resultado:
+
+            ganho += aposta * 10
+
+        return ganho,{
+            "resultado":resultado
+        }
+
+    return jsonify(
+        processar_aposta(
+            session["user_id"],
+            "diamantino",
+            aposta,
+            calcular
+        )
+    )
 
 # ================================
 # ADMIN
