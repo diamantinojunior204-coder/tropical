@@ -564,6 +564,7 @@ def api_spin():
     )
 
 #============Diamantino======
+
 @app.route("/api/diamantino", methods=["POST"])
 def api_diamantino():
 
@@ -571,44 +572,45 @@ def api_diamantino():
         return jsonify({"error":"login"}),401
 
     data = request.get_json()
+
     aposta = float(data["aposta"])
 
-    def calcular(aposta, c):
+    def calcular(aposta,c):
 
-        simbolos = ["forte","folha","moeda","Diamantino","saco"]
+        simbolos=["forte","folha","moeda","Diamantino","saco"]
 
-        resultado = [
+        resultado=[
             random.choice(simbolos),
             random.choice(simbolos),
             random.choice(simbolos)
         ]
 
-        ganho = -aposta
+        ganho=-aposta
 
-        if resultado[0] == resultado[1] == resultado[2]:
+        # JACKPOT
+        if resultado[0]==resultado[1]==resultado[2]:
 
-            if resultado[0] == "Diamantino":
-                ganho += aposta * 50
+            if resultado[0]=="Diamantino":
+                ganho+=aposta*50
             else:
-                ganho += aposta * 20
+                ganho+=aposta*20
 
+        # BONUS
         elif "Diamantino" in resultado:
-
-            ganho += aposta * 10
+            ganho+=aposta*10
 
         return ganho,{
             "resultado":resultado
         }
 
-    return jsonify(
-        processar_aposta(
-            session["user_id"],
-            "diamantino",
-            aposta,
-            calcular
-        )
+    resultado=processar_aposta(
+        session["user_id"],
+        "diamantino",
+        aposta,
+        calcular
     )
 
+    return jsonify(resultado)
 # ================================
 # ADMIN
 # ================================
