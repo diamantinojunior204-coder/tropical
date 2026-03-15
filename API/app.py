@@ -635,12 +635,12 @@ def calcular_slot(aposta,c):
     if resultado[0]==resultado[1]==resultado[2]:
 
         if resultado[0]=="Diamantino":
-            ganho=aposta*50
+           ganho=aposta*50
         else:
-            ganho=aposta*20
+           ganho=aposta*20
 
     elif "Diamantino" in resultado:
-        ganho=aposta*10
+          ganho=aposta*10
 
     return resultado,ganho
 
