@@ -356,7 +356,7 @@ def frutas():
         return redirect("/login")
 
     return render_template("frutas.html")
- @app.route("/diamantino")
+@app.route("/diamantino")
 def diamantino():
 
     if "user_id" not in session:
