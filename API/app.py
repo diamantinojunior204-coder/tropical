@@ -356,6 +356,14 @@ def frutas():
         return redirect("/login")
 
     return render_template("frutas.html")
+ #rota Diamantino 
+@app.route("/diamantino")
+def diamantino():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    return render_template("diamantino.html", saldo=get_saldo())
 # ================================
 # SLOT
 # ================================
@@ -557,7 +565,25 @@ def api_spin():
     )
 
 
+#=====slot Diamantino===
+@app.route("/api/diamantino", methods=["POST"])
+def api_diamantino():
 
+    if "user_id" not in session:
+        return jsonify({"error":"login"}),401
+
+    data = request.get_json()
+
+    aposta = float(data["aposta"])
+
+    return jsonify(
+        processar_aposta(
+            session["user_id"],
+            "diamantino",
+            aposta,
+            calcular_diamantino
+        )
+    )
 # ================================
 # ADMIN
 # ================================
@@ -918,6 +944,59 @@ def resetar_cassino():
 
     except Exception as e:
         return f"Erro: {e}"
+#=======logica Diamantino 
+def calcular_diamantino(aposta, c):
+
+    simbolos = ["forte","folha","moeda","Diamantino","saco"]
+
+    c.execute("SELECT total_apostado,total_pago FROM estatisticas WHERE id=1")
+    stats = c.fetchone()
+
+    total_apostado = stats[0]
+    total_pago = stats[1]
+
+    rtp = 0
+
+    if total_apostado > 0:
+        rtp = total_pago / total_apostado
+
+    RTP_ALVO = 0.90
+
+    resultado = [
+        random.choice(simbolos),
+        random.choice(simbolos),
+        random.choice(simbolos)
+    ]
+
+    # controle RTP
+    if rtp > RTP_ALVO:
+
+        while resultado[0] == resultado[1] == resultado[2]:
+            resultado[2] = random.choice(simbolos)
+
+    ganho = -aposta
+
+    if resultado[0] == resultado[1] == resultado[2]:
+
+        if resultado[0] == "Diamantino":
+            ganho += aposta * 50
+
+        else:
+            ganho += aposta * 20
+
+    elif "Diamantino" in resultado:
+
+        ganho += aposta * 10
+
+    c.execute("""
+    UPDATE estatisticas
+    SET total_apostado = total_apostado + %s,
+        total_pago = total_pago + %s
+    WHERE id=1
+    """,(aposta,ganho))
+
+    return ganho, {"resultado": resultado}
+
 #===================================
 # START
 # ================================
