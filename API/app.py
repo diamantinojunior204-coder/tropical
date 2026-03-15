@@ -622,28 +622,27 @@ def calcular_slot(aposta,c):
         random.choice(simbolos),
         random.choice(simbolos)
     ]
-
+    
     # controla RTP
-    if rtp>RTP_ALVO:
+    if rtp > RTP_ALVO:
 
-        while resultado[0]==resultado[1]==resultado[2]:
-            resultado[2]=random.choice(simbolos)
+        while resultado[0] == resultado[1] == resultado[2]:
+            resultado[2] = random.choice(simbolos)
 
-    ganho=0
+    ganho = 0
 
     # pagamentos
     if resultado[0] == resultado[1] == resultado[2]:
 
-       if resultado[0] == "Diamantino":
-           ganho += aposta * 50
-       else:
-           ganho += aposta * 20
-    
+        if resultado[0] == "Diamantino":
+            ganho = aposta * 50
+        else:
+            ganho = aposta * 20
+
     elif "Diamantino" in resultado:
-        ganho=aposta*10
+        ganho = aposta * 10
 
-    return resultado,ganho
-
+    return resultado, ganho
 
 #============Diamantino======
 @app.route("/api/diamantino",methods=["POST"])
