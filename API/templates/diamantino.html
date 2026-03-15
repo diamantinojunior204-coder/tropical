@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎰 Diamantino Slot</title>
+
+<style>
+
+body{
+background:radial-gradient(circle,#2a0066,#0a001f);
+font-family:Arial;
+display:flex;
+flex-direction:column;
+align-items:center;
+padding:20px;
+color:white;
+}
+
+h1{
+margin-bottom:20px;
+}
+
+.slot{
+background:#4b0082;
+padding:20px;
+border-radius:15px;
+box-shadow:0 0 30px black;
+}
+
+.reels{
+display:flex;
+gap:10px;
+margin-bottom:20px;
+}
+
+.reel{
+width:110px;
+height:300px;
+overflow:hidden;
+border-radius:10px;
+border:4px solid gold;
+background:white;
+position:relative;
+}
+
+.strip{
+position:absolute;
+width:100%;
+top:0;
+}
+
+.symbol{
+height:100px;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.symbol img{
+max-width:90%;
+max-height:90%;
+}
+
+.controls{
+text-align:center;
+}
+
+button{
+padding:15px 40px;
+font-size:18px;
+border:none;
+border-radius:20px;
+background:#ff0055;
+color:white;
+cursor:pointer;
+}
+
+button:disabled{
+background:#555;
+}
+
+.credits{
+font-size:22px;
+margin-bottom:10px;
+}
+
+.result{
+margin-top:10px;
+font-size:20px;
+color:gold;
+}
+
+.win{
+animation:flash 0.4s infinite;
+}
+
+@keyframes flash{
+0%{box-shadow:0 0 10px yellow;}
+50%{box-shadow:0 0 30px gold;}
+100%{box-shadow:0 0 10px yellow;}
+}
+
+input{
+padding:10px;
+font-size:16px;
+border-radius:10px;
+border:none;
+margin-bottom:10px;
+width:120px;
+text-align:center;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>🎰 Diamantino Slot</h1>
+
+<div class="slot" id="slot">
+
+<div class="reels">
+
+<div class="reel"><div class="strip" id="s1"></div></div>
+<div class="reel"><div class="strip" id="s2"></div></div>
+<div class="reel"><div class="strip" id="s3"></div></div>
+
+</div>
+
+<div class="controls">
+
+<div class="credits">
+Saldo: R$ <span id="credits">{{saldo}}</span>
+</div>
+
+<input type="number" id="aposta" value="1" min="1">
+
+<br><br>
+
+<button id="spin">GIRAR</button>
+
+<div class="result" id="result">
+Boa sorte!
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const symbols=[
+{src:"/static/img/forte.jpg",name:"forte"},
+{src:"/static/img/folha.jpg",name:"folha"},
+{src:"/static/img/moeda.jpg",name:"moeda"},
+{src:"/static/img/wild.jpg",name:"Diamantino"},
+{src:"/static/img/saco.jpg",name:"saco"}
+];
+
+const strips=[
+document.getElementById("s1"),
+document.getElementById("s2"),
+document.getElementById("s3")
+];
+
+const spinBtn=document.getElementById("spin");
+const creditsEl=document.getElementById("credits");
+const resultEl=document.getElementById("result");
+const slot=document.getElementById("slot");
+
+const spinSound = new Audio("/static/audio/jogo2.mp3");
+const winSound = new Audio("/static/audio/audio1.mp3");
+
+let credits=parseFloat(creditsEl.innerText);
+
+function randomSymbol(){
+return symbols[Math.floor(Math.random()*symbols.length)];
+}
+
+function createSymbol(symbol){
+
+const div=document.createElement("div");
+
+div.className="symbol";
+
+div.innerHTML=`<img src="${symbol.src}">`;
+
+div.dataset.symbol=symbol.name;
+
+return div;
+}
+
+function buildStrip(strip){
+
+let list=[];
+
+for(let i=0;i<30;i++){
+list.push(randomSymbol());
+}
+
+list.forEach(s=>strip.appendChild(createSymbol(s)));
+list.forEach(s=>strip.appendChild(createSymbol(s)));
+
+}
+
+function init(){
+
+strips.forEach(strip=>{
+buildStrip(strip);
+});
+
+}
+
+function spin(){
+
+let aposta=document.getElementById("aposta").value;
+
+spinSound.currentTime=0;
+spinSound.play();
+
+slot.classList.remove("win");
+
+spinBtn.disabled=true;
+
+resultEl.innerText="Girando...";
+
+fetch("/api/diamantino",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+aposta:aposta
+})
+})
+.then(r=>r.json())
+.then(data=>{
+
+credits=data.saldo;
+
+creditsEl.innerText=credits;
+
+let r=data.resultado;
+
+animateSpin(r);
+
+spinBtn.disabled=false;
+
+});
+
+}
+
+function animateSpin(r){
+
+strips.forEach((strip,i)=>{
+
+const symbolsList=strip.children;
+
+const stopIndex=Math.floor(Math.random()*30);
+
+const offset=stopIndex*100;
+
+const distance=(symbolsList.length*100)+offset;
+
+strip.style.transition="none";
+
+setTimeout(()=>{
+
+strip.style.transition="transform "+(2+i*0.5)+"s cubic-bezier(.2,.8,.2,1)";
+strip.style.transform="translateY(-"+distance+"px)";
+
+},50);
+
+setTimeout(()=>{
+
+strip.style.transition="none";
+strip.style.transform="translateY(-"+offset+"px)");
+
+if(i===2){
+checkWin(r);
+}
+
+},2300+i*500);
+
+});
+
+}
+
+function checkWin(r){
+
+if(r[0]===r[1] && r[1]===r[2]){
+
+slot.classList.add("win");
+
+winSound.play();
+
+resultEl.innerText="🎉 JACKPOT!";
+
+}
+
+else if(r.includes("Diamantino")){
+
+winSound.play();
+
+resultEl.innerText="⭐ Diamantino!";
+
+}
+
+else{
+
+resultEl.innerText="Oh! não deu";
+
+}
+
+}
+
+spinBtn.onclick=spin;
+
+init();
+
+</script>
+
+</body>
+</html>
