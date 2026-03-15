@@ -1,4 +1,9 @@
-import os import random import psycopg2 from urllib.parse import urlparse from flask import Flask, render_template, request, redirect, session, jsonify from werkzeug.security import generate_password_hash, check_password_hash
+import os
+import random 
+import psycopg2
+from urllib.parse import urlparse 
+from flask import Flask, render_template, request, redirect, session, jsonify 
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(name) app.secret_key = "segredo_super_cassino"
 
