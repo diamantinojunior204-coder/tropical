@@ -17,9 +17,7 @@ padding:20px;
 color:white;
 }
 
-h1{
-margin-bottom:20px;
-}
+h1{margin-bottom:20px;}
 
 .slot{
 background:#4b0082;
@@ -62,9 +60,7 @@ max-width:90%;
 max-height:90%;
 }
 
-.controls{
-text-align:center;
-}
+.controls{text-align:center;}
 
 button{
 padding:15px 40px;
@@ -76,9 +72,7 @@ color:white;
 cursor:pointer;
 }
 
-button:disabled{
-background:#555;
-}
+button:disabled{background:#555;}
 
 .credits{
 font-size:22px;
@@ -121,11 +115,9 @@ text-align:center;
 <div class="slot" id="slot">
 
 <div class="reels">
-
 <div class="reel"><div class="strip" id="s1"></div></div>
 <div class="reel"><div class="strip" id="s2"></div></div>
 <div class="reel"><div class="strip" id="s3"></div></div>
-
 </div>
 
 <div class="controls">
@@ -145,7 +137,6 @@ Boa sorte!
 </div>
 
 </div>
-
 </div>
 
 <script>
@@ -173,6 +164,7 @@ const spinSound=new Audio("/static/audio/jogo2.mp3");
 const winSound=new Audio("/static/audio/audio1.mp3");
 
 let credits=parseFloat(creditsEl.innerText);
+let lastSaldo=credits;
 
 function randomSymbol(){
 return symbols[Math.floor(Math.random()*symbols.length)];
@@ -181,11 +173,8 @@ return symbols[Math.floor(Math.random()*symbols.length)];
 function createSymbol(symbol){
 
 const div=document.createElement("div");
-
 div.className="symbol";
-
 div.innerHTML=`<img src="${symbol.src}">`;
-
 div.dataset.symbol=symbol.name;
 
 return div;
@@ -205,13 +194,14 @@ list.forEach(s=>strip.appendChild(createSymbol(s)));
 }
 
 function init(){
-
 strips.forEach(strip=>{
 buildStrip(strip);
 });
-
 }
+
 function spin(){
+
+if(spinBtn.disabled) return;
 
 let aposta=document.getElementById("aposta").value;
 
@@ -229,12 +219,10 @@ method:"POST",
 headers:{
 "Content-Type":"application/json"
 },
-body:JSON.stringify({
-aposta:aposta
+body:JSON.stringify({aposta:aposta})
 })
-})
-.then(response => response.json())
-.then(data => {
+.then(r=>r.json())
+.then(data=>{
 
 if(data.erro){
 resultEl.innerText=data.erro;
@@ -242,18 +230,9 @@ spinBtn.disabled=false;
 return;
 }
 
-credits=data.saldo;
-creditsEl.innerText=credits;
+lastSaldo=data.saldo;
 
-let resultado=data.resultado;
-
-if(!resultado){
-resultEl.innerText="Erro no jogo";
-spinBtn.disabled=false;
-return;
-}
-
-animateSpin(resultado);
+animateSpin(data.resultado,data.ganho);
 
 })
 .catch(err=>{
@@ -261,18 +240,17 @@ console.log(err);
 resultEl.innerText="Erro no servidor";
 spinBtn.disabled=false;
 });
+
 }
 
-function animateSpin(r,ganho){
+function animateSpin(resultado,ganho){
 
 strips.forEach((strip,i)=>{
 
 const symbolsList=strip.children;
 
 const stopIndex=Math.floor(Math.random()*30);
-
 const offset=stopIndex*100;
-
 const distance=(symbolsList.length*100)+offset;
 
 strip.style.transition="none";
@@ -287,15 +265,11 @@ strip.style.transform="translateY(-"+distance+"px)";
 setTimeout(()=>{
 
 strip.style.transition="none";
-
 strip.style.transform="translateY(-"+offset+"px)";
 
 if(i===2){
 
-checkWin(r,ganho);
-
-/* ATIVA BOTÃO NOVAMENTE */
-spinBtn.disabled=false;
+finishSpin(ganho);
 
 }
 
@@ -303,10 +277,12 @@ spinBtn.disabled=false;
 
 });
 
-  }
+}
 
+function finishSpin(ganho){
 
-function checkWin(r,ganho){
+credits=lastSaldo;
+creditsEl.innerText=credits;
 
 if(ganho>0){
 
@@ -316,12 +292,13 @@ winSound.play();
 
 resultEl.innerText="🎉 GANHOU R$ "+ganho;
 
-}
-else{
+}else{
 
-resultEl.innerText="Oh! não deu";
+resultEl.innerText="Tente novamente";
 
 }
+
+spinBtn.disabled=false;
 
 }
 
