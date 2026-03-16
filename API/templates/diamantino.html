@@ -72,7 +72,9 @@ color:white;
 cursor:pointer;
 }
 
-button:disabled{background:#555;}
+button:disabled{
+background:#555;
+}
 
 .credits{
 font-size:22px;
@@ -115,9 +117,11 @@ text-align:center;
 <div class="slot" id="slot">
 
 <div class="reels">
+
 <div class="reel"><div class="strip" id="s1"></div></div>
 <div class="reel"><div class="strip" id="s2"></div></div>
 <div class="reel"><div class="strip" id="s3"></div></div>
+
 </div>
 
 <div class="controls">
@@ -137,6 +141,7 @@ Boa sorte!
 </div>
 
 </div>
+
 </div>
 
 <script>
@@ -173,8 +178,11 @@ return symbols[Math.floor(Math.random()*symbols.length)];
 function createSymbol(symbol){
 
 const div=document.createElement("div");
+
 div.className="symbol";
+
 div.innerHTML=`<img src="${symbol.src}">`;
+
 div.dataset.symbol=symbol.name;
 
 return div;
@@ -194,9 +202,11 @@ list.forEach(s=>strip.appendChild(createSymbol(s)));
 }
 
 function init(){
+
 strips.forEach(strip=>{
 buildStrip(strip);
 });
+
 }
 
 function spin(){
@@ -242,6 +252,7 @@ spinBtn.disabled=false;
 });
 
 }
+
 function animateSpin(resultado,ganho){
 
 strips.forEach((strip,i)=>{
@@ -249,7 +260,7 @@ strips.forEach((strip,i)=>{
 const symbolsList=[...strip.children];
 
 let index=symbolsList.findIndex(
-s => s.dataset.symbol === resultado[i]
+s=>s.dataset.symbol===resultado[i]
 );
 
 if(index<0){
@@ -257,7 +268,6 @@ index=10;
 }
 
 const offset=index*100;
-
 const distance=(symbolsList.length*100)+offset;
 
 strip.style.transition="none";
@@ -275,22 +285,6 @@ strip.style.transition="none";
 strip.style.transform="translateY(-"+offset+"px)");
 
 if(i===2){
-finishSpin(ganho);
-}
-
-},2300+i*500);
-
-});
-
-}
-
-
-setTimeout(()=>{
-
-strip.style.transition="none";
-strip.style.transform="translateY(-"+offset+"px)";
-
-if(i===2){
 
 finishSpin(ganho);
 
@@ -305,6 +299,7 @@ finishSpin(ganho);
 function finishSpin(ganho){
 
 credits=lastSaldo;
+
 creditsEl.innerText=credits;
 
 if(ganho>0){
