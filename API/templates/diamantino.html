@@ -211,10 +211,9 @@ buildStrip(strip);
 });
 
 }
-
 function spin(){
 
-let aposta=parseFloat(document.getElementById("aposta").value);
+let aposta=document.getElementById("aposta").value;
 
 spinSound.currentTime=0;
 spinSound.play();
@@ -234,31 +233,36 @@ body:JSON.stringify({
 aposta:aposta
 })
 })
-.then(r=>r.json())
-.then(data=>{
+.then(response => response.json())
+.then(data => {
+
+if(data.erro){
+resultEl.innerText=data.erro;
+spinBtn.disabled=false;
+return;
+}
 
 credits=data.saldo;
-
 creditsEl.innerText=credits;
 
-let r=data.extra.resultado;
+let resultado=data.resultado;
 
-animateSpin(r,data.ganho);
-
+if(!resultado){
+resultEl.innerText="Erro no jogo";
 spinBtn.disabled=false;
+return;
+}
+
+animateSpin(resultado);
 
 })
-.catch(e=>{
-
-console.log(e);
-
-resultEl.innerText="Erro no jogo";
-
+.catch(err=>{
+console.log(err);
+resultEl.innerText="Erro no servidor";
 spinBtn.disabled=false;
-
 });
-
 }
+
 
 function animateSpin(r,ganho){
 
