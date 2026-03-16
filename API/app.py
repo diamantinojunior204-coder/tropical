@@ -593,13 +593,12 @@ def api_diamantino():
         return jsonify({"erro":"login"}),401
 
     data = request.get_json()
-
     aposta = float(data["aposta"])
 
     conn = conectar()
     c = conn.cursor()
 
-    # pegar saldo
+    # saldo atual
     c.execute("SELECT saldo FROM users WHERE id=%s",(session["user_id"],))
     saldo = float(c.fetchone()[0])
 
@@ -607,26 +606,8 @@ def api_diamantino():
         conn.close()
         return jsonify({"erro":"Saldo insuficiente"})
 
-    # símbolos
-    simbolos = ["forte","folha","moeda","Diamantino","saco"]
-
-    resultado = [
-        random.choice(simbolos),
-        random.choice(simbolos),
-        random.choice(simbolos)
-    ]
-
-    ganho = -aposta
-
-    if resultado[0] == resultado[1] == resultado[2]:
-
-        if resultado[0] == "Diamantino":
-            ganho += aposta * 50
-        else:
-            ganho += aposta * 20
-
-    elif "Diamantino" in resultado:
-        ganho += aposta * 10
+    # usa sua função
+    ganho, extra = calcular_diamantino(aposta, c)
 
     saldo = saldo + ganho
 
@@ -640,10 +621,13 @@ def api_diamantino():
     conn.close()
 
     return jsonify({
-        "resultado": resultado,
+        "resultado": extra["resultado"],
         "ganho": ganho,
         "saldo": saldo
     })
+
+
+    
 
 # ================================
 # ADMIN
