@@ -263,7 +263,6 @@ spinBtn.disabled=false;
 });
 }
 
-
 function animateSpin(r,ganho){
 
 strips.forEach((strip,i)=>{
@@ -292,14 +291,20 @@ strip.style.transition="none";
 strip.style.transform="translateY(-"+offset+"px)";
 
 if(i===2){
+
 checkWin(r,ganho);
+
+/* ATIVA BOTÃO NOVAMENTE */
+spinBtn.disabled=false;
+
 }
 
 },2300+i*500);
 
 });
 
-}
+  }
+
 
 function checkWin(r,ganho){
 
