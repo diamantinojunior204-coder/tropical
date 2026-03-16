@@ -242,15 +242,22 @@ spinBtn.disabled=false;
 });
 
 }
-
 function animateSpin(resultado,ganho){
 
 strips.forEach((strip,i)=>{
 
-const symbolsList=strip.children;
+const symbolsList=[...strip.children];
 
-const stopIndex=Math.floor(Math.random()*30);
-const offset=stopIndex*100;
+let index=symbolsList.findIndex(
+s => s.dataset.symbol === resultado[i]
+);
+
+if(index<0){
+index=10;
+}
+
+const offset=index*100;
+
 const distance=(symbolsList.length*100)+offset;
 
 strip.style.transition="none";
@@ -261,6 +268,22 @@ strip.style.transition="transform "+(2+i*0.5)+"s cubic-bezier(.2,.8,.2,1)";
 strip.style.transform="translateY(-"+distance+"px)";
 
 },50);
+
+setTimeout(()=>{
+
+strip.style.transition="none";
+strip.style.transform="translateY(-"+offset+"px)");
+
+if(i===2){
+finishSpin(ganho);
+}
+
+},2300+i*500);
+
+});
+
+}
+
 
 setTimeout(()=>{
 
