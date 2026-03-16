@@ -1019,29 +1019,35 @@ def calcular_diamantino(aposta, c):
         while resultado[0] == resultado[1] == resultado[2]:
             resultado[2] = random.choice(simbolos)
 
-    ganho = -aposta
+    ganho = 0
 
+    # pagamentos
     if resultado[0] == resultado[1] == resultado[2]:
 
         if resultado[0] == "Diamantino":
-            ganho += aposta * 50
-
+            ganho = aposta * 50
         else:
-            ganho += aposta * 20
+            ganho = aposta * 20
 
     elif "Diamantino" in resultado:
 
-        ganho += aposta * 10
+        ganho = aposta * 10
 
+    # atualizar estatísticas
     c.execute("""
     UPDATE estatisticas
     SET total_apostado = total_apostado + %s,
         total_pago = total_pago + %s
     WHERE id=1
-    """,(aposta,ganho))
+    """,(aposta, ganho))
 
-    return ganho, {"resultado": resultado}
+    # resultado final do saldo (perde aposta primeiro)
+    ganho_final = ganho - aposta
 
+    return ganho_final, {"resultado": resultado}
+
+
+    
 #===================================
 # START
 # ================================
