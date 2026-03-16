@@ -598,7 +598,7 @@ def api_diamantino():
     conn = conectar()
     c = conn.cursor()
 
-    # saldo atual
+    # pegar saldo
     c.execute("SELECT saldo FROM users WHERE id=%s",(session["user_id"],))
     saldo = float(c.fetchone()[0])
 
@@ -606,10 +606,14 @@ def api_diamantino():
         conn.close()
         return jsonify({"erro":"Saldo insuficiente"})
 
-    # usa sua função
-    ganho, extra = calcular_diamantino(aposta, c)
+    # calcular prêmio
+    premio, extra = calcular_diamantino(aposta, c)
 
-    saldo = saldo + ganho
+    # desconta aposta
+    saldo -= aposta
+
+    # adiciona prêmio
+    saldo += premio
 
     # atualizar saldo
     c.execute(
@@ -622,9 +626,10 @@ def api_diamantino():
 
     return jsonify({
         "resultado": extra["resultado"],
-        "ganho": ganho,
+        "ganho": premio,
         "saldo": saldo
-    })
+    })    
+
 
 
     
@@ -1001,7 +1006,6 @@ def calcular_diamantino(aposta, c):
     total_pago = stats[1]
 
     rtp = 0
-
     if total_apostado > 0:
         rtp = total_pago / total_apostado
 
@@ -1015,23 +1019,21 @@ def calcular_diamantino(aposta, c):
 
     # controle RTP
     if rtp > RTP_ALVO:
-
         while resultado[0] == resultado[1] == resultado[2]:
             resultado[2] = random.choice(simbolos)
 
-    ganho = 0
+    premio = 0
 
     # pagamentos
     if resultado[0] == resultado[1] == resultado[2]:
 
         if resultado[0] == "Diamantino":
-            ganho = aposta * 50
+            premio = aposta * 25
         else:
-            ganho = aposta * 20
+            premio = aposta * 10
 
     elif "Diamantino" in resultado:
-
-        ganho = aposta * 10
+        premio = aposta * 3
 
     # atualizar estatísticas
     c.execute("""
@@ -1039,12 +1041,9 @@ def calcular_diamantino(aposta, c):
     SET total_apostado = total_apostado + %s,
         total_pago = total_pago + %s
     WHERE id=1
-    """,(aposta, ganho))
+    """,(aposta, premio))
 
-    # resultado final do saldo (perde aposta primeiro)
-    ganho_final = ganho - aposta
-
-    return ganho_final, {"resultado": resultado}
+    return premio, {"resultado": resultado}
 
 
     
