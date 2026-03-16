@@ -169,8 +169,8 @@ const creditsEl=document.getElementById("credits");
 const resultEl=document.getElementById("result");
 const slot=document.getElementById("slot");
 
-const spinSound = new Audio("/static/audio/jogo2.mp3");
-const winSound = new Audio("/static/audio/girar.mp3");
+const spinSound=new Audio("/static/audio/jogo2.mp3");
+const winSound=new Audio("/static/audio/audio1.mp3");
 
 let credits=parseFloat(creditsEl.innerText);
 
@@ -214,7 +214,7 @@ buildStrip(strip);
 
 function spin(){
 
-let aposta=document.getElementById("aposta").value;
+let aposta=parseFloat(document.getElementById("aposta").value);
 
 spinSound.currentTime=0;
 spinSound.play();
@@ -241,9 +241,18 @@ credits=data.saldo;
 
 creditsEl.innerText=credits;
 
-let r=data.resultado;
+let r=data.extra.resultado;
 
-animateSpin(r);
+animateSpin(r,data.ganho);
+
+spinBtn.disabled=false;
+
+})
+.catch(e=>{
+
+console.log(e);
+
+resultEl.innerText="Erro no jogo";
 
 spinBtn.disabled=false;
 
@@ -251,7 +260,7 @@ spinBtn.disabled=false;
 
 }
 
-function animateSpin(r){
+function animateSpin(r,ganho){
 
 strips.forEach((strip,i)=>{
 
@@ -275,10 +284,11 @@ strip.style.transform="translateY(-"+distance+"px)";
 setTimeout(()=>{
 
 strip.style.transition="none";
+
 strip.style.transform="translateY(-"+offset+"px)";
 
 if(i===2){
-checkWin(r);
+checkWin(r,ganho);
 }
 
 },2300+i*500);
@@ -287,26 +297,17 @@ checkWin(r);
 
 }
 
-function checkWin(r){
+function checkWin(r,ganho){
 
-if(r[0]===r[1] && r[1]===r[2]){
+if(ganho>0){
 
 slot.classList.add("win");
 
 winSound.play();
 
-resultEl.innerText="🎉 JACKPOT!";
+resultEl.innerText="🎉 GANHOU R$ "+ganho;
 
 }
-
-else if(r.includes("Diamantino")){
-
-winSound.play();
-
-resultEl.innerText="⭐ Diamantino!";
-
-}
-
 else{
 
 resultEl.innerText="Oh! não deu";
