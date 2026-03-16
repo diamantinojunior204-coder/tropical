@@ -614,6 +614,7 @@ def api_diamantino():
 
     # adiciona prêmio
     saldo += premio
+    saldo = round(saldo,2)
 
     # atualizar saldo
     c.execute(
@@ -626,8 +627,8 @@ def api_diamantino():
 
     return jsonify({
         "resultado": extra["resultado"],
-        "ganho": premio,
-        "saldo": saldo
+        "ganho": round(premio,2)
+        "saldo": round(saldo,2)
     })    
 
 
