@@ -35,6 +35,9 @@ def conectar():
 # ================================
 # CRIAR BANCO
 # ================================
+# ================================
+# CRIAR BANCO
+# ================================
 def criar_db():
 
     conn = conectar()
@@ -71,6 +74,15 @@ def criar_db():
     )
     """)
 
+    # ESTATÍSTICAS (RTP DO CASSINO)
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS estatisticas(
+        id INTEGER PRIMARY KEY,
+        total_apostado NUMERIC(12,2) DEFAULT 0,
+        total_pago NUMERIC(12,2) DEFAULT 0
+    )
+    """)
+
     # DEPÓSITOS PIX
     c.execute("""
     CREATE TABLE IF NOT EXISTS depositos(
@@ -81,7 +93,8 @@ def criar_db():
         data TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
-    # saque
+
+    # SAQUES
     c.execute("""
     CREATE TABLE IF NOT EXISTS saques(
         id SERIAL PRIMARY KEY,
@@ -93,11 +106,15 @@ def criar_db():
     )
     """)
 
-    # GARANTIR JACKPOT
-    c.execute("SELECT * FROM jackpot WHERE id=1")
-
+    # GARANTIR JACKPOT INICIAL
+    c.execute("SELECT id FROM jackpot WHERE id=1")
     if not c.fetchone():
-        c.execute("INSERT INTO jackpot VALUES (1,100)")
+        c.execute("INSERT INTO jackpot (id,valor) VALUES (1,100)")
+
+    # GARANTIR ESTATÍSTICAS INICIAIS
+    c.execute("SELECT id FROM estatisticas WHERE id=1")
+    if not c.fetchone():
+        c.execute("INSERT INTO estatisticas (id,total_apostado,total_pago) VALUES (1,0,0)")
 
     conn.commit()
     conn.close()
