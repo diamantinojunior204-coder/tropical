@@ -583,24 +583,68 @@ def api_spin():
 
 
 #=====slot Diamantino===
+# ================================
+# API DIAMANTINO
+# ================================
 @app.route("/api/diamantino", methods=["POST"])
 def api_diamantino():
 
     if "user_id" not in session:
-        return jsonify({"error":"login"}),401
+        return jsonify({"erro":"login"}),401
 
     data = request.get_json()
 
     aposta = float(data["aposta"])
 
-    return jsonify(
-        processar_aposta(
-            session["user_id"],
-            "diamantino",
-            aposta,
-            calcular_diamantino
-        )
+    conn = conectar()
+    c = conn.cursor()
+
+    # pegar saldo
+    c.execute("SELECT saldo FROM users WHERE id=%s",(session["user_id"],))
+    saldo = float(c.fetchone()[0])
+
+    if aposta > saldo:
+        conn.close()
+        return jsonify({"erro":"Saldo insuficiente"})
+
+    # símbolos
+    simbolos = ["forte","folha","moeda","Diamantino","saco"]
+
+    resultado = [
+        random.choice(simbolos),
+        random.choice(simbolos),
+        random.choice(simbolos)
+    ]
+
+    ganho = -aposta
+
+    if resultado[0] == resultado[1] == resultado[2]:
+
+        if resultado[0] == "Diamantino":
+            ganho += aposta * 50
+        else:
+            ganho += aposta * 20
+
+    elif "Diamantino" in resultado:
+        ganho += aposta * 10
+
+    saldo = saldo + ganho
+
+    # atualizar saldo
+    c.execute(
+        "UPDATE users SET saldo=%s WHERE id=%s",
+        (saldo, session["user_id"])
     )
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "resultado": resultado,
+        "ganho": ganho,
+        "saldo": saldo
+    })
+
 # ================================
 # ADMIN
 # ================================
