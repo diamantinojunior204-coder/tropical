@@ -627,7 +627,7 @@ def api_diamantino():
 
     return jsonify({
         "resultado": extra["resultado"],
-        "ganho": round(premio,2)
+        "ganho": round(premio,2),
         "saldo": round(saldo,2)
     })    
 
