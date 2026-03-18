@@ -168,8 +168,7 @@ const slot=document.getElementById("slot");
 const spinSound=new Audio("/static/audio/jogo2.mp3");
 const winSound=new Audio("/static/audio/audio1.mp3");
 
-let credits=parseFloat(creditsEl.innerText);
-let lastSaldo=credits;
+animarSaldo(lastSaldo);
 
 function randomSymbol(){
 return symbols[Math.floor(Math.random()*symbols.length)];
@@ -307,8 +306,8 @@ if(ganho>0){
 slot.classList.add("win");
 
 winSound.play();
+resultEl.innerHTML="🎉 <b>GANHOU R$ "+ganho+"</b>";
 
-resultEl.innerText="🎉 GANHOU R$ "+ganho;
 
 }else{
 
@@ -319,7 +318,25 @@ resultEl.innerText="Tente novamente";
 spinBtn.disabled=false;
 
 }
+function animarSaldo(valorFinal){
 
+let atual = parseFloat(creditsEl.innerText);
+let passo = (valorFinal - atual) / 30;
+
+let intervalo = setInterval(()=>{
+
+atual += passo;
+
+if((passo > 0 && atual >= valorFinal) || (passo < 0 && atual <= valorFinal)){
+atual = valorFinal;
+clearInterval(intervalo);
+}
+
+creditsEl.innerText = atual.toFixed(2);
+
+},30);
+
+}
 spinBtn.onclick=spin;
 
 init();
