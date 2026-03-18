@@ -632,19 +632,21 @@ def api_diamantino():
         "jackpot": round(extra["jackpot"],2),
         "ganhou_jackpot": extra["ganhou_jackpot"]
     })
-
 def calcular_diamantino(aposta, c):
 
     import random
 
     simbolos = ["forte","folha","moeda","Diamantino","saco"]
 
-    c.execute("SELECT total_apostado,total_pago,jackpot FROM estatisticas WHERE id=1")
-    stats = c.fetchone()
+    # pegar jackpot
+    c.execute("SELECT valor FROM jackpot WHERE id=1")
+    row = c.fetchone()
 
-    total_apostado = stats[0]
-    total_pago = stats[1]
-    jackpot = stats[2] or 100
+    if not row:
+        jackpot = 100
+        c.execute("INSERT INTO jackpot (id,valor) VALUES (1,100)")
+    else:
+        jackpot = float(row[0])
 
     # aumenta jackpot
     jackpot += aposta * 0.05
@@ -664,28 +666,33 @@ def calcular_diamantino(aposta, c):
             ganho = jackpot
             jackpot = 100
             ganhou_jackpot = True
-
         else:
             ganho = aposta * 20
 
     elif "Diamantino" in resultado:
         ganho = aposta * 5
 
-    # atualizar estatísticas
+    # atualizar jackpot
+    c.execute(
+        "UPDATE jackpot SET valor=%s WHERE id=1",
+        (jackpot,)
+    )
+
+    # atualizar estatísticas (SEM jackpot aqui)
     c.execute("""
     UPDATE estatisticas
     SET total_apostado = total_apostado + %s,
-        total_pago = total_pago + %s,
-        jackpot = %s
+        total_pago = total_pago + %s
     WHERE id=1
-    """,(aposta, max(ganho,0), jackpot))
+    """,(aposta, max(ganho,0)))
 
     return ganho, {
         "resultado": resultado,
         "jackpot": jackpot,
         "ganhou_jackpot": ganhou_jackpot
-    }    
+        }
 
+    
 
 
     
