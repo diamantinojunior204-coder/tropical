@@ -628,10 +628,64 @@ def api_diamantino():
     return jsonify({
         "resultado": extra["resultado"],
         "ganho": round(premio,2),
-        "saldo": round(saldo,2)
-    })    
+        "saldo": round(saldo,2),
+        "jackpot": round(extra["jackpot"],2),
+        "ganhou_jackpot": extra["ganhou_jackpot"]
+    })
 
+    
+def calcular_diamantino(aposta, c):
 
+    import random
+
+    simbolos = ["forte","folha","moeda","Diamantino","saco"]
+
+    c.execute("SELECT total_apostado,total_pago,jackpot FROM estatisticas WHERE id=1")
+    stats = c.fetchone()
+
+    total_apostado = stats[0]
+    total_pago = stats[1]
+    jackpot = stats[2]
+
+    # 🎯 aumenta jackpot a cada rodada
+    jackpot += aposta * 0.05   # 5% vai pro jackpot
+
+    resultado = [
+        random.choice(simbolos),
+        random.choice(simbolos),
+        random.choice(simbolos)
+    ]
+
+    ganho = -aposta
+    ganhou_jackpot = False
+
+    if resultado[0] == resultado[1] == resultado[2]:
+
+        if resultado[0] == "Diamantino":
+            ganho += jackpot
+            jackpot = 100  # reseta jackpot
+            ganhou_jackpot = True
+
+        else:
+            ganho += aposta * 20
+
+    elif "Diamantino" in resultado:
+        ganho += aposta * 5   # 🔽 reduzi (tava alto demais)
+
+    # atualizar estatísticas
+    c.execute("""
+    UPDATE estatisticas
+    SET total_apostado = total_apostado + %s,
+        total_pago = total_pago + %s,
+        jackpot = %s
+    WHERE id=1
+    """,(aposta, ganho, jackpot))
+
+    return ganho, {
+        "resultado": resultado,
+        "jackpot": jackpot,
+        "ganhou_jackpot": ganhou_jackpot
+    }
 
     
 
@@ -995,56 +1049,6 @@ def resetar_cassino():
 
     except Exception as e:
         return f"Erro: {e}"
-#=======logica Diamantino 
-def calcular_diamantino(aposta, c):
-
-    simbolos = ["forte","folha","moeda","Diamantino","saco"]
-
-    c.execute("SELECT total_apostado,total_pago FROM estatisticas WHERE id=1")
-    stats = c.fetchone()
-
-    total_apostado = stats[0]
-    total_pago = stats[1]
-
-    rtp = 0
-    if total_apostado > 0:
-        rtp = total_pago / total_apostado
-
-    RTP_ALVO = 0.90
-
-    resultado = [
-        random.choice(simbolos),
-        random.choice(simbolos),
-        random.choice(simbolos)
-    ]
-
-    # controle RTP
-    if rtp > RTP_ALVO:
-        while resultado[0] == resultado[1] == resultado[2]:
-            resultado[2] = random.choice(simbolos)
-
-    premio = 0
-
-    # pagamentos
-    if resultado[0] == resultado[1] == resultado[2]:
-
-        if resultado[0] == "Diamantino":
-            premio = aposta * 25
-        else:
-            premio = aposta * 10
-
-    elif "Diamantino" in resultado:
-        premio = aposta * 3
-
-    # atualizar estatísticas
-    c.execute("""
-    UPDATE estatisticas
-    SET total_apostado = total_apostado + %s,
-        total_pago = total_pago + %s
-    WHERE id=1
-    """,(aposta, premio))
-
-    return premio, {"resultado": resultado}
 
 
     
