@@ -633,7 +633,6 @@ def api_diamantino():
         "ganhou_jackpot": extra["ganhou_jackpot"]
     })
 
-    
 def calcular_diamantino(aposta, c):
 
     import random
@@ -645,10 +644,10 @@ def calcular_diamantino(aposta, c):
 
     total_apostado = stats[0]
     total_pago = stats[1]
-    jackpot = stats[2]
+    jackpot = stats[2] or 100
 
-    # 🎯 aumenta jackpot a cada rodada
-    jackpot += aposta * 0.05   # 5% vai pro jackpot
+    # aumenta jackpot
+    jackpot += aposta * 0.05
 
     resultado = [
         random.choice(simbolos),
@@ -656,21 +655,21 @@ def calcular_diamantino(aposta, c):
         random.choice(simbolos)
     ]
 
-    ganho = -aposta
+    ganho = 0
     ganhou_jackpot = False
 
     if resultado[0] == resultado[1] == resultado[2]:
 
         if resultado[0] == "Diamantino":
-            ganho += jackpot
-            jackpot = 100  # reseta jackpot
+            ganho = jackpot
+            jackpot = 100
             ganhou_jackpot = True
 
         else:
-            ganho += aposta * 20
+            ganho = aposta * 20
 
     elif "Diamantino" in resultado:
-        ganho += aposta * 5   # 🔽 reduzi (tava alto demais)
+        ganho = aposta * 5
 
     # atualizar estatísticas
     c.execute("""
@@ -679,13 +678,15 @@ def calcular_diamantino(aposta, c):
         total_pago = total_pago + %s,
         jackpot = %s
     WHERE id=1
-    """,(aposta, ganho, jackpot))
+    """,(aposta, max(ganho,0), jackpot))
 
     return ganho, {
         "resultado": resultado,
         "jackpot": jackpot,
         "ganhou_jackpot": ganhou_jackpot
-    }
+    }    
+
+
 
     
 
