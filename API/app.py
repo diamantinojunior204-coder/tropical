@@ -636,7 +636,7 @@ def calcular_diamantino(aposta, c):
 
     import random
 
-    simbolos = ["forte","folha","moeda","Diamantino","saco"]
+    simbolos = ["forte","forte","folha","folha","moeda","moeda","Diamantino","saco","saco","saco"]
 
     # pegar jackpot
     c.execute("SELECT valor FROM jackpot WHERE id=1")
