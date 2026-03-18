@@ -17,8 +17,6 @@ padding:20px;
 color:white;
 }
 
-h1{margin-bottom:20px;}
-
 .slot{
 background:#4b0082;
 padding:20px;
@@ -57,7 +55,6 @@ justify-content:center;
 
 .symbol img{
 max-width:90%;
-max-height:90%;
 }
 
 .controls{text-align:center;}
@@ -81,6 +78,12 @@ font-size:22px;
 margin-bottom:10px;
 }
 
+.jackpot{
+font-size:20px;
+color:gold;
+margin-bottom:10px;
+}
+
 .result{
 margin-top:10px;
 font-size:20px;
@@ -88,23 +91,13 @@ color:gold;
 }
 
 .win{
-animation:flash 0.4s infinite;
+animation:flash 0.3s infinite;
 }
 
 @keyframes flash{
 0%{box-shadow:0 0 10px yellow;}
-50%{box-shadow:0 0 30px gold;}
+50%{box-shadow:0 0 40px gold;}
 100%{box-shadow:0 0 10px yellow;}
-}
-
-input{
-padding:10px;
-font-size:16px;
-border-radius:10px;
-border:none;
-margin-bottom:10px;
-width:120px;
-text-align:center;
 }
 
 </style>
@@ -116,12 +109,14 @@ text-align:center;
 
 <div class="slot" id="slot">
 
-<div class="reels">
+<div class="jackpot">
+💎 JACKPOT: R$ <span id="jackpot">100.00</span>
+</div>
 
+<div class="reels">
 <div class="reel"><div class="strip" id="s1"></div></div>
 <div class="reel"><div class="strip" id="s2"></div></div>
 <div class="reel"><div class="strip" id="s3"></div></div>
-
 </div>
 
 <div class="controls">
@@ -131,17 +126,13 @@ Saldo: R$ <span id="credits">{{saldo}}</span>
 </div>
 
 <input type="number" id="aposta" value="1" min="1">
-
 <br><br>
 
 <button id="spin">GIRAR</button>
 
-<div class="result" id="result">
-Boa sorte!
-</div>
+<div class="result" id="result">Boa sorte!</div>
 
 </div>
-
 </div>
 
 <script>
@@ -162,50 +153,40 @@ document.getElementById("s3")
 
 const spinBtn=document.getElementById("spin");
 const creditsEl=document.getElementById("credits");
+const jackpotEl=document.getElementById("jackpot");
 const resultEl=document.getElementById("result");
 const slot=document.getElementById("slot");
 
 const spinSound=new Audio("/static/audio/jogo2.mp3");
 const winSound=new Audio("/static/audio/audio1.mp3");
+const jackpotSound=new Audio("/static/audio/jackpot.mp3");
 
-animarSaldo(lastSaldo);
+let credits=parseFloat(creditsEl.innerText);
+let lastSaldo=credits;
 
 function randomSymbol(){
 return symbols[Math.floor(Math.random()*symbols.length)];
 }
 
 function createSymbol(symbol){
-
 const div=document.createElement("div");
-
 div.className="symbol";
-
 div.innerHTML=`<img src="${symbol.src}">`;
-
 div.dataset.symbol=symbol.name;
-
 return div;
 }
 
 function buildStrip(strip){
-
 let list=[];
-
 for(let i=0;i<30;i++){
 list.push(randomSymbol());
 }
-
 list.forEach(s=>strip.appendChild(createSymbol(s)));
 list.forEach(s=>strip.appendChild(createSymbol(s)));
-
 }
 
 function init(){
-
-strips.forEach(strip=>{
-buildStrip(strip);
-});
-
+strips.forEach(strip=>buildStrip(strip));
 }
 
 function spin(){
@@ -218,16 +199,12 @@ spinSound.currentTime=0;
 spinSound.play();
 
 slot.classList.remove("win");
-
 spinBtn.disabled=true;
-
 resultEl.innerText="Girando...";
 
 fetch("/api/diamantino",{
 method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
+headers:{"Content-Type":"application/json"},
 body:JSON.stringify({aposta:aposta})
 })
 .then(r=>r.json())
@@ -241,15 +218,17 @@ return;
 
 lastSaldo=data.saldo;
 
+if(data.jackpot){
+jackpotEl.innerText=data.jackpot.toFixed(2);
+}
+
 animateSpin(data.resultado,data.ganho);
 
 })
-.catch(err=>{
-console.log(err);
+.catch(()=>{
 resultEl.innerText="Erro no servidor";
 spinBtn.disabled=false;
 });
-
 }
 
 function animateSpin(resultado,ganho){
@@ -262,9 +241,7 @@ let index=symbolsList.findIndex(
 s=>s.dataset.symbol===resultado[i]
 );
 
-if(index<0){
-index=10;
-}
+if(index<0) index=10;
 
 const offset=index*100;
 const distance=(symbolsList.length*100)+offset;
@@ -272,52 +249,47 @@ const distance=(symbolsList.length*100)+offset;
 strip.style.transition="none";
 
 setTimeout(()=>{
-
-strip.style.transition="transform "+(2+i*0.5)+"s cubic-bezier(.2,.8,.2,1)";
+strip.style.transition="transform "+(2+i*0.4)+"s ease-out";
 strip.style.transform="translateY(-"+distance+"px)";
-
 },50);
 
 setTimeout(()=>{
-
 strip.style.transition="none";
 strip.style.transform="translateY(-"+offset+"px)";
 
 if(i===2){
-
-finishSpin(ganho);
-
+finishSpin(ganho,resultado);
 }
 
-},2300+i*500);
+},2300+i*400);
 
 });
-
 }
 
-function finishSpin(ganho){
+function finishSpin(ganho,resultado){
 
-credits=lastSaldo;
-
-creditsEl.innerText=credits;
+animarSaldo(lastSaldo);
 
 if(ganho>0){
 
 slot.classList.add("win");
 
+if(resultado[0]=="Diamantino" && resultado[1]=="Diamantino" && resultado[2]=="Diamantino"){
+jackpotSound.play();
+resultEl.innerHTML="💎 JACKPOT!!! 💎";
+}else{
 winSound.play();
-resultEl.innerHTML="🎉 <b>GANHOU R$ "+ganho+"</b>";
-
+resultEl.innerHTML="🎉 GANHOU R$ "+ganho.toFixed(2);
+}
 
 }else{
-
 resultEl.innerText="Tente novamente";
-
 }
 
 spinBtn.disabled=false;
 
 }
+
 function animarSaldo(valorFinal){
 
 let atual = parseFloat(creditsEl.innerText);
@@ -337,6 +309,7 @@ creditsEl.innerText = atual.toFixed(2);
 },30);
 
 }
+
 spinBtn.onclick=spin;
 
 init();
