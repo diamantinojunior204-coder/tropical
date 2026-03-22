@@ -371,8 +371,13 @@ def frutas():
 
     if "user_id" not in session:
         return redirect("/login")
+        
+    return render_template(
+    "frutas.html",
+    saldo=get_saldo(),
+    username=session["username"]
+    )
 
-    return render_template("frutas.html")
  #rota Diamantino 
 @app.route("/diamantino")
 def diamantino():
