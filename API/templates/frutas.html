@@ -1,223 +1,306 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<!DOCTYPE html><html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🍓 Slot Frutas</title>
-
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-<script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
-
-<style>
-
+<title>🎰 Diamantino Slot</title><style>
 body{
-margin:0;
-min-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-background-image:url("/static/img/fundo.png");
-background-size:cover;
-background-position:center;
+background:radial-gradient(circle,#2a0066,#0a001f);
 font-family:Arial;
-padding:10px;
-box-sizing:border-box;
-}
-
-#game{
-width:100%;
-max-width:420px;
-}
-
-#painel{
-text-align:center;
-color:white;
-font-size:18px;
-margin-bottom:15px;
-background:rgba(0,0,0,0.6);
-padding:15px;
-border-radius:10px;
-}
-
-#saldo{
-font-weight:bold;
-color:#00ff88;
-}
-
-#container{
-text-align:center;
-width:100%;
-}
-
-.window-border{
-width:100%;
-overflow:hidden;
-}
-
-.window{
-display:flex;
-justify-content:center;
-}
-
-.outer-col{
-width:60px;
-overflow:hidden;
-}
-
-.col{
 display:flex;
 flex-direction:column;
 align-items:center;
+padding:20px;
+color:white;
 }
 
-.icon img{
-width:50px;
-height:50px;
+.slot{
+background:#4b0082;
+padding:20px;
+border-radius:15px;
+box-shadow:0 0 30px black;
 }
 
-.start-button{
-margin-top:20px;
-font-size:20px;
-padding:15px;
-width:100%;
-border:none;
+.reels{
+display:flex;
+gap:10px;
+margin-bottom:20px;
+}
+
+.reel{
+width:110px;
+height:300px;
+overflow:hidden;
 border-radius:10px;
-background:orange;
-cursor:pointer;
-font-weight:bold;
+border:4px solid gold;
+background:white;
+position:relative;
 }
 
-.start-button:active{
-transform:scale(0.97);
+.strip{
+position:absolute;
+width:100%;
+top:0;
 }
 
-input[type="number"]{
+.symbol{
+height:100px;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.symbol img{
+max-width:90%;
+max-height:90%;
+}
+
+.controls{text-align:center;}
+
+button{
+padding:15px 40px;
 font-size:18px;
-padding:8px;
-width:80px;
-text-align:center;
-border-radius:6px;
 border:none;
-margin-top:5px;
+border-radius:20px;
+background:#ff0055;
+color:white;
+cursor:pointer;
 }
 
-/* telas maiores */
+button:disabled{
+background:#555;
+}
 
-@media (min-width:600px){
-
-#painel{
+.credits{
 font-size:22px;
+margin-bottom:5px;
 }
 
-.icon img{
-width:70px;
-height:70px;
+.jackpot{
+font-size:18px;
+color:#00ffcc;
+margin-bottom:10px;
 }
 
-.outer-col{
-width:80px;
+.result{
+margin-top:10px;
+font-size:20px;
+color:gold;
 }
 
-.start-button{
-font-size:22px;
+.win{
+animation:flash 0.4s infinite;
 }
 
+@keyframes flash{
+0%{box-shadow:0 0 10px yellow;}
+50%{box-shadow:0 0 30px gold;}
+100%{box-shadow:0 0 10px yellow;}
 }
 
-</style>
+input{
+padding:10px;
+font-size:16px;
+border-radius:10px;
+border:none;
+margin-bottom:10px;
+width:120px;
+text-align:center;
+}
+</style></head><body><h1>🎰 Diamantino Slot</h1><div class="slot" id="slot"><div class="reels">
+<div class="reel"><div class="strip" id="s1"></div></div>
+<div class="reel"><div class="strip" id="s2"></div></div>
+<div class="reel"><div class="strip" id="s3"></div></div>
+</div><div class="controls"><div class="credits">
+Saldo: R$ <span id="credits">{{saldo}}</span>
+</div><div class="jackpot">
+💎 Jackpot: R$ <span id="jackpot">100</span>
+</div><input type="number" id="aposta" value="1" min="1"><br><br>
 
-</head>
+<button id="spin">GIRAR</button>
 
-<body>
+<div class="result" id="result">
+Boa sorte!
+</div></div></div><script>
 
-<div id="game">
+const symbols=[
+{src:"/static/img/forte.jpg",name:"forte"},
+{src:"/static/img/folha.jpg",name:"folha"},
+{src:"/static/img/moeda.jpg",name:"moeda"},
+{src:"/static/img/wild.jpg",name:"Diamantino"},
+{src:"/static/img/saco.jpg",name:"saco"}
+];
 
-<div id="painel">
+const strips=[
+document.getElementById("s1"),
+document.getElementById("s2"),
+document.getElementById("s3")
+];
 
-💰 Saldo: R$ <span id="saldo">{{saldo}}</span>
+const spinBtn=document.getElementById("spin");
+const creditsEl=document.getElementById("credits");
+const jackpotEl=document.getElementById("jackpot");
+const resultEl=document.getElementById("result");
+const slot=document.getElementById("slot");
 
-<br><br>
+const spinSound=new Audio("/static/audio/jogo2.mp3");
+const winSound=new Audio("/static/audio/audio1.mp3");
 
-Aposta:<br>
-<input type="number" id="aposta" value="1" min="1">
+let credits=parseFloat(creditsEl.innerText);
+let lastSaldo=credits;
 
-</div>
+function randomSymbol(){
+return symbols[Math.floor(Math.random()*symbols.length)];
+}
 
+function createSymbol(symbol){
+const div=document.createElement("div");
+div.className="symbol";
+div.innerHTML=`<img src="${symbol.src}">`;
+div.dataset.symbol=symbol.name;
+return div;
+}
 
-<div id="container">
+function buildStrip(strip){
+let list=[];
+for(let i=0;i<30;i++){
+list.push(randomSymbol());
+}
+list.forEach(s=>strip.appendChild(createSymbol(s)));
+list.forEach(s=>strip.appendChild(createSymbol(s)));
+}
 
-<div class="window-border">
-<div class="window">
+function init(){
+strips.forEach(strip=>buildStrip(strip));
+}
 
-<div class="outer-spacer"></div>
-<div class="outer-col"><div class="col"></div></div>
+function spin(){
 
-<div class="outer-spacer"></div>
-<div class="outer-col"><div class="col"></div></div>
+if(spinBtn.disabled) return;
 
-<div class="outer-spacer"></div>
-<div class="outer-col"><div class="col"></div></div>
+let aposta=document.getElementById("aposta").value;
 
-<div class="outer-spacer"></div>
-<div class="outer-col"><div class="col"></div></div>
+spinSound.currentTime=0;
+spinSound.play();
 
-<div class="outer-spacer"></div>
-<div class="outer-col"><div class="col"></div></div>
+slot.classList.remove("win");
+spinBtn.disabled=true;
+resultEl.innerText="Girando...";
 
-<div class="outer-spacer"></div>
-
-</div>
-</div>
-
-<input type="button" onclick="girar(this)" class="start-button" value="🎰 GIRAR">
-
-</div>
-
-</div>
-<div id="mensagem_ganho"></div>
-
-<!-- SOM -->
-<audio id="somGiro" src="/static/audio/girar.mp3"></audio>
-
-<script>
-
-function girar(botao){
-
-let aposta = document.getElementById("aposta").value
-
-let audio = document.getElementById("somGiro")
-audio.currentTime = 0
-audio.play()
-
-fetch("/api/spin",{
+fetch("/api/diamantino",{
 method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-aposta:aposta
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({aposta:aposta})
 })
-})
-.then(res => res.json())
-.then(data => {
+.then(r=>r.json())
+.then(data=>{
 
-setResult(data.resultado)
-
-document.getElementById("saldo").innerText = data.saldo
-
-
-  if(data.ganho > 0){
-document.getElementById("mensagem_ganho").innerHTML =
-"<div style='background:#16a34a;color:white;padding:10px;border-radius:10px;font-size:18px;'>🎉 Você ganhou R$ "+data.ganho+"</div>";
+if(data.erro){
+resultEl.innerText=data.erro;
+spinBtn.disabled=false;
+return;
 }
 
-})
+lastSaldo=data.saldo;
+jackpotEl.innerText=data.jackpot;
 
-spin(botao)
+animateSpin(data.resultado,data.ganho,data.ganhou_jackpot);
+
+})
+.catch(()=>{
+resultEl.innerText="Erro no servidor";
+spinBtn.disabled=false;
+});
 
 }
 
-</script>
+function animateSpin(resultado,ganho,ganhouJackpot){
 
-</body>
+strips.forEach((strip,i)=>{
+
+const symbolsList=[...strip.children];
+
+let index=symbolsList.findIndex(
+s=>s.dataset.symbol===resultado[i]
+);
+
+if(index<0) index=10;
+
+const offset=index*100;
+const distance=(symbolsList.length*100)+offset;
+
+strip.style.transition="none";
+
+setTimeout(()=>{
+strip.style.transition="transform "+(2+i*0.5)+"s cubic-bezier(.2,.8,.2,1)";
+strip.style.transform="translateY(-"+distance+"px)";
+},50);
+
+setTimeout(()=>{
+strip.style.transition="none";
+strip.style.transform="translateY(-"+offset+"px)";
+
+if(i===2){
+finishSpin(ganho,ganhouJackpot);
+}
+
+},2300+i*500);
+
+});
+
+}
+
+function finishSpin(ganho,ganhouJackpot){
+
+animarSaldo(lastSaldo);
+
+if(ganhouJackpot){
+
+slot.classList.add("win");
+winSound.play();
+
+resultEl.innerHTML="💎 JACKPOT!!! 💰";
+
+}
+else if(ganho>0){
+
+slot.classList.add("win");
+winSound.play();
+
+resultEl.innerHTML="🎉 GANHOU R$ "+ganho;
+
+}
+else{
+
+resultEl.innerText="Tente novamente";
+
+}
+
+spinBtn.disabled=false;
+
+}
+
+function animarSaldo(valorFinal){
+
+let atual=parseFloat(creditsEl.innerText);
+let passo=(valorFinal-atual)/20;
+
+let intervalo=setInterval(()=>{
+
+atual+=passo;
+
+if((passo>0 && atual>=valorFinal) || (passo<0 && atual<=valorFinal)){
+atual=valorFinal;
+clearInterval(intervalo);
+}
+
+creditsEl.innerText=atual.toFixed(2);
+
+},30);
+
+}
+
+spinBtn.onclick=spin;
+init();
+
+</script></body>
 </html>
