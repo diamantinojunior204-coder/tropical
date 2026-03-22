@@ -496,8 +496,7 @@ def api_cartas():
         }
 
     return jsonify(processar_aposta(session["user_id"],"cartas",aposta,calcular))
-
-#===========frutas================
+#===========FRUTAS COM JACKPOT PROFISSIONAL================
 @app.route("/api/spin", methods=["POST"])
 def api_spin():
 
@@ -506,9 +505,14 @@ def api_spin():
 
     data = request.get_json()
 
-    aposta = float(data["aposta"])
+    try:
+        aposta = float(data["aposta"])
+    except:
+        return jsonify({"error":"aposta inválida"}),400
 
     def calcular(aposta, c):
+
+        import random
 
         simbolos = [
             "apple","apricot","banana","big_win","cherry",
@@ -523,43 +527,55 @@ def api_spin():
         ]
 
         ganho = -aposta
+        ganhou_jackpot = False
 
-        # pagamento simples
-        if resultado[0] == resultado[1] == resultado[2]:
-
-            if resultado[0] == "cherry":
-                ganho += aposta * 3
-
-            elif resultado[0] == "lemon":
-                ganho += aposta * 4
-
-            elif resultado[0] == "orange":
-                ganho += aposta * 5
-
-            elif resultado[0] == "banana":
-                ganho += aposta * 8
-
-            elif resultado[0] == "watermelon":
-                ganho += aposta * 10
-
-            elif resultado[0] == "lucky_seven":
-
-                c.execute("SELECT valor FROM jackpot WHERE id=1")
-                jackpot = float(c.fetchone()[0])
-
-                ganho += jackpot
-
-                jackpot = 100
-
-                c.execute(
-                    "UPDATE jackpot SET valor=%s WHERE id=1",
-                    (jackpot,)
-                )
-
-        # aumentar jackpot
+        # pegar jackpot atual
         c.execute("SELECT valor FROM jackpot WHERE id=1")
         jackpot = float(c.fetchone()[0])
 
+        # =========================
+        # 🎯 PAGAMENTOS NORMAIS
+        # =========================
+        if resultado[0] == resultado[1] == resultado[2]:
+
+            simbolo = resultado[0]
+
+            if simbolo == "cherry":
+                ganho += aposta * 3
+
+            elif simbolo == "lemon":
+                ganho += aposta * 4
+
+            elif simbolo == "orange":
+                ganho += aposta * 5
+
+            elif simbolo == "banana":
+                ganho += aposta * 8
+
+            elif simbolo == "watermelon":
+                ganho += aposta * 10
+
+            # =========================
+            # 💎 JACKPOT (RARO)
+            # =========================
+            elif simbolo == "lucky_seven":
+
+                chance = random.random()  # 0.0 até 1.0
+
+                # 🔥 AJUSTE AQUI A DIFICULDADE
+                if chance < 0.02:   # 2% de chance
+
+                    ganho += jackpot
+                    jackpot = 100
+                    ganhou_jackpot = True
+
+                else:
+                    # paga prêmio menor (não jackpot)
+                    ganho += aposta * 15
+
+        # =========================
+        # 💰 ACUMULA JACKPOT
+        # =========================
         jackpot += aposta * 0.03
 
         c.execute(
@@ -569,7 +585,8 @@ def api_spin():
 
         return ganho,{
             "resultado":resultado,
-            "jackpot":round(jackpot,2)
+            "jackpot":round(jackpot,2),
+            "ganhou_jackpot":ganhou_jackpot
         }
 
     return jsonify(
@@ -581,6 +598,7 @@ def api_spin():
         )
     )
 
+        
 
 #=====slot Diamantino===
 # ================================
