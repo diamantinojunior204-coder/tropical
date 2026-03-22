@@ -13,12 +13,9 @@ min-height:100vh;
 display:flex;
 justify-content:center;
 align-items:center;
-
-/* 🔥 FUNDO ADICIONADO */
 background-image:url("/static/img/fundo.png");
 background-size:cover;
 background-position:center;
-
 font-family:Arial;
 padding:10px;
 box-sizing:border-box;
@@ -39,15 +36,8 @@ padding:15px;
 border-radius:10px;
 }
 
-#saldo{
-font-weight:bold;
-color:#00ff88;
-}
-
-#jackpot{
-color:gold;
-font-weight:bold;
-}
+#saldo{font-weight:bold;color:#00ff88;}
+#jackpot{color:gold;font-weight:bold;}
 
 .window{
 display:flex;
@@ -80,6 +70,16 @@ justify-content:center;
 .symbol img{
 width:60px;
 height:60px;
+}
+
+/* ✨ brilho nas frutas vencedoras */
+.highlight img{
+animation:glow 0.6s infinite alternate;
+}
+
+@keyframes glow{
+0%{filter:drop-shadow(0 0 5px gold);}
+100%{filter:drop-shadow(0 0 20px yellow);}
 }
 
 .start-button{
@@ -119,25 +119,18 @@ animation:flash 0.3s infinite;
 <div id="game">
 
 <div id="painel">
-
 👤 Olá, <b>{{username}}</b><br><br>
-
 💰 Saldo: R$ <span id="saldo">{{saldo}}</span><br>
 🎰 Jackpot: R$ <span id="jackpot">0.00</span>
-
 <br><br>
-
 Aposta:<br>
 <input type="number" id="aposta" value="1" min="1">
-
 </div>
 
 <div class="window">
-
 <div class="reel"><div class="strip" id="r1"></div></div>
 <div class="reel"><div class="strip" id="r2"></div></div>
 <div class="reel"><div class="strip" id="r3"></div></div>
-
 </div>
 
 <button onclick="girar()" id="btn" class="start-button">🎰 GIRAR</button>
@@ -146,7 +139,6 @@ Aposta:<br>
 
 </div>
 
-<!-- SOM -->
 <audio id="somGiro" src="/static/audio/girar.mp3"></audio>
 <audio id="somWin" src="/static/audio/audio1.mp3"></audio>
 
@@ -172,7 +164,7 @@ const btn=document.getElementById("btn");
 function criarSimbolo(nome){
 let div=document.createElement("div");
 div.className="symbol";
-div.innerHTML=`<img src="/items/${nome}.png">`;
+div.innerHTML=`<img src="/static/items/${nome}.png">`;
 div.dataset.name=nome;
 return div;
 }
@@ -196,6 +188,9 @@ btn.disabled=true;
 msg.innerText="Girando...";
 
 document.getElementById("somGiro").play();
+
+// remove brilho antigo
+document.querySelectorAll(".highlight").forEach(e=>e.classList.remove("highlight"));
 
 fetch("/api/spin",{
 method:"POST",
@@ -228,7 +223,6 @@ strips.forEach((strip,i)=>{
 let items=[...strip.children];
 
 let index=items.findIndex(x=>x.dataset.name===resultado[i]);
-
 if(index<0) index=5;
 
 let offset=index*70;
@@ -244,6 +238,9 @@ strip.style.transform="translateY(-"+total+"px)";
 setTimeout(()=>{
 strip.style.transition="none";
 strip.style.transform="translateY(-"+offset+"px)";
+
+// 👇 marca símbolo vencedor
+items[index].classList.add("highlight");
 
 if(i===2) finalizar(data);
 
