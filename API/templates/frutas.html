@@ -1,108 +1,284 @@
-<!DOCTYPE html><html lang="pt-BR">
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🍓 Slot Frutas</title><link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-<script src="{{ url_for('static', filename='js/script.js') }}" defer></script><style>
+<title>🍓 Slot Frutas</title>
+
+<style>
+
+body{
+margin:0;
+min-height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+
+/* 🔥 FUNDO ADICIONADO */
+background-image:url("/static/img/fundo.png");
+background-size:cover;
+background-position:center;
+
+font-family:Arial;
+padding:10px;
+box-sizing:border-box;
+}
+
+#game{
+width:100%;
+max-width:420px;
+}
+
 #painel{
 text-align:center;
 color:white;
 font-size:18px;
 margin-bottom:15px;
-background:rgba(0,0,0,0.6);
+background:rgba(0,0,0,0.7);
 padding:15px;
 border-radius:10px;
 }
 
-#saldo{color:#00ff88;font-weight:bold;}
-#jackpot{color:#ffd700;font-weight:bold;}
-
-#mensagem{
-margin-top:10px;
-text-align:center;
+#saldo{
+font-weight:bold;
+color:#00ff88;
 }
-</style></head><body><div id="game"><div id="painel">👋 Olá, <b>{{username}}</b><br>
+
+#jackpot{
+color:gold;
+font-weight:bold;
+}
+
+.window{
+display:flex;
+justify-content:center;
+gap:10px;
+}
+
+.reel{
+width:80px;
+height:220px;
+overflow:hidden;
+background:white;
+border-radius:10px;
+border:3px solid gold;
+position:relative;
+}
+
+.strip{
+position:absolute;
+width:100%;
+}
+
+.symbol{
+height:70px;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.symbol img{
+width:60px;
+height:60px;
+}
+
+.start-button{
+margin-top:20px;
+font-size:20px;
+padding:15px;
+width:100%;
+border:none;
+border-radius:10px;
+background:orange;
+cursor:pointer;
+font-weight:bold;
+}
+
+.result{
+margin-top:10px;
+color:white;
+text-align:center;
+font-size:18px;
+}
+
+.win{
+animation:flash 0.3s infinite;
+}
+
+@keyframes flash{
+0%{box-shadow:0 0 10px yellow;}
+50%{box-shadow:0 0 25px gold;}
+100%{box-shadow:0 0 10px yellow;}
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+<div id="painel">
+
+👤 Olá, <b>{{username}}</b><br><br>
 
 💰 Saldo: R$ <span id="saldo">{{saldo}}</span><br>
-
-💎 Jackpot: R$ <span id="jackpot">100</span>
+🎰 Jackpot: R$ <span id="jackpot">0.00</span>
 
 <br><br>
 
 Aposta:<br>
 <input type="number" id="aposta" value="1" min="1">
 
-</div><div id="container"><div class="window-border">
-<div class="window"><div class="outer-spacer"></div>
-<div class="outer-col"><div class="col"></div></div><div class="outer-spacer"></div>
-<div class="outer-col"><div class="col"></div></div><div class="outer-spacer"></div>
-<div class="outer-col"><div class="col"></div></div><div class="outer-spacer"></div>
-<div class="outer-col"><div class="col"></div></div><div class="outer-spacer"></div>
-<div class="outer-col"><div class="col"></div></div><div class="outer-spacer"></div></div>
-</div><input type="button" onclick="girar(this)" class="start-button" value="🎰 GIRAR"></div><div id="mensagem"></div></div><audio id="somGiro" src="/static/audio/girar.mp3"></audio>
+</div>
+
+<div class="window">
+
+<div class="reel"><div class="strip" id="r1"></div></div>
+<div class="reel"><div class="strip" id="r2"></div></div>
+<div class="reel"><div class="strip" id="r3"></div></div>
+
+</div>
+
+<button onclick="girar()" id="btn" class="start-button">🎰 GIRAR</button>
+
+<div class="result" id="msg">Boa sorte!</div>
+
+</div>
+
+<!-- SOM -->
+<audio id="somGiro" src="/static/audio/girar.mp3"></audio>
 <audio id="somWin" src="/static/audio/audio1.mp3"></audio>
 
 <script>
 
-function girar(botao){
+const symbols=[
+"apple","apricot","banana","big_win","cherry",
+"grapes","lemon","lucky_seven","orange","pear",
+"strawberry","watermelon"
+];
 
-let aposta = document.getElementById("aposta").value
+const strips=[
+document.getElementById("r1"),
+document.getElementById("r2"),
+document.getElementById("r3")
+];
 
-let audio = document.getElementById("somGiro")
-audio.currentTime = 0
-audio.play()
+const saldoEl=document.getElementById("saldo");
+const jackpotEl=document.getElementById("jackpot");
+const msg=document.getElementById("msg");
+const btn=document.getElementById("btn");
+
+function criarSimbolo(nome){
+let div=document.createElement("div");
+div.className="symbol";
+div.innerHTML=`<img src="/static/img/${nome}.png">`;
+div.dataset.name=nome;
+return div;
+}
+
+function preencher(strip){
+for(let i=0;i<30;i++){
+let s=symbols[Math.floor(Math.random()*symbols.length)];
+strip.appendChild(criarSimbolo(s));
+}
+}
+
+strips.forEach(preencher);
+
+function girar(){
+
+if(btn.disabled) return;
+
+let aposta=document.getElementById("aposta").value;
+
+btn.disabled=true;
+msg.innerText="Girando...";
+
+document.getElementById("somGiro").play();
 
 fetch("/api/spin",{
 method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
+headers:{"Content-Type":"application/json"},
 body:JSON.stringify({aposta:aposta})
 })
-.then(res => res.json())
-.then(data => {
+.then(r=>r.json())
+.then(data=>{
 
 if(data.error){
-msg("Erro: "+data.error,"red")
-return
+msg.innerText=data.error;
+btn.disabled=false;
+return;
 }
 
-// 🔥 ESSENCIAL (não mexer)
-setResult(data.resultado)
-spin(botao)
-
-// atualiza depois da animação
-setTimeout(()=>{
-
-document.getElementById("saldo").innerText = data.saldo
-document.getElementById("jackpot").innerText = data.jackpot
-
-if(data.ganhou_jackpot){
-document.getElementById("somWin").play()
-msg("💎 JACKPOT!!! R$ "+data.ganho,"gold")
-}
-else if(data.ganho > 0){
-document.getElementById("somWin").play()
-msg("🎉 Ganhou R$ "+data.ganho,"green")
-}
-else{
-msg("😢 Não foi dessa vez","orange")
-}
-
-},1200)
+animar(data.resultado,data);
 
 })
-
 .catch(()=>{
-msg("Erro no servidor","red")
-})
+msg.innerText="Erro servidor";
+btn.disabled=false;
+});
 
 }
 
-function msg(txt,cor){
-document.getElementById("mensagem").innerHTML =
-"<div style='background:"+cor+";padding:10px;border-radius:10px;color:white;'>"+txt+"</div>"
+function animar(resultado,data){
+
+strips.forEach((strip,i)=>{
+
+let items=[...strip.children];
+
+let index=items.findIndex(x=>x.dataset.name===resultado[i]);
+
+if(index<0) index=5;
+
+let offset=index*70;
+let total=(items.length*70)+offset;
+
+strip.style.transition="none";
+
+setTimeout(()=>{
+strip.style.transition="transform "+(2+i*0.4)+"s ease-out";
+strip.style.transform="translateY(-"+total+"px)";
+},50);
+
+setTimeout(()=>{
+strip.style.transition="none";
+strip.style.transform="translateY(-"+offset+"px)";
+
+if(i===2) finalizar(data);
+
+},2200+i*400);
+
+});
+
 }
 
-</script></body>
+function finalizar(data){
+
+saldoEl.innerText=parseFloat(data.saldo).toFixed(2);
+jackpotEl.innerText=parseFloat(data.jackpot).toFixed(2);
+
+if(data.ganho>0){
+
+msg.innerText="🎉 Ganhou R$ "+data.ganho;
+
+document.getElementById("somWin").play();
+
+document.getElementById("game").classList.add("win");
+
+setTimeout(()=>{
+document.getElementById("game").classList.remove("win");
+},1500);
+
+}else{
+msg.innerText="Não foi dessa vez...";
+}
+
+btn.disabled=false;
+
+}
+
+</script>
+
+</body>
 </html>
