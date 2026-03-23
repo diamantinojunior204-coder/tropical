@@ -386,110 +386,126 @@ def diamantino():
         return redirect("/login")
 
     return render_template("diamantino.html", saldo=get_saldo())
+
 # ================================
 # SLOT
 # ================================
-@app.route("/api/slot",methods=["POST"])
+@app.route("/api/slot", methods=["POST"])
 def api_slot():
 
     if "user_id" not in session:
-        return jsonify({"error":"login"}),401
+        return jsonify({"error":"login"}), 401
 
-    aposta=float(request.form["aposta"])
-     def calcular(aposta, c):
+    aposta = float(request.form["aposta"])
 
-    simbolos = ["🍒","🍋","🍀","⭐","💎","7"]
+    def calcular(aposta, c):
 
-    grade = [[random.choice(simbolos) for _ in range(3)] for _ in range(3)]
+        simbolos = ["🍒","🍋","🍀","⭐","💎","7"]
 
-    ganho = -aposta
-    linhas_ganhas = []
+        grade = [[random.choice(simbolos) for _ in range(3)] for _ in range(3)]
 
-    c.execute("SELECT valor FROM jackpot WHERE id=1")
-    jackpot = float(c.fetchone()[0])
+        ganho = -aposta
+        linhas_ganhas = []
 
-    jackpot += aposta * 0.03
+        # pega jackpot atual
+        c.execute("SELECT valor FROM jackpot WHERE id=1")
+        jackpot = float(c.fetchone()[0])
 
-    def calcular_premio(simbolo):
-        if simbolo == "🍒": return aposta * 2
-        elif simbolo == "🍋": return aposta * 3
-        elif simbolo == "🍀": return aposta * 5
-        elif simbolo == "⭐": return aposta * 10
-        elif simbolo == "💎": return aposta * 20
-        elif simbolo == "7":
-            return jackpot
-        return 0
+        # acumula jackpot
+        jackpot += aposta * 0.03
 
-    # ========================
-    # HORIZONTAIS
-    # ========================
-    for i, linha in enumerate(grade):
-        if linha[0] == linha[1] == linha[2]:
+        # função de prêmio
+        def calcular_premio(simbolo):
+            if simbolo == "🍒": return aposta * 2
+            elif simbolo == "🍋": return aposta * 3
+            elif simbolo == "🍀": return aposta * 5
+            elif simbolo == "⭐": return aposta * 10
+            elif simbolo == "💎": return aposta * 20
+            elif simbolo == "7": return jackpot
+            return 0
 
-            linhas_ganhas.append([i*3, i*3+1, i*3+2])
+        # ========================
+        # HORIZONTAIS
+        # ========================
+        for i, linha in enumerate(grade):
+            if linha[0] == linha[1] == linha[2]:
 
-            premio = calcular_premio(linha[0])
+                linhas_ganhas.append([i*3, i*3+1, i*3+2])
 
-            if linha[0] == "7":
+                premio = calcular_premio(linha[0])
+
+                if linha[0] == "7":
+                    jackpot = 100
+
+                ganho += premio
+
+        # ========================
+        # VERTICAIS
+        # ========================
+        for col in range(3):
+            if grade[0][col] == grade[1][col] == grade[2][col]:
+
+                linhas_ganhas.append([col, col+3, col+6])
+
+                premio = calcular_premio(grade[0][col])
+
+                if grade[0][col] == "7":
+                    jackpot = 100
+
+                ganho += premio
+
+        # ========================
+        # DIAGONAL PRINCIPAL
+        # ========================
+        if grade[0][0] == grade[1][1] == grade[2][2]:
+
+            linhas_ganhas.append([0,4,8])
+
+            premio = calcular_premio(grade[0][0])
+
+            if grade[0][0] == "7":
                 jackpot = 100
 
             ganho += premio
 
-    # ========================
-    # VERTICAIS
-    # ========================
-    for col in range(3):
-        if grade[0][col] == grade[1][col] == grade[2][col]:
+        # ========================
+        # DIAGONAL SECUNDÁRIA
+        # ========================
+        if grade[0][2] == grade[1][1] == grade[2][0]:
 
-            linhas_ganhas.append([col, col+3, col+6])
+            linhas_ganhas.append([2,4,6])
 
-            premio = calcular_premio(grade[0][col])
+            premio = calcular_premio(grade[0][2])
 
-            if grade[0][col] == "7":
+            if grade[0][2] == "7":
                 jackpot = 100
 
             ganho += premio
 
-    # ========================
-    # DIAGONAL PRINCIPAL
-    # ========================
-    if grade[0][0] == grade[1][1] == grade[2][2]:
+        # salvar jackpot atualizado
+        c.execute("UPDATE jackpot SET valor=%s WHERE id=1", (jackpot,))
 
-        linhas_ganhas.append([0,4,8])
+        # mapa visual
+        mapa = {"🍒":1,"🍋":2,"🍀":3,"⭐":4,"💎":5,"7":6}
+        grade_numerica = [[mapa[s] for s in linha] for linha in grade]
 
-        premio = calcular_premio(grade[0][0])
+        return ganho, {
+            "grade": grade_numerica,
+            "linhas_ganhas": linhas_ganhas,
+            "jackpot": round(jackpot, 2)
+        }
 
-        if grade[0][0] == "7":
-            jackpot = 100
+    return jsonify(
+        processar_aposta(
+            session["user_id"],
+            "slot",
+            aposta,
+            calcular
+        )
+    )
 
-        ganho += premio
+        
 
-    # ========================
-    # DIAGONAL SECUNDÁRIA
-    # ========================
-    if grade[0][2] == grade[1][1] == grade[2][0]:
-
-        linhas_ganhas.append([2,4,6])
-
-        premio = calcular_premio(grade[0][2])
-
-        if grade[0][2] == "7":
-            jackpot = 100
-
-        ganho += premio
-
-    # atualizar jackpot
-    c.execute("UPDATE jackpot SET valor=%s WHERE id=1", (jackpot,))
-
-    mapa = {"🍒":1,"🍋":2,"🍀":3,"⭐":4,"💎":5,"7":6}
-    grade_numerica = [[mapa[s] for s in linha] for linha in grade]
-
-    return ganho, {
-        "grade": grade_numerica,
-        "linhas_ganhas": linhas_ganhas,
-        "jackpot": round(jackpot,2)
-    }
-    
 
 # ================================
 # ROLETA
