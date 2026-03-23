@@ -1,130 +1,114 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🎰 Slot Cassino</title>
+<title>🍓 Slot Frutas</title>
 
 <style>
 
 body{
-  margin:0;
-  font-family:Arial;
-  background:url("/static/fundo.jpg");
-  background-size:cover;
-  color:white;
-  text-align:center;
+margin:0;
+min-height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background-image:url("/static/img/fundo.png");
+background-size:cover;
+background-position:center;
+font-family:Arial;
+padding:10px;
+box-sizing:border-box;
 }
 
-/* TOPO */
-
-.topo{
-  padding:10px 20px;
-  background:rgba(0,0,0,0.6);
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  font-size:20px;
+#game{
+width:100%;
+max-width:420px;
 }
 
-/* USUARIO */
-
-#usuario{
-  font-size:18px;
-  color:#00eaff;
+#painel{
+text-align:center;
+color:white;
+font-size:18px;
+margin-bottom:15px;
+background:rgba(0,0,0,0.7);
+padding:15px;
+border-radius:10px;
 }
 
-/* SALDO */
+#saldo{font-weight:bold;color:#00ff88;}
+#jackpot{color:gold;font-weight:bold;}
 
-#saldo{
-  font-weight:bold;
-  color:gold;
-  font-size:24px;
+.window{
+display:flex;
+justify-content:center;
+gap:10px;
 }
 
-/* JACKPOT */
-
-#jackpot{
-  font-weight:bold;
-  color:#ffd700;
-  font-size:26px;
-  text-shadow:0 0 10px gold,0 0 20px orange;
-  animation:jackpotGlow 1.2s infinite alternate;
+.reel{
+width:80px;
+height:220px;
+overflow:hidden;
+background:white;
+border-radius:10px;
+border:3px solid gold;
+position:relative;
 }
 
-@keyframes jackpotGlow{
-  from{ transform:scale(1); }
-  to{ transform:scale(1.05); }
+.strip{
+position:absolute;
+width:100%;
 }
 
-/* SLOT */
-
-.slot{
-  margin-top:30px;
-  display:grid;
-  grid-template-columns:repeat(3,100px);
-  grid-gap:10px;
-  justify-content:center;
+.symbol{
+height:70px;
+display:flex;
+align-items:center;
+justify-content:center;
 }
 
-.celula{
-  width:100px;
-  height:100px;
-  background:black;
-  border-radius:10px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  border:3px solid gold;
+.symbol img{
+width:60px;
+height:60px;
 }
 
-.celula img{
-  width:80px;
+/* ✨ brilho nas frutas vencedoras */
+.highlight img{
+animation:glow 0.6s infinite alternate;
 }
 
-/* CONTROLES */
-
-.controls{
-  margin-top:20px;
+@keyframes glow{
+0%{filter:drop-shadow(0 0 5px gold);}
+100%{filter:drop-shadow(0 0 20px yellow);}
 }
 
-button{
-  padding:14px 25px;
-  font-size:18px;
-  border:none;
-  border-radius:8px;
-  background:orange;
-  cursor:pointer;
+.start-button{
+margin-top:20px;
+font-size:20px;
+padding:15px;
+width:100%;
+border:none;
+border-radius:10px;
+background:orange;
+cursor:pointer;
+font-weight:bold;
 }
 
-button:hover{
-  background:gold;
+.result{
+margin-top:10px;
+color:white;
+text-align:center;
+font-size:18px;
 }
-
-input{
-  padding:10px;
-  width:120px;
-  font-size:16px;
-}
-
-/* EFEITO DE VITÓRIA */
 
 .win{
-  animation:piscar 0.5s infinite;
+animation:flash 0.3s infinite;
 }
 
-@keyframes piscar{
-  0%{box-shadow:0 0 10px gold;}
-  50%{box-shadow:0 0 25px orange;}
-  100%{box-shadow:0 0 10px gold;}
-}
-
-/* RESULTADO */
-
-#resultado{
-  margin-top:15px;
-  font-size:22px;
-  font-weight:bold;
+@keyframes flash{
+0%{box-shadow:0 0 10px yellow;}
+50%{box-shadow:0 0 25px gold;}
+100%{box-shadow:0 0 10px yellow;}
 }
 
 </style>
@@ -132,172 +116,162 @@ input{
 
 <body>
 
-<div class="topo">
-<div id="usuario">
-    👤 Boa sorte, {{ session.username }}<br>
+<div id="game">
+
+<div id="painel">
+👤 Olá, <b>{{username}}</b><br><br>
+💰 Saldo: R$ <span id="saldo">{{saldo}}</span><br>
+🎰 Jackpot: R$ <span id="jackpot">0.00</span>
+<br><br>
+Aposta:<br>
+<input type="number" id="aposta" value="1" min="1">
 </div>
 
-  <div>
-    💰 Saldo: <span id="saldo">R$ {{saldo}}</span>
-  </div>
+<div class="window">
+<div class="reel"><div class="strip" id="r1"></div></div>
+<div class="reel"><div class="strip" id="r2"></div></div>
+<div class="reel"><div class="strip" id="r3"></div></div>
+</div>
 
-  <div>
-    💎 Jackpot: <span id="jackpot">{{jackpot}}</span>
-  </div>
+<button onclick="girar()" id="btn" class="start-button">🎰 GIRAR</button>
+
+<div class="result" id="msg">Boa sorte!</div>
 
 </div>
 
-<h1>🎰 Caça-Níquel</h1>
-
-<div class="slot">
-  <div class="celula"><img id="c0" src="/static/slot/1.jpeg"></div>
-  <div class="celula"><img id="c1" src="/static/slot/2.jpeg"></div>
-  <div class="celula"><img id="c2" src="/static/slot/3.jpeg"></div>
-  <div class="celula"><img id="c3" src="/static/slot/4.jpeg"></div>
-  <div class="celula"><img id="c4" src="/static/slot/5.jpeg"></div>
-  <div class="celula"><img id="c5" src="/static/slot/1.jpeg"></div>
-  <div class="celula"><img id="c6" src="/static/slot/2.jpeg"></div>
-  <div class="celula"><img id="c7" src="/static/slot/3.jpeg"></div>
-  <div class="celula"><img id="c8" src="/static/slot/4.jpeg"></div>
-</div>
-
-<div class="controls">
-  <input id="aposta" type="number" value="10" min="1">
-  <button onclick="girar()">🎰 GIRAR</button>
-</div>
-
-<div id="resultado"></div>
-
-<!-- SONS -->
-<audio id="somGiro" src="/static/audio/jogo2.mp3"></audio>
-<audio id="somWin" src="/static/win.mp3"></audio>
+<audio id="somGiro" src="/static/audio/girar.mp3"></audio>
+<audio id="somWin" src="/static/audio/audio1.mp3"></audio>
 
 <script>
 
-/* ANIMAÇÃO DE SALDO (efeito cassino) */
+const symbols=[
+"apple","apricot","banana","big_win","cherry",
+"grapes","lemon","lucky_seven","orange","pear",
+"strawberry","watermelon"
+];
 
-function animarSaldo(valorFinal){
+const strips=[
+document.getElementById("r1"),
+document.getElementById("r2"),
+document.getElementById("r3")
+];
 
-  let saldoElemento=document.getElementById("saldo");
-  let atual=parseFloat(saldoElemento.innerText.replace("R$",""));
+const saldoEl=document.getElementById("saldo");
+const jackpotEl=document.getElementById("jackpot");
+const msg=document.getElementById("msg");
+const btn=document.getElementById("btn");
 
-  let intervalo=setInterval(()=>{
-
-    atual+= (valorFinal-atual)*0.2;
-
-    saldoElemento.innerText="R$ "+atual.toFixed(2);
-
-    if(Math.abs(valorFinal-atual)<0.05){
-      saldoElemento.innerText="R$ "+valorFinal.toFixed(2);
-      clearInterval(intervalo);
-    }
-
-  },30);
+function criarSimbolo(nome){
+let div=document.createElement("div");
+div.className="symbol";
+div.innerHTML=`<img src="/static/items/${nome}.png">`;
+div.dataset.name=nome;
+return div;
 }
 
-let simbolos=[1,2,3,4,5,6];
+function preencher(strip){
+for(let i=0;i<30;i++){
+let s=symbols[Math.floor(Math.random()*symbols.length)];
+strip.appendChild(criarSimbolo(s));
+}
+}
+
+strips.forEach(preencher);
 
 function girar(){
 
-  document.getElementById("somGiro").currentTime=0;
-  document.getElementById("somGiro").play();
+if(btn.disabled) return;
 
-  let aposta=parseFloat(document.getElementById("aposta").value);
+let aposta=document.getElementById("aposta").value;
 
-  if(aposta<=0){
-    alert("Digite uma aposta válida!");
-    return;
-  }
+btn.disabled=true;
+msg.innerText="Girando...";
 
-  let tempo=0;
+document.getElementById("somGiro").play();
 
-  let spin=setInterval(()=>{
+// remove brilho antigo
+document.querySelectorAll(".highlight").forEach(e=>e.classList.remove("highlight"));
 
-    for(let i=0;i<9;i++){
+fetch("/api/spin",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({aposta:aposta})
+})
+.then(r=>r.json())
+.then(data=>{
 
-      let r=Math.floor(Math.random()*6)+1;
+if(data.error){
+msg.innerText=data.error;
+btn.disabled=false;
+return;
+}
 
-      document.getElementById("c"+i).src="/static/slot/"+r+".jpeg";
+animar(data.resultado,data);
 
-    }
+})
+.catch(()=>{
+msg.innerText="Erro servidor";
+btn.disabled=false;
+});
 
-    tempo+=100;
+}
 
-    if(tempo>=2000){
-      clearInterval(spin);
-      mostrarResultado();
-    }
+function animar(resultado,data){
 
-  },100);
+strips.forEach((strip,i)=>{
 
-  function mostrarResultado(){
+let items=[...strip.children];
 
-    fetch("/api/slot",{
-      method:"POST",
-      body:new URLSearchParams({aposta:aposta})
-    })
+let index=items.findIndex(x=>x.dataset.name===resultado[i]);
+if(index<0) index=5;
 
-    .then(r=>r.json())
+let offset=index*70;
+let total=(items.length*70)+offset;
 
-    .then(data=>{
+strip.style.transition="none";
 
-      if(data.error){
-        alert(data.error);
-        return;
-      }
+setTimeout(()=>{
+strip.style.transition="transform "+(2+i*0.4)+"s ease-out";
+strip.style.transform="translateY(-"+total+"px)";
+},50);
 
-      animarSaldo(data.saldo);
+setTimeout(()=>{
+strip.style.transition="none";
+strip.style.transform="translateY(-"+offset+"px)";
 
-      document.getElementById("jackpot").innerText=data.jackpot;
+// 👇 marca símbolo vencedor
+items[index].classList.add("highlight");
 
-      let grade=data.grade.flat();
+if(i===2) finalizar(data);
 
-      for(let i=0;i<9;i++){
+},2200+i*400);
 
-        document.getElementById("c"+i).src="/static/slot/"+grade[i]+".jpeg";
+});
 
-        document.getElementById("c"+i).classList.remove("win");
+}
 
-      }
+function finalizar(data){
 
-      if(data.linhas_ganhas){
+saldoEl.innerText=parseFloat(data.saldo).toFixed(2);
+jackpotEl.innerText=parseFloat(data.jackpot).toFixed(2);
 
-        data.linhas_ganhas.forEach(linha=>{
+if(data.ganho>0){
 
-          linha.forEach(idx=>{
+msg.innerText="🎉 Ganhou R$ "+data.ganho;
 
-            document.getElementById("c"+idx).classList.add("win");
+document.getElementById("somWin").play();
 
-          });
+document.getElementById("game").classList.add("win");
 
-        });
+setTimeout(()=>{
+document.getElementById("game").classList.remove("win");
+},1500);
 
-      }
+}else{
+msg.innerText="Não foi dessa vez...";
+}
 
-      let res=document.getElementById("resultado");
-
-      if(data.ganho>0){
-
-        document.getElementById("somWin").play();
-
-        res.innerHTML="🎉 GANHOU R$ "+data.ganho;
-
-      }else{
-
-        res.innerHTML="Boa sorte!";
-
-      }
-
-    })
-
-    .catch(err=>{
-
-      console.error(err);
-      alert("Erro ao processar o slot");
-
-    });
-
-  }
+btn.disabled=false;
 
 }
 
@@ -305,6 +279,3 @@ function girar(){
 
 </body>
 </html>
-
-
-
