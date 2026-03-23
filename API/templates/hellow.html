@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎰 Slot Cassino</title>
+
+<style>
+
+body{
+  margin:0;
+  font-family:Arial;
+  background:url("/static/fundo.jpg");
+  background-size:cover;
+  color:white;
+  text-align:center;
+}
+
+/* TOPO */
+
+.topo{
+  padding:10px 20px;
+  background:rgba(0,0,0,0.6);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:20px;
+}
+
+/* USUARIO */
+
+#usuario{
+  font-size:18px;
+  color:#00eaff;
+}
+
+/* SALDO */
+
+#saldo{
+  font-weight:bold;
+  color:gold;
+  font-size:24px;
+}
+
+/* JACKPOT */
+
+#jackpot{
+  font-weight:bold;
+  color:#ffd700;
+  font-size:26px;
+  text-shadow:0 0 10px gold,0 0 20px orange;
+  animation:jackpotGlow 1.2s infinite alternate;
+}
+
+@keyframes jackpotGlow{
+  from{ transform:scale(1); }
+  to{ transform:scale(1.05); }
+}
+
+/* SLOT */
+
+.slot{
+  margin-top:30px;
+  display:grid;
+  grid-template-columns:repeat(3,100px);
+  grid-gap:10px;
+  justify-content:center;
+}
+
+.celula{
+  width:100px;
+  height:100px;
+  background:black;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:3px solid gold;
+}
+
+.celula img{
+  width:80px;
+}
+
+/* CONTROLES */
+
+.controls{
+  margin-top:20px;
+}
+
+button{
+  padding:14px 25px;
+  font-size:18px;
+  border:none;
+  border-radius:8px;
+  background:orange;
+  cursor:pointer;
+}
+
+button:hover{
+  background:gold;
+}
+
+input{
+  padding:10px;
+  width:120px;
+  font-size:16px;
+}
+
+/* EFEITO DE VITÓRIA */
+
+.win{
+  animation:piscar 0.5s infinite;
+}
+
+@keyframes piscar{
+  0%{box-shadow:0 0 10px gold;}
+  50%{box-shadow:0 0 25px orange;}
+  100%{box-shadow:0 0 10px gold;}
+}
+
+/* RESULTADO */
+
+#resultado{
+  margin-top:15px;
+  font-size:22px;
+  font-weight:bold;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="topo">
+<div id="usuario">
+    👤 Boa sorte, {{ session.username }}<br>
+</div>
+
+  <div>
+    💰 Saldo: <span id="saldo">R$ {{saldo}}</span>
+  </div>
+
+  <div>
+    💎 Jackpot: <span id="jackpot">{{jackpot}}</span>
+  </div>
+
+</div>
+
+<h1>🎰 Caça-Níquel</h1>
+
+<div class="slot">
+  <div class="celula"><img id="c0" src="/static/slot/1.jpeg"></div>
+  <div class="celula"><img id="c1" src="/static/slot/2.jpeg"></div>
+  <div class="celula"><img id="c2" src="/static/slot/3.jpeg"></div>
+  <div class="celula"><img id="c3" src="/static/slot/4.jpeg"></div>
+  <div class="celula"><img id="c4" src="/static/slot/5.jpeg"></div>
+  <div class="celula"><img id="c5" src="/static/slot/1.jpeg"></div>
+  <div class="celula"><img id="c6" src="/static/slot/2.jpeg"></div>
+  <div class="celula"><img id="c7" src="/static/slot/3.jpeg"></div>
+  <div class="celula"><img id="c8" src="/static/slot/4.jpeg"></div>
+</div>
+
+<div class="controls">
+  <input id="aposta" type="number" value="10" min="1">
+  <button onclick="girar()">🎰 GIRAR</button>
+</div>
+
+<div id="resultado"></div>
+
+<!-- SONS -->
+<audio id="somGiro" src="/static/audio/jogo2.mp3"></audio>
+<audio id="somWin" src="/static/win.mp3"></audio>
+
+<script>
+
+/* ANIMAÇÃO DE SALDO (efeito cassino) */
+
+function animarSaldo(valorFinal){
+
+  let saldoElemento=document.getElementById("saldo");
+  let atual=parseFloat(saldoElemento.innerText.replace("R$",""));
+
+  let intervalo=setInterval(()=>{
+
+    atual+= (valorFinal-atual)*0.2;
+
+    saldoElemento.innerText="R$ "+atual.toFixed(2);
+
+    if(Math.abs(valorFinal-atual)<0.05){
+      saldoElemento.innerText="R$ "+valorFinal.toFixed(2);
+      clearInterval(intervalo);
+    }
+
+  },30);
+}
+
+let simbolos=[1,2,3,4,5,6];
+
+function girar(){
+
+  document.getElementById("somGiro").currentTime=0;
+  document.getElementById("somGiro").play();
+
+  let aposta=parseFloat(document.getElementById("aposta").value);
+
+  if(aposta<=0){
+    alert("Digite uma aposta válida!");
+    return;
+  }
+
+  let tempo=0;
+
+  let spin=setInterval(()=>{
+
+    for(let i=0;i<9;i++){
+
+      let r=Math.floor(Math.random()*6)+1;
+
+      document.getElementById("c"+i).src="/static/slot/"+r+".jpeg";
+
+    }
+
+    tempo+=100;
+
+    if(tempo>=2000){
+      clearInterval(spin);
+      mostrarResultado();
+    }
+
+  },100);
+
+  function mostrarResultado(){
+
+    fetch("/api/slot",{
+      method:"POST",
+      body:new URLSearchParams({aposta:aposta})
+    })
+
+    .then(r=>r.json())
+
+    .then(data=>{
+
+      if(data.error){
+        alert(data.error);
+        return;
+      }
+
+      animarSaldo(data.saldo);
+
+      document.getElementById("jackpot").innerText=data.jackpot;
+
+      let grade=data.grade.flat();
+
+      for(let i=0;i<9;i++){
+
+        document.getElementById("c"+i).src="/static/slot/"+grade[i]+".jpeg";
+
+        document.getElementById("c"+i).classList.remove("win");
+
+      }
+
+      if(data.linhas_ganhas){
+
+        data.linhas_ganhas.forEach(linha=>{
+
+          linha.forEach(idx=>{
+
+            document.getElementById("c"+idx).classList.add("win");
+
+          });
+
+        });
+
+      }
+
+      let res=document.getElementById("resultado");
+
+      if(data.ganho>0){
+
+        document.getElementById("somWin").play();
+
+        res.innerHTML="🎉 GANHOU R$ "+data.ganho;
+
+      }else{
+
+        res.innerHTML="Boa sorte!";
+
+      }
+
+    })
+
+    .catch(err=>{
+
+      console.error(err);
+      alert("Erro ao processar o slot");
+
+    });
+
+  }
+
+}
+
+</script>
+
+</body>
+</html>
+
+
