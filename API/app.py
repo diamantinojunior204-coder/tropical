@@ -387,7 +387,7 @@ def diamantino():
 
     return render_template("diamantino.html", saldo=get_saldo())
 @app.route("/hellow")
-def slot_page():
+def wellho_page():
 
     if "user_id" not in session:
         return redirect("/login")
