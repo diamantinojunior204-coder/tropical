@@ -386,6 +386,13 @@ def diamantino():
         return redirect("/login")
 
     return render_template("diamantino.html", saldo=get_saldo())
+@app.route("/hellow")
+def slot_page():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    return render_template("hellow.html",saldo=get_saldo())
 
 # ================================
 # SLOT
