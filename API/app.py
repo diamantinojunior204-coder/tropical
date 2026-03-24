@@ -1182,12 +1182,13 @@ def api_slot_master():
     return jsonify({
     "saldo": saldo,
     "ganho": ganho,
-    "grade": extra["grade"],
-    "linhas_ganhas": extra["linhas_ganhas"],
-    "jackpot": extra["jackpot"],
-    "multiplicador": extra["multiplicador"],
-    "bonus": extra["bonus"]
+    "grade": extra.get("grade", []),
+    "linhas_ganhas": extra.get("linhas_ganhas", []),
+    "jackpot": extra.get("jackpot", 0),
+    "multiplicador": extra.get("multiplicador", 1),
+    "bonus": extra.get("bonus", False)
     })
+    
     
 #========≠=calcular====
 def slot_master(aposta, c, tema):
