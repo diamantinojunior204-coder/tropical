@@ -16,8 +16,6 @@ body{
   text-align:center;
 }
 
-/* TOPO */
-
 .topo{
   padding:10px 20px;
   background:rgba(0,0,0,0.6);
@@ -27,22 +25,16 @@ body{
   font-size:20px;
 }
 
-/* USUARIO */
-
 #usuario{
   font-size:18px;
   color:#00eaff;
 }
-
-/* SALDO */
 
 #saldo{
   font-weight:bold;
   color:gold;
   font-size:24px;
 }
-
-/* JACKPOT */
 
 #jackpot{
   font-weight:bold;
@@ -56,8 +48,6 @@ body{
   from{ transform:scale(1); }
   to{ transform:scale(1.05); }
 }
-
-/* SLOT */
 
 .slot{
   margin-top:30px;
@@ -82,8 +72,6 @@ body{
   width:80px;
 }
 
-/* CONTROLES */
-
 .controls{
   margin-top:20px;
 }
@@ -97,17 +85,11 @@ button{
   cursor:pointer;
 }
 
-button:hover{
-  background:gold;
-}
-
 input{
   padding:10px;
   width:120px;
   font-size:16px;
 }
-
-/* EFEITO DE VITÓRIA */
 
 .win{
   animation:piscar 0.5s infinite;
@@ -118,8 +100,6 @@ input{
   50%{box-shadow:0 0 25px orange;}
   100%{box-shadow:0 0 10px gold;}
 }
-
-/* RESULTADO */
 
 #resultado{
   margin-top:15px;
@@ -133,9 +113,9 @@ input{
 <body>
 
 <div class="topo">
-<div id="usuario">
-    👤 Boa sorte, {{ session.username }}<br>
-</div>
+  <div id="usuario">
+    👤 Boa sorte, {{ session.username }}
+  </div>
 
   <div>
     💰 Saldo: <span id="saldo">R$ {{saldo}}</span>
@@ -144,21 +124,20 @@ input{
   <div>
     💎 Jackpot: <span id="jackpot">{{jackpot}}</span>
   </div>
-
 </div>
 
-<h1>🎰 Caça-Níquel</h1>
+<h1>🎰 Caça-Níquel Halloween</h1>
 
 <div class="slot">
-  <div class="celula"><img id="c0" src="/static/slot2/1.jpg"></div>
-  <div class="celula"><img id="c1" src="/static/slot2/2.jpg"></div>
-  <div class="celula"><img id="c2" src="/static/slot2/3.jpg"></div>
-  <div class="celula"><img id="c3" src="/static/slot2/4.jpg"></div>
-  <div class="celula"><img id="c4" src="/static/slot2/5.jpg"></div>
-  <div class="celula"><img id="c5" src="/static/slot2/6.jpg"></div>
-  <div class="celula"><img id="c6" src="/static/slot2/1.jpg"></div>
-  <div class="celula"><img id="c7" src="/static/slot2/2.jpg"></div>
-  <div class="celula"><img id="c8" src="/static/slot2/3.jpg"></div>
+  <div class="celula"><img id="c0"></div>
+  <div class="celula"><img id="c1"></div>
+  <div class="celula"><img id="c2"></div>
+  <div class="celula"><img id="c3"></div>
+  <div class="celula"><img id="c4"></div>
+  <div class="celula"><img id="c5"></div>
+  <div class="celula"><img id="c6"></div>
+  <div class="celula"><img id="c7"></div>
+  <div class="celula"><img id="c8"></div>
 </div>
 
 <div class="controls">
@@ -168,136 +147,127 @@ input{
 
 <div id="resultado"></div>
 
-<!-- SONS -->
 <audio id="somGiro" src="/static/audio/jogo2.mp3"></audio>
 <audio id="somWin" src="/static/win.mp3"></audio>
 
 <script>
 
-/* ANIMAÇÃO DE SALDO (efeito cassino) */
+/* MAPEAMENTO DO BACKEND */
+const mapaImgs={
+  "bruxa":"/static/halloween/bruxa.png",
+  "caveira":"/static/halloween/caveira.png",
+  "abobora":"/static/halloween/abobora.png",
+  "fantasma":"/static/halloween/fantasma.png",
+  "tridente":"/static/halloween/tridente.png"
+};
 
+/* ANIMA SALDO */
 function animarSaldo(valorFinal){
 
-  let saldoElemento=document.getElementById("saldo");
-  let atual=parseFloat(saldoElemento.innerText.replace("R$",""));
+  let el=document.getElementById("saldo");
+  let atual=parseFloat(el.innerText.replace("R$",""));
 
-  let intervalo=setInterval(()=>{
+  let i=setInterval(()=>{
 
-    atual+= (valorFinal-atual)*0.2;
-
-    saldoElemento.innerText="R$ "+atual.toFixed(2);
+    atual+=(valorFinal-atual)*0.2;
+    el.innerText="R$ "+atual.toFixed(2);
 
     if(Math.abs(valorFinal-atual)<0.05){
-      saldoElemento.innerText="R$ "+valorFinal.toFixed(2);
-      clearInterval(intervalo);
+      el.innerText="R$ "+valorFinal.toFixed(2);
+      clearInterval(i);
     }
 
   },30);
 }
 
-let simbolos=[1,2,3,4,5,6];
+/* SPIN */
 
 function girar(){
-
-  document.getElementById("somGiro").currentTime=0;
-  document.getElementById("somGiro").play();
 
   let aposta=parseFloat(document.getElementById("aposta").value);
 
   if(aposta<=0){
-    alert("Digite uma aposta válida!");
+    alert("Aposta inválida");
     return;
   }
 
+  document.getElementById("somGiro").play();
+
   let tempo=0;
 
-  let spin=setInterval(()=>{
+  let anim=setInterval(()=>{
 
-    for(let i=0;i<9;i++){
-
-      let r=Math.floor(Math.random()*6)+1;
-
-      document.getElementById("c"+i).src="/static/slot2/"+r+".jpg";
-
-    }
+    Object.values(document.querySelectorAll(".celula img")).forEach((img)=>{
+      let keys=Object.keys(mapaImgs);
+      let rand=keys[Math.floor(Math.random()*keys.length)];
+      img.src=mapaImgs[rand];
+    });
 
     tempo+=100;
 
-    if(tempo>=2000){
-      clearInterval(spin);
-      mostrarResultado();
+    if(tempo>=1500){
+      clearInterval(anim);
+      resultadoFinal();
     }
 
   },100);
 
-  function mostrarResultado(){
+}
 
-    fetch("/api/slot",{
-      method:"POST",
-      body:new URLSearchParams({aposta:aposta})
+/* RESULTADO FINAL */
+
+function resultadoFinal(){
+
+  let aposta=parseFloat(document.getElementById("aposta").value);
+
+  fetch("/api/slot_master",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      aposta:aposta,
+      tema:"halloween"
     })
+  })
+  .then(r=>r.json())
+  .then(data=>{
 
-    .then(r=>r.json())
+    if(data.erro){
+      alert(data.erro);
+      return;
+    }
 
-    .then(data=>{
+    animarSaldo(data.saldo);
 
-      if(data.error){
-        alert(data.error);
-        return;
-      }
+    document.getElementById("jackpot").innerText=data.jackpot;
 
-      animarSaldo(data.saldo);
+    let resultado=data.resultado;
 
-      document.getElementById("jackpot").innerText=data.jackpot;
+    for(let i=0;i<9;i++){
 
-      let grade=data.grade.flat();
+      let simbolo=resultado[i%3]; // adapta 3 → 9 grid
 
-      for(let i=0;i<9;i++){
+      let el=document.getElementById("c"+i);
 
-        document.getElementById("c"+i).src="/static/slot2/"+grade[i]+".jpg";
+      el.src=mapaImgs[simbolo];
 
-        document.getElementById("c"+i).classList.remove("win");
+      el.classList.remove("win");
+    }
 
-      }
+    if(data.ganho>0){
 
-      if(data.linhas_ganhas){
+      document.getElementById("somWin").play();
 
-        data.linhas_ganhas.forEach(linha=>{
+      document.getElementById("resultado").innerHTML=
+      "🎉 GANHOU R$ "+data.ganho;
 
-          linha.forEach(idx=>{
+    }else{
+      document.getElementById("resultado").innerHTML="Boa sorte!";
+    }
 
-            document.getElementById("c"+idx).classList.add("win");
-
-          });
-
-        });
-
-      }
-
-      let res=document.getElementById("resultado");
-
-      if(data.ganho>0){
-
-        document.getElementById("somWin").play();
-
-        res.innerHTML="🎉 GANHOU R$ "+data.ganho;
-
-      }else{
-
-        res.innerHTML="Boa sorte!";
-
-      }
-
-    })
-
-    .catch(err=>{
-
-      console.error(err);
-      alert("Erro ao processar o slot");
-
-    });
-
-  }
+  })
+  .catch(()=>{
+    alert("Erro servidor");
+  });
 
 }
 
@@ -305,5 +275,3 @@ function girar(){
 
 </body>
 </html>
-
-
