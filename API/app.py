@@ -1147,7 +1147,159 @@ def resetar_cassino():
     except Exception as e:
         return f"Erro: {e}"
 
+#=========motor unico ===≠=====
+@app.route("/api/slot_master", methods=["POST"])
+def api_slot_master():
 
+    if "user_id" not in session:
+        return jsonify({"erro":"login"}),401
+
+    data = request.get_json()
+
+    aposta = float(data["aposta"])
+    tema = data["tema"]  # 👈 aqui muda o jogo
+
+    conn = conectar()
+    c = conn.cursor()
+
+    # saldo
+    c.execute("SELECT saldo FROM users WHERE id=%s",(session["user_id"],))
+    saldo = float(c.fetchone()[0])
+
+    if aposta > saldo:
+        conn.close()
+        return jsonify({"erro":"Saldo insuficiente"})
+
+    ganho, extra = slot_master(aposta, c, tema)
+
+    saldo -= aposta
+    saldo += ganho
+
+    c.execute("UPDATE users SET saldo=%s WHERE id=%s",(saldo, session["user_id"]))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "resultado": extra["resultado"],
+        "ganho": round(ganho,2),
+        "saldo": round(saldo,2),
+        "jackpot": extra["jackpot"],
+        "ganhou_jackpot": extra["ganhou_jackpot"]
+    })
+#========≠=calcular====
+def slot_master(aposta, c, tema):
+
+    import random
+
+    # =========================
+    # TEMAS (PERSONALIZAÇÃO)
+    # =========================
+    TEMAS = {
+        "frutas": {
+            "simbolos": ["cherry","lemon","orange","banana","watermelon","seven"],
+            "pagamentos": {
+                "cherry": 3,
+                "lemon": 4,
+                "orange": 5,
+                "banana": 8,
+                "watermelon": 10,
+                "seven": "jackpot"
+            }
+        },
+        "diamantino": {
+            "simbolos": ["forte","folha","moeda","Diamantino","saco"],
+            "pagamentos": {
+                "forte": 10,
+                "folha": 10,
+                "moeda": 10,
+                "Diamantino": "jackpot",
+                "saco": 10
+            }
+        },
+        "halloween": {
+            "simbolos": ["bruxa","caveira","abobora","fantasma","tridente"],
+            "pagamentos": {
+                "bruxa": 10,
+                "caveira": 12,
+                "abobora": 15,
+                "fantasma": 20,
+                "tridente": "jackpot"
+            }
+        }
+    }
+
+    config = TEMAS[tema]
+    simbolos = config["simbolos"]
+
+    # =========================
+    # BUSCAR ESTATÍSTICAS
+    # =========================
+    c.execute("SELECT total_apostado,total_pago FROM estatisticas WHERE id=1")
+    stats = c.fetchone()
+
+    total_apostado = stats[0]
+    total_pago = stats[1]
+
+    rtp = total_pago / total_apostado if total_apostado > 0 else 0
+    RTP_ALVO = 0.90
+
+    # =========================
+    # JACKPOT GLOBAL
+    # =========================
+    c.execute("SELECT valor FROM jackpot WHERE id=1")
+    jackpot = float(c.fetchone()[0])
+
+    jackpot += aposta * 0.03
+
+    # =========================
+    # GERAR RESULTADO
+    # =========================
+    resultado = [random.choice(simbolos) for _ in range(3)]
+
+    # 🎯 CONTROLE RTP (ANTI QUEBRA)
+    if rtp > RTP_ALVO:
+        while resultado[0] == resultado[1] == resultado[2]:
+            resultado[2] = random.choice(simbolos)
+
+    ganho = -aposta
+    ganhou_jackpot = False
+
+    # =========================
+    # PAGAMENTO
+    # =========================
+    if resultado[0] == resultado[1] == resultado[2]:
+
+        simbolo = resultado[0]
+        regra = config["pagamentos"][simbolo]
+
+        if regra == "jackpot":
+            ganho += jackpot
+            jackpot = 100
+            ganhou_jackpot = True
+        else:
+            ganho += aposta * regra
+
+    elif any(s == "seven" or s == "Diamantino" or s == "tridente" for s in resultado):
+        ganho += aposta * 5
+
+    # =========================
+    # ATUALIZAR BANCO
+    # =========================
+    c.execute("""
+    UPDATE estatisticas
+    SET total_apostado = total_apostado + %s,
+        total_pago = total_pago + %s
+    WHERE id=1
+    """,(aposta, ganho))
+
+    c.execute("UPDATE jackpot SET valor=%s WHERE id=1",(jackpot,))
+
+    return ganho, {
+        "resultado": resultado,
+        "jackpot": round(jackpot,2),
+        "ganhou_jackpot": ganhou_jackpot
+    }
     
 #===================================
 # START
