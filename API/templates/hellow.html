@@ -16,12 +16,15 @@ color:white;
 text-align:center;
 }
 
+/* TOPO */
+
 .topo{
 padding:10px 20px;
 background:rgba(0,0,0,0.6);
 display:flex;
 justify-content:space-between;
 align-items:center;
+flex-wrap:wrap;
 }
 
 #usuario{color:#00eaff;}
@@ -37,26 +40,39 @@ from{transform:scale(1);}
 to{transform:scale(1.1);}
 }
 
+/* SLOT GRID */
+
 .slot{
 margin-top:30px;
 display:grid;
-grid-template-columns:repeat(3,100px);
+grid-template-columns:repeat(3,110px);
 gap:10px;
 justify-content:center;
 }
 
+/* CELULA CORRIGIDA */
+
 .celula{
-width:100px;
-height:100px;
-background:black;
-border-radius:10px;
+width:110px;
+height:110px;
+background:radial-gradient(circle,#111,#000);
+border-radius:12px;
 display:flex;
 align-items:center;
 justify-content:center;
 border:3px solid gold;
+overflow:hidden;
 }
 
-.celula img{width:80px;}
+/* IMAGEM FIXA */
+
+.celula img{
+width:80px;
+height:80px;
+object-fit:contain;
+}
+
+/* WIN */
 
 .win{
 animation:winFlash 0.4s infinite;
@@ -67,6 +83,8 @@ animation:winFlash 0.4s infinite;
 50%{box-shadow:0 0 30px orange;}
 100%{box-shadow:0 0 10px gold;}
 }
+
+/* CONTROLES */
 
 .controls{margin-top:20px;}
 
@@ -79,11 +97,21 @@ background:orange;
 cursor:pointer;
 }
 
+input{
+padding:10px;
+font-size:16px;
+width:120px;
+}
+
+/* RESULTADO */
+
 #resultado{
 margin-top:15px;
 font-size:22px;
 font-weight:bold;
 }
+
+/* FLASH TELA */
 
 @keyframes telaFlash{
 0%{background:#000;}
@@ -104,23 +132,38 @@ font-weight:bold;
 
 <h1>🎰 Halloween Slot</h1>
 
+<!-- ✅ GRID CORRIGIDO -->
 <div class="slot">
-<img id="c0"><img id="c1"><img id="c2">
-<img id="c3"><img id="c4"><img id="c5">
-<img id="c6"><img id="c7"><img id="c8">
+
+<div class="celula"><img id="c0"></div>
+<div class="celula"><img id="c1"></div>
+<div class="celula"><img id="c2"></div>
+
+<div class="celula"><img id="c3"></div>
+<div class="celula"><img id="c4"></div>
+<div class="celula"><img id="c5"></div>
+
+<div class="celula"><img id="c6"></div>
+<div class="celula"><img id="c7"></div>
+<div class="celula"><img id="c8"></div>
+
 </div>
 
 <div class="controls">
-<input id="aposta" type="number" value="10">
+<input id="aposta" type="number" value="10" min="1">
+<br><br>
 <button onclick="girar()">🎰 GIRAR</button>
 </div>
 
 <div id="resultado"></div>
 
+<!-- SONS -->
 <audio id="somGiro" src="/static/audio/jogo2.mp3"></audio>
 <audio id="somWin" src="/static/win.mp3"></audio>
 
 <script>
+
+/* MAPA DE IMAGENS */
 
 const mapaImgs={
 1:"/static/slot2/1.jpg",
@@ -129,6 +172,8 @@ const mapaImgs={
 4:"/static/slot2/4.jpg",
 5:"/static/slot2/5.jpg"
 };
+
+/* ANIMAÇÃO SALDO */
 
 function animarSaldo(valorFinal){
 
@@ -148,6 +193,8 @@ clearInterval(i);
 },30);
 
 }
+
+/* GIRAR */
 
 function girar(){
 
@@ -180,6 +227,8 @@ resultadoFinal();
 
 }
 
+/* RESULTADO FINAL */
+
 function resultadoFinal(){
 
 let aposta=parseFloat(document.getElementById("aposta").value);
@@ -187,10 +236,7 @@ let aposta=parseFloat(document.getElementById("aposta").value);
 fetch("/api/slot_master",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-aposta:aposta,
-tema:"halloween"
-})
+body:JSON.stringify({aposta:aposta})
 })
 .then(r=>r.json())
 .then(data=>{
@@ -200,9 +246,11 @@ alert(data.erro);
 return;
 }
 
+/* saldo e jackpot */
 animarSaldo(data.saldo);
 document.getElementById("jackpot").innerText=data.jackpot;
 
+/* aplicar resultado */
 let grade=data.grade.flat();
 
 for(let i=0;i<9;i++){
@@ -214,7 +262,7 @@ el.classList.remove("win");
 
 }
 
-/* LINHAS GANHAS */
+/* linhas ganhas */
 if(data.linhas_ganhas){
 data.linhas_ganhas.forEach(linha=>{
 linha.forEach(idx=>{
@@ -223,7 +271,7 @@ document.getElementById("c"+idx).classList.add("win");
 });
 }
 
-/* RESULTADO */
+/* resultado texto */
 let res=document.getElementById("resultado");
 
 if(data.ganho>0){
@@ -232,28 +280,26 @@ document.getElementById("somWin").play();
 
 let texto="🎉 GANHOU R$ "+data.ganho;
 
-/* MULTIPLICADOR */
-if(data.multiplicador > 1){
+if(data.multiplicador>1){
 texto+=" x"+data.multiplicador+" 🔥";
 }
 
-/* BONUS */
 if(data.bonus){
-texto+="<br>🎁 RODADA GRÁTIS!";
+texto+="<br>🎁 BONUS!";
 }
 
-/* JACKPOT */
-if(data.ganho > 500){
-texto+="<br>💎 JACKPOT!!!";
+if(data.ganho>500){
+texto+="<br>💎 JACKPOT!";
 }
 
 res.innerHTML=texto;
 
-/* FLASH TELA */
 document.body.style.animation="telaFlash 0.3s 6";
 
 }else{
+
 res.innerHTML="Boa sorte!";
+
 }
 
 })
