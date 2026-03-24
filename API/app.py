@@ -1192,114 +1192,110 @@ def slot_master(aposta, c, tema):
 
     import random
 
-    # =========================
-    # TEMAS (PERSONALIZAÇÃO)
-    # =========================
-    TEMAS = {
-        "frutas": {
-            "simbolos": ["cherry","lemon","orange","banana","watermelon","seven"],
-            "pagamentos": {
-                "cherry": 3,
-                "lemon": 4,
-                "orange": 5,
-                "banana": 8,
-                "watermelon": 10,
-                "seven": "jackpot"
-            }
-        },
-        "diamantino": {
-            "simbolos": ["forte","folha","moeda","Diamantino","saco"],
-            "pagamentos": {
-                "forte": 10,
-                "folha": 10,
-                "moeda": 10,
-                "Diamantino": "jackpot",
-                "saco": 10
-            }
-        },
-        "halloween": {
-            "simbolos": ["bruxa","caveira","abobora","fantasma","tridente"],
-            "pagamentos": {
-                "bruxa": 10,
-                "caveira": 12,
-                "abobora": 15,
-                "fantasma": 20,
-                "tridente": "jackpot"
-            }
-        }
-    }
+    simbolos = ["bruxa","caveira","abobora","fantasma","tridente"]
 
-    config = TEMAS[tema]
-    simbolos = config["simbolos"]
-
-    # =========================
-    # BUSCAR ESTATÍSTICAS
-    # =========================
-    c.execute("SELECT total_apostado,total_pago FROM estatisticas WHERE id=1")
-    stats = c.fetchone()
-
-    total_apostado = stats[0]
-    total_pago = stats[1]
-
-    rtp = total_pago / total_apostado if total_apostado > 0 else 0
-    RTP_ALVO = 0.90
-
-    # =========================
-    # JACKPOT GLOBAL
-    # =========================
-    c.execute("SELECT valor FROM jackpot WHERE id=1")
-    jackpot = float(c.fetchone()[0])
-
-    jackpot += aposta * 0.03
-
-    # =========================
-    # GERAR RESULTADO
-    # =========================
-    resultado = [random.choice(simbolos) for _ in range(3)]
-
-    # 🎯 CONTROLE RTP (ANTI QUEBRA)
-    if rtp > RTP_ALVO:
-        while resultado[0] == resultado[1] == resultado[2]:
-            resultado[2] = random.choice(simbolos)
+    grade = [[random.choice(simbolos) for _ in range(3)] for _ in range(3)]
 
     ganho = -aposta
-    ganhou_jackpot = False
+    linhas_ganhas = []
+
+    # jackpot
+    c.execute("SELECT valor FROM jackpot WHERE id=1")
+    jackpot = float(c.fetchone()[0])
+    jackpot += aposta * 0.03
+
+    # 🎯 PAGAMENTOS
+    def premio(simbolo):
+        if simbolo == "bruxa": return aposta * 5
+        if simbolo == "caveira": return aposta * 8
+        if simbolo == "abobora": return aposta * 10
+        if simbolo == "fantasma": return aposta * 15
+        if simbolo == "tridente": return "jackpot"
 
     # =========================
-    # PAGAMENTO
+    # CHECAR LINHAS
     # =========================
-    if resultado[0] == resultado[1] == resultado[2]:
 
-        simbolo = resultado[0]
-        regra = config["pagamentos"][simbolo]
+    # horizontais
+    for i, linha in enumerate(grade):
+        if linha[0] == linha[1] == linha[2]:
+            linhas_ganhas.append([i*3, i*3+1, i*3+2])
+            p = premio(linha[0])
 
-        if regra == "jackpot":
+            if p == "jackpot":
+                ganho += jackpot
+                jackpot = 100
+            else:
+                ganho += p
+
+    # verticais
+    for col in range(3):
+        if grade[0][col] == grade[1][col] == grade[2][col]:
+            linhas_ganhas.append([col, col+3, col+6])
+            p = premio(grade[0][col])
+
+            if p == "jackpot":
+                ganho += jackpot
+                jackpot = 100
+            else:
+                ganho += p
+
+    # diagonal principal
+    if grade[0][0] == grade[1][1] == grade[2][2]:
+        linhas_ganhas.append([0,4,8])
+        p = premio(grade[0][0])
+
+        if p == "jackpot":
             ganho += jackpot
             jackpot = 100
-            ganhou_jackpot = True
         else:
-            ganho += aposta * regra
+            ganho += p
 
-    elif any(s == "seven" or s == "Diamantino" or s == "tridente" for s in resultado):
-        ganho += aposta * 5
+    # diagonal secundária
+    if grade[0][2] == grade[1][1] == grade[2][0]:
+        linhas_ganhas.append([2,4,6])
+        p = premio(grade[0][2])
 
-    # =========================
-    # ATUALIZAR BANCO
-    # =========================
-    c.execute("""
-    UPDATE estatisticas
-    SET total_apostado = total_apostado + %s,
-        total_pago = total_pago + %s
-    WHERE id=1
-    """,(aposta, ganho))
+        if p == "jackpot":
+            ganho += jackpot
+            jackpot = 100
+        else:
+            ganho += p
 
-    c.execute("UPDATE jackpot SET valor=%s WHERE id=1",(jackpot,))
+    # 🎯 MULTIPLICADOR ALEATÓRIO
+    multiplicador = 1
+
+    if ganho > 0:
+        r = random.random()
+
+        if r < 0.05:
+            multiplicador = 5
+        elif r < 0.15:
+            multiplicador = 2
+
+        ganho *= multiplicador
+
+    # 🎁 BONUS (rodada grátis)
+    bonus = False
+    if random.random() < 0.05:
+        bonus = True
+
+    # atualizar jackpot
+    c.execute("UPDATE jackpot SET valor=%s WHERE id=1", (jackpot,))
+
+    mapa = {"bruxa":1,"caveira":2,"abobora":3,"fantasma":4,"tridente":5}
+    grade_num = [[mapa[s] for s in linha] for linha in grade]
 
     return ganho, {
-        "resultado": resultado,
+        "grade": grade_num,
+        "linhas_ganhas": linhas_ganhas,
         "jackpot": round(jackpot,2),
-        "ganhou_jackpot": ganhou_jackpot
+        "multiplicador": multiplicador,
+        "bonus": bonus
     }
+
+    
+    
     
 #===================================
 # START
