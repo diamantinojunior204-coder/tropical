@@ -1156,13 +1156,12 @@ def api_slot_master():
 
     data = request.get_json()
 
-    aposta = float(data["aposta"])
-    tema = data["tema"]  # 👈 aqui muda o jogo
+    aposta = float(data.get("aposta", 0))
+    tema = data.get("tema", "halloween")
 
     conn = conectar()
     c = conn.cursor()
 
-    # saldo
     c.execute("SELECT saldo FROM users WHERE id=%s",(session["user_id"],))
     saldo = float(c.fetchone()[0])
 
@@ -1172,23 +1171,23 @@ def api_slot_master():
 
     ganho, extra = slot_master(aposta, c, tema)
 
-    saldo -= aposta
-    saldo += ganho
+    saldo = round(saldo - aposta + ganho, 2)
 
     c.execute("UPDATE users SET saldo=%s WHERE id=%s",(saldo, session["user_id"]))
 
     conn.commit()
     conn.close()
+
     return jsonify({
-    "saldo": saldo,
-    "ganho": ganho,
-    "grade": extra.get("grade", []),
-    "linhas_ganhas": extra.get("linhas_ganhas", []),
-    "jackpot": extra.get("jackpot", 0),
-    "multiplicador": extra.get("multiplicador", 1),
-    "bonus": extra.get("bonus", False)
+        "saldo": saldo,
+        "ganho": ganho,
+        "grade": extra.get("grade", []),
+        "linhas_ganhas": extra.get("linhas_ganhas", []),
+        "jackpot": extra.get("jackpot", 0),
+        "multiplicador": extra.get("multiplicador", 1),
+        "bonus": extra.get("bonus", False)
     })
-    
+
     
 #========≠=calcular====
 def slot_master(aposta, c, tema):
