@@ -131,7 +131,9 @@ input{
 </head>
 
 <body>
-
+<!-- musica ambiente --><audio autoplay loop>
+<source src="/static/musica.mp3" type="audio/mpeg">
+</audio>
 <div class="topo">
 <div id="usuario">
     👤 Boa sorte, {{ session.username }}<br>
@@ -169,7 +171,7 @@ input{
 <div id="resultado"></div>
 
 <!-- SONS -->
-<audio id="somGiro" src="/static/audio/jogo2.mp3"></audio>
+<audio id="somGiro" src="/static/audio/giro.mp3"></audio>
 <audio id="somWin" src="/static/win.mp3"></audio>
 
 <script>
