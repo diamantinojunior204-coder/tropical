@@ -1179,14 +1179,16 @@ def api_slot_master():
 
     conn.commit()
     conn.close()
-
     return jsonify({
-        "resultado": extra["resultado"],
-        "ganho": round(ganho,2),
-        "saldo": round(saldo,2),
-        "jackpot": extra["jackpot"],
-        "ganhou_jackpot": extra["ganhou_jackpot"]
+    "saldo": saldo,
+    "ganho": ganho,
+    "grade": extra["grade"],
+    "linhas_ganhas": extra["linhas_ganhas"],
+    "jackpot": extra["jackpot"],
+    "multiplicador": extra["multiplicador"],
+    "bonus": extra["bonus"]
     })
+    
 #========≠=calcular====
 def slot_master(aposta, c, tema):
 
