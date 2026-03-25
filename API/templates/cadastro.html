@@ -4,25 +4,139 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cadastro - Cassino</title>
+
 <style>
-body {margin:0;font-family:Arial;background:#0f172a;color:white;display:flex;justify-content:center;align-items:center;height:100vh;}
-.container {background:rgba(0,0,0,0.7);padding:20px;border-radius:12px;width:90%;max-width:350px;}
-input {width:100%;padding:12px;margin:8px 0;border-radius:6px;border:none;}
-button {width:100%;padding:12px;margin-top:10px;background:orange;border:none;border-radius:6px;font-weight:bold;cursor:pointer;}
+body {
+margin:0;
+font-family:Arial;
+background:#0f172a;
+color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
+
+.container {
+background:rgba(0,0,0,0.7);
+padding:20px;
+border-radius:12px;
+width:90%;
+max-width:350px;
+}
+
+input {
+width:100%;
+padding:12px;
+margin:8px 0;
+border-radius:6px;
+border:none;
+}
+
+button {
+width:100%;
+padding:12px;
+margin-top:10px;
+background:orange;
+border:none;
+border-radius:6px;
+font-weight:bold;
+cursor:pointer;
+}
+
 button:hover{background:gold;}
+
 h2{text-align:center;margin-bottom:20px;}
 a{text-decoration:none;color:gold;}
+
+.check{
+margin-top:10px;
+display:flex;
+align-items:center;
+gap:8px;
+font-size:14px;
+}
+
+.erro{
+color:red;
+font-size:14px;
+text-align:center;
+margin-top:10px;
+}
 </style>
 </head>
+
 <body>
+
 <div class="container">
 <h2>🎰 Cassino Cadastro</h2>
-<form method="POST" action="/cadastro">
+
+<form method="POST" action="/cadastro" onsubmit="return validar()">
+
 <input type="text" name="usuario" placeholder="Usuário" required>
+
 <input type="password" name="senha" placeholder="Senha" required>
+
+<!-- 🆔 CPF -->
+<input type="text" name="cpf" id="cpf" placeholder="CPF (somente números)" maxlength="14" required>
+
+<!-- 🔞 MAIORIDADE -->
+<div class="check">
+<input type="checkbox" id="idade">
+<label for="idade">Tenho mais de 18 anos</label>
+</div>
+
 <button type="submit">Cadastrar</button>
+
+<div class="erro" id="erro"></div>
+
 </form>
+
 <p>Já tem conta? <a href="/">Login</a></p>
 </div>
+
+<script>
+
+/* 🧠 VALIDAR FORM */
+function validar(){
+
+let cpf = document.getElementById("cpf").value;
+let idade = document.getElementById("idade").checked;
+let erro = document.getElementById("erro");
+
+erro.innerText = "";
+
+/* validar cpf simples */
+cpf = cpf.replace(/\D/g,'');
+
+if(cpf.length !== 11){
+erro.innerText = "CPF inválido";
+return false;
+}
+
+/* validar idade */
+if(!idade){
+erro.innerText = "Você precisa ser maior de 18 anos";
+return false;
+}
+
+return true;
+}
+
+/* ✨ MÁSCARA CPF AUTOMÁTICA */
+document.getElementById("cpf").addEventListener("input", function(e){
+
+let v = e.target.value.replace(/\D/g,'');
+
+v = v.replace(/(\d{3})(\d)/,"$1.$2");
+v = v.replace(/(\d{3})(\d)/,"$1.$2");
+v = v.replace(/(\d{3})(\d{1,2})$/,"$1-$2");
+
+e.target.value = v;
+
+});
+
+</script>
+
 </body>
 </html>
