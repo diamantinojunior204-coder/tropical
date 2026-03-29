@@ -152,15 +152,15 @@ input{
 <h1>🎰 hellowee 2</h1>
 
 <div class="slot">
-  <div class="celula"><img id="c0" src="/static/slot2/1.jpeg"></div>
-  <div class="celula"><img id="c1" src="/static/slot2/2.jpeg"></div>
-  <div class="celula"><img id="c2" src="/static/slot2/3.jpeg"></div>
-  <div class="celula"><img id="c3" src="/static/slot2/4.jpeg"></div>
-  <div class="celula"><img id="c4" src="/static/slot2/5.jpeg"></div>
-  <div class="celula"><img id="c5" src="/static/slot2/1.jpeg"></div>
-  <div class="celula"><img id="c6" src="/static/slot2/2.jpeg"></div>
-  <div class="celula"><img id="c7" src="/static/slot2/3.jpeg"></div>
-  <div class="celula"><img id="c8" src="/static/slot2/4.jpeg"></div>
+  <div class="celula"><img id="c0" src="/static/slot2/1.jpg"></div>
+  <div class="celula"><img id="c1" src="/static/slot2/2.jpg"></div>
+  <div class="celula"><img id="c2" src="/static/slot2/3.jpg"></div>
+  <div class="celula"><img id="c3" src="/static/slot2/4.jpg"></div>
+  <div class="celula"><img id="c4" src="/static/slot2/5.jpg"></div>
+  <div class="celula"><img id="c5" src="/static/slot2/1.jpg"></div>
+  <div class="celula"><img id="c6" src="/static/slot2/2.jpg"></div>
+  <div class="celula"><img id="c7" src="/static/slot2/3.jpg"></div>
+  <div class="celula"><img id="c8" src="/static/slot2/4.jpg"></div>
 </div>
 
 <div class="controls">
@@ -219,7 +219,7 @@ function girar(){
 
       let r=Math.floor(Math.random()*6)+1;
 
-      document.getElementById("c"+i).src="/static/slot2/"+r+".jpeg";
+      document.getElementById("c"+i).src="/static/slot2/"+r+".jpg";
 
     }
 
@@ -256,7 +256,7 @@ function girar(){
 
       for(let i=0;i<9;i++){
 
-        document.getElementById("c"+i).src="/static/slot2/"+grade[i]+".jpeg";
+        document.getElementById("c"+i).src="/static/slot2/"+grade[i]+".jpg";
 
         document.getElementById("c"+i).classList.remove("win");
 
