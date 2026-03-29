@@ -26,6 +26,7 @@ flex-wrap:wrap;
 
 #usuario{color:#00eaff;}
 #saldo{color:gold;font-size:22px;}
+
 #jackpot{
 color:#ffd700;
 font-size:24px;
@@ -92,6 +93,11 @@ background:orange;
 cursor:pointer;
 }
 
+button:disabled{
+opacity:0.5;
+cursor:not-allowed;
+}
+
 input{
 padding:10px;
 font-size:16px;
@@ -131,7 +137,7 @@ font-weight:bold;
 <div class="controls">
 <input id="aposta" type="number" value="10" min="1">
 <br><br>
-<button onclick="girar()">🎰 GIRAR</button>
+<button id="btnGirar" onclick="girar()">🎰 GIRAR</button>
 </div>
 
 <div id="resultado"></div>
@@ -140,6 +146,8 @@ font-weight:bold;
 <audio id="somWin" src="/static/win.mp3"></audio>
 
 <script>
+
+let girando = false;
 
 const mapaImgs={
 1:"/static/items/apple.png",
@@ -190,16 +198,21 @@ clearInterval(i);
 
 function girar(){
 
+if(girando) return;
+
 let aposta=parseFloat(document.getElementById("aposta").value);
 
-if(aposta<=0){
+if(isNaN(aposta) || aposta<=0){
 alert("Aposta inválida");
 return;
 }
 
+girando = true;
+document.getElementById("btnGirar").disabled = true;
+
 document.getElementById("somGiro").play();
 
-fetch("/api/slot2",{
+fetch("/api/slot",{
 method:"POST",
 body:new URLSearchParams({aposta:aposta})
 })
@@ -208,6 +221,7 @@ body:new URLSearchParams({aposta:aposta})
 
 if(data.erro){
 alert(data.erro);
+liberar();
 return;
 }
 
@@ -216,6 +230,7 @@ animarRolos(data);
 })
 .catch(()=>{
 alert("Erro servidor");
+liberar();
 });
 
 }
@@ -318,6 +333,14 @@ document.body.style.animation="telaFlash 0.3s 6";
 res.innerHTML="Boa sorte!";
 }
 
+// 🔓 LIBERA BOTÃO
+liberar();
+
+}
+
+function liberar(){
+girando = false;
+document.getElementById("btnGirar").disabled = false;
 }
 
 </script>
