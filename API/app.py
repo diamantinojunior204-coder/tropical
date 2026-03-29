@@ -921,27 +921,38 @@ def slot_master(aposta, c, tema):
     linhas_ganhas = []
 
     # =========================
-    # JACKPOT
+    # JACKPOT (SEGURO)
     # =========================
     c.execute("SELECT valor FROM jackpot WHERE id=1")
-    jackpot = float(c.fetchone()[0])
+    row = c.fetchone()
+
+    if not row or row[0] is None:
+        jackpot = 100
+    else:
+        jackpot = float(row[0])
+
     jackpot += aposta * 0.03
 
     # =========================
-    # DADOS BANCA
+    # DADOS BANCA (SEGURO)
     # =========================
     c.execute("""
     SELECT COALESCE(SUM(valor),0)
     FROM depositos WHERE status='pago'
     """)
-    total_depositos = float(c.fetchone()[0] or 0)
+    row = c.fetchone()
+    total_depositos = float(row[0] or 0)
 
     c.execute("""
     SELECT COALESCE(SUM(aposta),0), COALESCE(SUM(ganho),0)
     FROM apostas
     """)
-    total_apostado, total_pago = c.fetchone()
-    banca = float(total_apostado or 0) - float(total_pago or 0)
+    row = c.fetchone()
+
+    total_apostado = float(row[0] or 0)
+    total_pago = float(row[1] or 0)
+
+    banca = total_apostado - total_pago
 
     # =========================
     # RTP
@@ -957,6 +968,7 @@ def slot_master(aposta, c, tema):
         if simbolo == "abobora": return aposta * 5
         if simbolo == "fantasma": return aposta * 7
         if simbolo == "tridente": return "jackpot"
+        return 0
 
     # =========================
     # JACKPOT INTELIGENTE
@@ -966,19 +978,19 @@ def slot_master(aposta, c, tema):
         if jackpot < 1000:
             return False
 
-        if jackpot < total_depositos * 1.5:
+        if total_depositos > 0 and jackpot < total_depositos * 1.5:
             return False
 
-        if jackpot > banca * 0.3:
+        if banca > 0 and jackpot > banca * 0.3:
             return False
 
         chance = 0.05
 
-        if jackpot > total_depositos * 2:
-            chance = 0.1
-
-        if jackpot > total_depositos * 3:
-            chance = 0.2
+        if total_depositos > 0:
+            if jackpot > total_depositos * 2:
+                chance = 0.1
+            if jackpot > total_depositos * 3:
+                chance = 0.2
 
         return random.random() < chance
 
@@ -1021,7 +1033,7 @@ def slot_master(aposta, c, tema):
         aplicar(grade[0][2])
 
     # =========================
-    # MULTIPLICADOR (AJUSTADO)
+    # MULTIPLICADOR
     # =========================
     multiplicador = 1
 
@@ -1052,6 +1064,9 @@ def slot_master(aposta, c, tema):
     # =========================
     c.execute("UPDATE jackpot SET valor=%s WHERE id=1", (jackpot,))
 
+    # =========================
+    # VISUAL
+    # =========================
     mapa = {"bruxa":1,"caveira":2,"abobora":3,"fantasma":4,"tridente":5}
     grade_num = [[mapa[s] for s in linha] for linha in grade]
 
@@ -1062,7 +1077,8 @@ def slot_master(aposta, c, tema):
         "multiplicador": multiplicador,
         "bonus": bonus
     }
-   
+    
+
 
     
     
