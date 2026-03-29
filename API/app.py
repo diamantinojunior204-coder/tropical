@@ -950,55 +950,73 @@ def api_slot2():
         **dados
     })
 #=========motor unico ===≠=====
-def slot_master(aposta, c, tema):
+def slot_master(aposta, c, user_id, tema):
 
     import random
 
     simbolos = ["bruxa","caveira","abobora","fantasma","tridente"]
 
+    # 🎰 GRADE
     grade = [[random.choice(simbolos) for _ in range(3)] for _ in range(3)]
 
-    ganho = -aposta
+    ganho = 0
     linhas_ganhas = []
 
     # =========================
-    # JACKPOT (SEGURO)
+    # JACKPOT
     # =========================
     c.execute("SELECT valor FROM jackpot WHERE id=1")
     row = c.fetchone()
-
-    if not row or row[0] is None:
-        jackpot = 100
-    else:
-        jackpot = float(row[0])
+    jackpot = float(row[0] or 100)
 
     jackpot += aposta * 0.03
 
     # =========================
-    # DADOS BANCA (SEGURO)
+    # BANCA GLOBAL
     # =========================
-    c.execute("""
-    SELECT COALESCE(SUM(valor),0)
-    FROM depositos WHERE status='pago'
-    """)
-    row = c.fetchone()
-    total_depositos = float(row[0] or 0)
+    c.execute("SELECT COALESCE(SUM(valor),0) FROM depositos WHERE status='pago'")
+    total_depositos = float(c.fetchone()[0] or 0)
 
-    c.execute("""
-    SELECT COALESCE(SUM(aposta),0), COALESCE(SUM(ganho),0)
-    FROM apostas
-    """)
+    c.execute("SELECT COALESCE(SUM(aposta),0), COALESCE(SUM(ganho),0) FROM apostas")
     row = c.fetchone()
-
     total_apostado = float(row[0] or 0)
     total_pago = float(row[1] or 0)
 
     banca = total_apostado - total_pago
 
     # =========================
-    # RTP
+    # PLAYER (ANTI PROFIT)
+    # =========================
+    c.execute("""
+        SELECT COALESCE(SUM(ganho),0), COALESCE(SUM(aposta),0)
+        FROM apostas WHERE user_id=%s
+    """, (user_id,))
+    row = c.fetchone()
+
+    ganho_user = float(row[0] or 0)
+    aposta_user = float(row[1] or 0)
+
+    lucro_user = ganho_user - aposta_user
+
+    # =========================
+    # RTP DINÂMICO
     # =========================
     rtp_base = 0.92
+
+    # banca baixa = reduz RTP
+    if banca < total_depositos * 0.1:
+        rtp_base = 0.80
+
+    # player ganhando muito = reduz RTP dele
+    if lucro_user > aposta_user * 0.5:
+        rtp_base -= 0.10
+
+    # player perdendo = aumenta RTP (incentivo)
+    if lucro_user < -aposta_user * 0.5:
+        rtp_base += 0.05
+
+    # limite de segurança
+    rtp_base = max(0.75, min(rtp_base, 0.98))
 
     # =========================
     # PRÊMIOS
@@ -1019,19 +1037,19 @@ def slot_master(aposta, c, tema):
         if jackpot < 1000:
             return False
 
-        if total_depositos > 0 and jackpot < total_depositos * 1.5:
+        if jackpot < total_depositos * 1.5:
             return False
 
         if banca > 0 and jackpot > banca * 0.3:
             return False
 
-        chance = 0.05
+        chance = 0.03
 
-        if total_depositos > 0:
-            if jackpot > total_depositos * 2:
-                chance = 0.1
-            if jackpot > total_depositos * 3:
-                chance = 0.2
+        if jackpot > total_depositos * 2:
+            chance = 0.08
+
+        if jackpot > total_depositos * 3:
+            chance = 0.15
 
         return random.random() < chance
 
@@ -1094,11 +1112,25 @@ def slot_master(aposta, c, tema):
     bonus = random.random() < 0.03
 
     # =========================
-    # RTP FINAL
+    # LIMITE DE PAGAMENTO
+    # =========================
+    limite = aposta * 50
+
+    if ganho > limite:
+        ganho = limite
+
+    # =========================
+    # RTP FINAL (TRAVA)
     # =========================
     if ganho > 0:
         if random.random() > rtp_base:
             ganho = 0
+
+    # =========================
+    # SEGURANÇA BANCA
+    # =========================
+    if banca > 0 and ganho > banca * 0.2:
+        ganho = 0
 
     # =========================
     # SALVAR JACKPOT
@@ -1118,6 +1150,7 @@ def slot_master(aposta, c, tema):
         "multiplicador": multiplicador,
         "bonus": bonus
     }
+
     
 
 
