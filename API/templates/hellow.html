@@ -194,18 +194,14 @@ function girar(){
 
   function resultadoFinal(){
 
-    fetch("/api/slot",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        aposta: aposta
-      
-      })
-    })
-    .then(r=>r.json())
-    .then(data=>{
-
-      if(data.erro){
+   
+  fetch("/api/slot",{
+  method:"POST",
+  body:new URLSearchParams({aposta:aposta})
+  })
+  .then(r=>r.json())
+  .then(data=>{
+     if(data.erro){
         alert(data.erro);
         liberar();
         return;
