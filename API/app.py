@@ -32,9 +32,7 @@ def conectar():
     return conn
 
 
-# ================================
-# CRIAR BANCO
-# ================================
+
 # ================================
 # CRIAR BANCO
 # ================================
@@ -49,7 +47,7 @@ def criar_db():
         id SERIAL PRIMARY KEY,
         username TEXT UNIQUE,
         password TEXT,
-        saldo NUMERIC(10,2) DEFAULT 100,
+        saldo NUMERIC(10,2) DEFAULT 1,
         is_admin INTEGER DEFAULT 0
     )
     """)
@@ -135,7 +133,7 @@ def criar_admin():
         c.execute("""
         INSERT INTO users(username,password,is_admin,saldo)
         VALUES(%s,%s,1,1000)
-        """, ("admin", generate_password_hash("admin123")))
+        """, ("admin", generate_password_hash("admincassinocubano")))
 
     conn.commit()
     conn.close()
@@ -423,11 +421,11 @@ def api_slot():
 
         # função de prêmio
         def calcular_premio(simbolo):
-            if simbolo == "🍒": return aposta * 2
-            elif simbolo == "🍋": return aposta * 3
-            elif simbolo == "🍀": return aposta * 5
-            elif simbolo == "⭐": return aposta * 10
-            elif simbolo == "💎": return aposta * 20
+            if simbolo == "🍒": return aposta * 1
+            elif simbolo == "🍋": return aposta * 2
+            elif simbolo == "🍀": return aposta * 3
+            elif simbolo == "⭐": return aposta * 5
+            elif simbolo == "💎": return aposta * 7
             elif simbolo == "7": return jackpot
             return 0
 
@@ -515,278 +513,6 @@ def api_slot():
 
 
 # ================================
-# ROLETA
-# ================================
-@app.route("/api/roleta",methods=["POST"])
-def api_roleta():
-
-    if "user_id" not in session:
-        return jsonify({"error":"login"}),401
-
-    aposta=float(request.form["aposta"])
-    escolha=request.form["cor"]
-
-    def calcular(aposta,c):
-
-        cor=random.choice(["vermelho","preto"])
-
-        ganho=-aposta
-
-        if cor==escolha:
-            ganho=aposta
-
-        return ganho,{"resultado":cor}
-
-    return jsonify(processar_aposta(session["user_id"],"roleta",aposta,calcular))
-
-
-# ================================
-# CARTAS
-# ================================
-@app.route("/api/cartas",methods=["POST"])
-def api_cartas():
-
-    if "user_id" not in session:
-        return jsonify({"error":"login"}),401
-
-    aposta=float(request.form["aposta"])
-
-    def calcular(aposta,c):
-
-        jogador=random.randint(1,13)
-        dealer=random.randint(1,13)
-
-        ganho=-aposta
-
-        if jogador>dealer:
-            ganho=aposta
-
-        return ganho,{
-            "jogador":jogador,
-            "dealer":dealer
-        }
-
-    return jsonify(processar_aposta(session["user_id"],"cartas",aposta,calcular))
-#===========FRUTAS COM JACKPOT PROFISSIONAL================
-@app.route("/api/spin", methods=["POST"])
-def api_spin():
-
-    if "user_id" not in session:
-        return jsonify({"error":"login"}),401
-
-    data = request.get_json()
-
-    try:
-        aposta = float(data["aposta"])
-    except:
-        return jsonify({"error":"aposta inválida"}),400
-
-    def calcular(aposta, c):
-
-        import random
-
-        simbolos = [
-            "apple","apricot","banana","big_win","cherry",
-            "grapes","lemon","lucky_seven","orange","pear",
-            "strawberry","watermelon"
-        ]
-
-        resultado = [
-            random.choice(simbolos),
-            random.choice(simbolos),
-            random.choice(simbolos)
-        ]
-
-        ganho = -aposta
-        ganhou_jackpot = False
-
-        # pegar jackpot atual
-        c.execute("SELECT valor FROM jackpot WHERE id=1")
-        jackpot = float(c.fetchone()[0])
-
-        # =========================
-        # 🎯 PAGAMENTOS NORMAIS
-        # =========================
-        if resultado[0] == resultado[1] == resultado[2]:
-
-            simbolo = resultado[0]
-
-            if simbolo == "cherry":
-                ganho += aposta * 3
-
-            elif simbolo == "lemon":
-                ganho += aposta * 4
-
-            elif simbolo == "orange":
-                ganho += aposta * 5
-
-            elif simbolo == "banana":
-                ganho += aposta * 8
-
-            elif simbolo == "watermelon":
-                ganho += aposta * 10
-
-            # =========================
-            # 💎 JACKPOT (RARO)
-            # =========================
-            elif simbolo == "lucky_seven":
-
-                chance = random.random()  # 0.0 até 1.0
-
-                # 🔥 AJUSTE AQUI A DIFICULDADE
-                if chance < 0.02:   # 2% de chance
-
-                    ganho += jackpot
-                    jackpot = 100
-                    ganhou_jackpot = True
-
-                else:
-                    # paga prêmio menor (não jackpot)
-                    ganho += aposta * 15
-
-        # =========================
-        # 💰 ACUMULA JACKPOT
-        # =========================
-        jackpot += aposta * 0.03
-
-        c.execute(
-            "UPDATE jackpot SET valor=%s WHERE id=1",
-            (jackpot,)
-        )
-
-        return ganho,{
-            "resultado":resultado,
-            "jackpot":round(jackpot,2),
-            "ganhou_jackpot":ganhou_jackpot
-        }
-
-    return jsonify(
-        processar_aposta(
-            session["user_id"],
-            "frutas",
-            aposta,
-            calcular
-        )
-    )
-
-        
-
-#=====slot Diamantino===
-# ================================
-# API DIAMANTINO
-# ================================
-@app.route("/api/diamantino", methods=["POST"])
-def api_diamantino():
-
-    if "user_id" not in session:
-        return jsonify({"erro":"login"}),401
-
-    data = request.get_json()
-    aposta = float(data["aposta"])
-
-    conn = conectar()
-    c = conn.cursor()
-
-    # pegar saldo
-    c.execute("SELECT saldo FROM users WHERE id=%s",(session["user_id"],))
-    saldo = float(c.fetchone()[0])
-
-    if aposta > saldo:
-        conn.close()
-        return jsonify({"erro":"Saldo insuficiente"})
-
-    # calcular prêmio
-    premio, extra = calcular_diamantino(aposta, c)
-
-    # desconta aposta
-    saldo -= aposta
-
-    # adiciona prêmio
-    saldo += premio
-    saldo = round(saldo,2)
-
-    # atualizar saldo
-    c.execute(
-        "UPDATE users SET saldo=%s WHERE id=%s",
-        (saldo, session["user_id"])
-    )
-
-    conn.commit()
-    conn.close()
-
-    return jsonify({
-        "resultado": extra["resultado"],
-        "ganho": round(premio,2),
-        "saldo": round(saldo,2),
-        "jackpot": round(extra["jackpot"],2),
-        "ganhou_jackpot": extra["ganhou_jackpot"]
-    })
-def calcular_diamantino(aposta, c):
-
-    import random
-
-    simbolos = ["forte","forte","folha","folha","moeda","moeda","Diamantino","saco","saco","saco"]
-
-    # pegar jackpot
-    c.execute("SELECT valor FROM jackpot WHERE id=1")
-    row = c.fetchone()
-
-    if not row:
-        jackpot = 100
-        c.execute("INSERT INTO jackpot (id,valor) VALUES (1,100)")
-    else:
-        jackpot = float(row[0])
-
-    # aumenta jackpot
-    jackpot += aposta * 0.05
-
-    resultado = [
-        random.choice(simbolos),
-        random.choice(simbolos),
-        random.choice(simbolos)
-    ]
-
-    ganho = 0
-    ganhou_jackpot = False
-
-    if resultado[0] == resultado[1] == resultado[2]:
-
-        if resultado[0] == "Diamantino":
-            ganho = jackpot
-            jackpot = 100
-            ganhou_jackpot = True
-        else:
-            ganho = aposta * 20
-
-    elif "Diamantino" in resultado:
-        ganho = aposta * 5
-
-    # atualizar jackpot
-    c.execute(
-        "UPDATE jackpot SET valor=%s WHERE id=1",
-        (jackpot,)
-    )
-
-    # atualizar estatísticas (SEM jackpot aqui)
-    c.execute("""
-    UPDATE estatisticas
-    SET total_apostado = total_apostado + %s,
-        total_pago = total_pago + %s
-    WHERE id=1
-    """,(aposta, max(ganho,0)))
-
-    return ganho, {
-        "resultado": resultado,
-        "jackpot": jackpot,
-        "ganhou_jackpot": ganhou_jackpot
-        }
-
-    
-
-
-    
-
-# ================================
 # ADMIN
 # ================================
 @app.route("/admin")
@@ -868,10 +594,6 @@ def admin():
     lucro=round(lucro, 2)
     )
 
-
-
-    
-    
 
 # ================================
 # LOGOUT
@@ -1066,6 +788,8 @@ def sacar():
         if valor > saldo:
             conn.close()
             return "Saldo insuficiente"
+        elif valor <=0:
+            return "digite um valor válido!"
 
         # registrar saque
         c.execute("""
@@ -1208,10 +932,10 @@ def slot_master(aposta, c, tema):
 
     # 🎯 PAGAMENTOS
     def premio(simbolo):
-        if simbolo == "bruxa": return aposta * 5
-        if simbolo == "caveira": return aposta * 8
-        if simbolo == "abobora": return aposta * 10
-        if simbolo == "fantasma": return aposta * 15
+        if simbolo == "bruxa": return aposta * 2
+        if simbolo == "caveira": return aposta * 4
+        if simbolo == "abobora": return aposta * 5
+        if simbolo == "fantasma": return aposta * 7
         if simbolo == "tridente": return "jackpot"
 
     # =========================
@@ -1287,14 +1011,14 @@ def slot_master(aposta, c, tema):
 
     mapa = {"bruxa":1,"caveira":2,"abobora":3,"fantasma":4,"tridente":5}
     grade_num = [[mapa[s] for s in linha] for linha in grade]
-
-    return ganho, {
+    return round(ganho, 2), {
         "grade": grade_num,
         "linhas_ganhas": linhas_ganhas,
-        "jackpot": round(jackpot,2),
+        "jackpot": round(jackpot, 2),
         "multiplicador": multiplicador,
         "bonus": bonus
     }
+   
 
     
     
