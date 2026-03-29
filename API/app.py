@@ -911,7 +911,10 @@ def resetar_cassino():
 @app.route("/api/slot2", methods=["POST"])
 def api_slot2():
 
-    aposta = float(request.form.get("aposta", 0))
+    try:
+        aposta = float(request.form.get("aposta", 0))
+    except:
+        return jsonify({"erro": "Aposta inválida"})
 
     if aposta <= 0:
         return jsonify({"erro": "Aposta inválida"})
@@ -919,23 +922,34 @@ def api_slot2():
     conn = conectar()
     c = conn.cursor()
 
-    # pegar saldo
-    c.execute("SELECT saldo FROM users WHERE id=%s", (session["user_id"],))
-    saldo = float(c.fetchone()[0])
+    # 🔒 LOCK do usuário (evita clique duplo REAL)
+    c.execute("SELECT saldo FROM users WHERE id=%s FOR UPDATE", (session["user_id"],))
+    row = c.fetchone()
+
+    if not row:
+        conn.close()
+        return jsonify({"erro": "Usuário inválido"})
+
+    saldo = float(row[0])
 
     if aposta > saldo:
         conn.close()
         return jsonify({"erro": "Saldo insuficiente"})
 
-    # 🎰 chama motor
-    ganho, dados = slot_master(aposta, c, "frutas")
+    # 🎰 chama motor (AGORA COM user_id)
+    ganho, dados = slot_master(aposta, c, session["user_id"], "frutas")
 
+    # 💰 saldo final correto (SEM BUG)
     saldo_final = saldo - aposta + ganho
 
-    # salva saldo
-    c.execute("UPDATE users SET saldo=%s WHERE id=%s", (saldo_final, session["user_id"]))
+    # salvar saldo
+    c.execute("""
+        UPDATE users 
+        SET saldo=%s 
+        WHERE id=%s
+    """, (saldo_final, session["user_id"]))
 
-    # salvar aposta (importante pro RTP)
+    # registrar aposta
     c.execute("""
         INSERT INTO apostas(user_id, aposta, ganho)
         VALUES(%s,%s,%s)
@@ -946,7 +960,7 @@ def api_slot2():
 
     return jsonify({
         "ganho": ganho,
-        "saldo": saldo_final,
+        "saldo": round(saldo_final, 2),
         **dados
     })
 #=========motor unico ===≠=====
