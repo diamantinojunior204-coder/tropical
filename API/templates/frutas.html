@@ -219,13 +219,10 @@ return;
 
 document.getElementById("somGiro").play();
 
-fetch("/api/slot_master",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-aposta: aposta,
-tema: "frutas"
-})
+   fetch("/api/slot",{
+      method:"POST",
+      body:new URLSearchParams({aposta:aposta})
+    })
 })
 .then(r=>r.json())
 .then(data=>{
