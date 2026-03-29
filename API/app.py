@@ -42,7 +42,18 @@ def get_banca_info(c):
     banca = total_apostado - total_pago
 
     return total_depositos, banca
+#===========Home=====
+@app.route("/")
+def home():
 
+    logado = "user_id" in session
+
+    return render_template(
+        "home.html",
+        logado=logado,
+        username=session.get("username"),
+        saldo=get_saldo() if logado else 0
+    )
 # ================================
 # PROCESSAR APOSTA
 # ================================
