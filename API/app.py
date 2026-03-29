@@ -412,89 +412,129 @@ def api_slot():
         ganho = -aposta
         linhas_ganhas = []
 
-        # pega jackpot atual
+        # =========================
+        # PEGAR JACKPOT
+        # =========================
         c.execute("SELECT valor FROM jackpot WHERE id=1")
         jackpot = float(c.fetchone()[0])
 
-        # acumula jackpot
+        # acumula jackpot (3%)
         jackpot += aposta * 0.03
 
-        # função de prêmio
+        # =========================
+        # RTP CONTROL (~92%)
+        # =========================
+        rtp_base = 0.92
+
+        # =========================
+        # DADOS DA BANCA
+        # =========================
+        c.execute("""
+        SELECT COALESCE(SUM(valor),0)
+        FROM depositos WHERE status='pago'
+        """)
+        total_depositos = float(c.fetchone()[0] or 0)
+
+        c.execute("""
+        SELECT COALESCE(SUM(aposta),0), COALESCE(SUM(ganho),0)
+        FROM apostas
+        """)
+        total_apostado, total_pago = c.fetchone()
+        banca = float(total_apostado or 0) - float(total_pago or 0)
+
+        # =========================
+        # PRÊMIOS
+        # =========================
         def calcular_premio(simbolo):
             if simbolo == "🍒": return aposta * 1
             elif simbolo == "🍋": return aposta * 2
             elif simbolo == "🍀": return aposta * 3
             elif simbolo == "⭐": return aposta * 5
             elif simbolo == "💎": return aposta * 7
-            elif simbolo == "7": return jackpot
+            elif simbolo == "7": return "jackpot"
             return 0
 
-        # ========================
-        # HORIZONTAIS
-        # ========================
+        # =========================
+        # CONTROLE JACKPOT
+        # =========================
+        def pode_pagar_jackpot():
+
+            if jackpot < 1000:
+                return False
+
+            if jackpot < total_depositos * 1.5:
+                return False
+
+            if jackpot > banca * 0.3:
+                return False
+
+            # chance progressiva
+            chance = 0.05
+
+            if jackpot > total_depositos * 2:
+                chance = 0.1
+
+            if jackpot > total_depositos * 3:
+                chance = 0.2
+
+            return random.random() < chance
+
+        # =========================
+        # APLICAR PREMIO
+        # =========================
+        def aplicar(simbolo):
+            nonlocal ganho, jackpot
+
+            premio = calcular_premio(simbolo)
+
+            if premio == "jackpot":
+                if pode_pagar_jackpot():
+                    ganho += jackpot
+                    jackpot = 100
+                else:
+                    # disfarce (alto prêmio)
+                    ganho += aposta * random.choice([8, 10])
+            else:
+                ganho += premio
+
+        # =========================
+        # CHECAR LINHAS
+        # =========================
         for i, linha in enumerate(grade):
             if linha[0] == linha[1] == linha[2]:
-
                 linhas_ganhas.append([i*3, i*3+1, i*3+2])
+                aplicar(linha[0])
 
-                premio = calcular_premio(linha[0])
-
-                if linha[0] == "7":
-                    jackpot = 100
-
-                ganho += premio
-
-        # ========================
-        # VERTICAIS
-        # ========================
         for col in range(3):
             if grade[0][col] == grade[1][col] == grade[2][col]:
-
                 linhas_ganhas.append([col, col+3, col+6])
+                aplicar(grade[0][col])
 
-                premio = calcular_premio(grade[0][col])
-
-                if grade[0][col] == "7":
-                    jackpot = 100
-
-                ganho += premio
-
-        # ========================
-        # DIAGONAL PRINCIPAL
-        # ========================
         if grade[0][0] == grade[1][1] == grade[2][2]:
-
             linhas_ganhas.append([0,4,8])
+            aplicar(grade[0][0])
 
-            premio = calcular_premio(grade[0][0])
-
-            if grade[0][0] == "7":
-                jackpot = 100
-
-            ganho += premio
-
-        # ========================
-        # DIAGONAL SECUNDÁRIA
-        # ========================
         if grade[0][2] == grade[1][1] == grade[2][0]:
-
             linhas_ganhas.append([2,4,6])
+            aplicar(grade[0][2])
 
-            premio = calcular_premio(grade[0][2])
+        # =========================
+        # AJUSTE FINAL RTP
+        # =========================
+        if ganho > 0:
+            if random.random() > rtp_base:
+                ganho = 0  # corta alguns ganhos pra manter RTP
 
-            if grade[0][2] == "7":
-                jackpot = 100
-
-            ganho += premio
-
-        # salvar jackpot atualizado
+        # =========================
+        # SALVAR JACKPOT
+        # =========================
         c.execute("UPDATE jackpot SET valor=%s WHERE id=1", (jackpot,))
 
         # mapa visual
         mapa = {"🍒":1,"🍋":2,"🍀":3,"⭐":4,"💎":5,"7":6}
         grade_numerica = [[mapa[s] for s in linha] for linha in grade]
 
-        return ganho, {
+        return round(ganho, 2), {
             "grade": grade_numerica,
             "linhas_ganhas": linhas_ganhas,
             "jackpot": round(jackpot, 2)
@@ -508,9 +548,6 @@ def api_slot():
             calcular
         )
     )
-
-        
-
 
 # ================================
 # ADMIN
@@ -872,48 +909,6 @@ def resetar_cassino():
         return f"Erro: {e}"
 
 #=========motor unico ===≠=====
-@app.route("/api/slot_master", methods=["POST"])
-def api_slot_master():
-
-    if "user_id" not in session:
-        return jsonify({"erro":"login"}),401
-
-    data = request.get_json()
-
-    aposta = float(data.get("aposta", 0))
-    tema = data.get("tema", "halloween")
-
-    conn = conectar()
-    c = conn.cursor()
-
-    c.execute("SELECT saldo FROM users WHERE id=%s",(session["user_id"],))
-    saldo = float(c.fetchone()[0])
-
-    if aposta > saldo:
-        conn.close()
-        return jsonify({"erro":"Saldo insuficiente"})
-
-    ganho, extra = slot_master(aposta, c, tema)
-
-    saldo = round(saldo - aposta + ganho, 2)
-
-    c.execute("UPDATE users SET saldo=%s WHERE id=%s",(saldo, session["user_id"]))
-
-    conn.commit()
-    conn.close()
-
-    return jsonify({
-        "saldo": saldo,
-        "ganho": ganho,
-        "grade": extra.get("grade", []),
-        "linhas_ganhas": extra.get("linhas_ganhas", []),
-        "jackpot": extra.get("jackpot", 0),
-        "multiplicador": extra.get("multiplicador", 1),
-        "bonus": extra.get("bonus", False)
-    })
-
-    
-#========≠=calcular====
 def slot_master(aposta, c, tema):
 
     import random
@@ -925,12 +920,37 @@ def slot_master(aposta, c, tema):
     ganho = -aposta
     linhas_ganhas = []
 
-    # jackpot
+    # =========================
+    # JACKPOT
+    # =========================
     c.execute("SELECT valor FROM jackpot WHERE id=1")
     jackpot = float(c.fetchone()[0])
     jackpot += aposta * 0.03
 
-    # 🎯 PAGAMENTOS
+    # =========================
+    # DADOS BANCA
+    # =========================
+    c.execute("""
+    SELECT COALESCE(SUM(valor),0)
+    FROM depositos WHERE status='pago'
+    """)
+    total_depositos = float(c.fetchone()[0] or 0)
+
+    c.execute("""
+    SELECT COALESCE(SUM(aposta),0), COALESCE(SUM(ganho),0)
+    FROM apostas
+    """)
+    total_apostado, total_pago = c.fetchone()
+    banca = float(total_apostado or 0) - float(total_pago or 0)
+
+    # =========================
+    # RTP
+    # =========================
+    rtp_base = 0.92
+
+    # =========================
+    # PRÊMIOS
+    # =========================
     def premio(simbolo):
         if simbolo == "bruxa": return aposta * 2
         if simbolo == "caveira": return aposta * 4
@@ -939,78 +959,102 @@ def slot_master(aposta, c, tema):
         if simbolo == "tridente": return "jackpot"
 
     # =========================
-    # CHECAR LINHAS
+    # JACKPOT INTELIGENTE
     # =========================
+    def pode_pagar_jackpot():
 
-    # horizontais
+        if jackpot < 1000:
+            return False
+
+        if jackpot < total_depositos * 1.5:
+            return False
+
+        if jackpot > banca * 0.3:
+            return False
+
+        chance = 0.05
+
+        if jackpot > total_depositos * 2:
+            chance = 0.1
+
+        if jackpot > total_depositos * 3:
+            chance = 0.2
+
+        return random.random() < chance
+
+    # =========================
+    # APLICAR PREMIO
+    # =========================
+    def aplicar(simbolo):
+        nonlocal ganho, jackpot
+
+        p = premio(simbolo)
+
+        if p == "jackpot":
+            if pode_pagar_jackpot():
+                ganho += jackpot
+                jackpot = 100
+            else:
+                ganho += aposta * random.choice([8, 10])
+        else:
+            ganho += p
+
+    # =========================
+    # LINHAS
+    # =========================
     for i, linha in enumerate(grade):
         if linha[0] == linha[1] == linha[2]:
             linhas_ganhas.append([i*3, i*3+1, i*3+2])
-            p = premio(linha[0])
+            aplicar(linha[0])
 
-            if p == "jackpot":
-                ganho += jackpot
-                jackpot = 100
-            else:
-                ganho += p
-
-    # verticais
     for col in range(3):
         if grade[0][col] == grade[1][col] == grade[2][col]:
             linhas_ganhas.append([col, col+3, col+6])
-            p = premio(grade[0][col])
+            aplicar(grade[0][col])
 
-            if p == "jackpot":
-                ganho += jackpot
-                jackpot = 100
-            else:
-                ganho += p
-
-    # diagonal principal
     if grade[0][0] == grade[1][1] == grade[2][2]:
         linhas_ganhas.append([0,4,8])
-        p = premio(grade[0][0])
+        aplicar(grade[0][0])
 
-        if p == "jackpot":
-            ganho += jackpot
-            jackpot = 100
-        else:
-            ganho += p
-
-    # diagonal secundária
     if grade[0][2] == grade[1][1] == grade[2][0]:
         linhas_ganhas.append([2,4,6])
-        p = premio(grade[0][2])
+        aplicar(grade[0][2])
 
-        if p == "jackpot":
-            ganho += jackpot
-            jackpot = 100
-        else:
-            ganho += p
-
-    # 🎯 MULTIPLICADOR ALEATÓRIO
+    # =========================
+    # MULTIPLICADOR (AJUSTADO)
+    # =========================
     multiplicador = 1
 
     if ganho > 0:
         r = random.random()
 
-        if r < 0.05:
+        if r < 0.03:
             multiplicador = 5
-        elif r < 0.15:
+        elif r < 0.12:
             multiplicador = 2
 
         ganho *= multiplicador
 
-    # 🎁 BONUS (rodada grátis)
-    bonus = False
-    if random.random() < 0.05:
-        bonus = True
+    # =========================
+    # BONUS
+    # =========================
+    bonus = random.random() < 0.03
 
-    # atualizar jackpot
+    # =========================
+    # RTP FINAL
+    # =========================
+    if ganho > 0:
+        if random.random() > rtp_base:
+            ganho = 0
+
+    # =========================
+    # SALVAR JACKPOT
+    # =========================
     c.execute("UPDATE jackpot SET valor=%s WHERE id=1", (jackpot,))
 
     mapa = {"bruxa":1,"caveira":2,"abobora":3,"fantasma":4,"tridente":5}
     grade_num = [[mapa[s] for s in linha] for linha in grade]
+
     return round(ganho, 2), {
         "grade": grade_num,
         "linhas_ganhas": linhas_ganhas,
