@@ -233,12 +233,12 @@ resultadoFinal();
 function resultadoFinal(){
 
 let aposta=parseFloat(document.getElementById("aposta").value);
-fetch("/api/slot_master",{
+fetch("/api/slot",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
-aposta: aposta,
-tema: "halloween"  // 👈 ESSENCIAL
+aposta: aposta
+
 })
 })
 
