@@ -2,65 +2,56 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🎰 Slot Frutas</title>
+<title>🎰 Slot Master</title>
 
 <style>
-
 body{
 margin:0;
 font-family:Arial;
-background:url("/static/fundo.jpg");
-background-size:cover;
+background:radial-gradient(circle,#0a0a0a,#000);
 color:white;
 text-align:center;
 }
 
 /* TOPO */
 .topo{
-padding:10px 20px;
-background:rgba(0,0,0,0.6);
 display:flex;
 justify-content:space-between;
-align-items:center;
-flex-wrap:wrap;
+padding:15px;
+background:#111;
 }
 
-#usuario{color:#00eaff;}
 #saldo{color:gold;font-size:22px;}
 #jackpot{
 color:#ffd700;
-font-size:24px;
-animation:jackpotGlow 1s infinite alternate;
+font-size:26px;
+animation:jackGlow 1s infinite alternate;
 }
 
-@keyframes jackpotGlow{
+@keyframes jackGlow{
 from{transform:scale(1);}
 to{transform:scale(1.1);}
 }
 
-/* 🎰 ROLINHOS */
-
-.window{
+/* SLOT */
+.slot{
 display:flex;
 justify-content:center;
 gap:10px;
-margin-top:30px;
+margin-top:40px;
 }
 
 .reel{
 width:110px;
 height:330px;
 overflow:hidden;
-background:radial-gradient(circle,#111,#000);
-border-radius:12px;
 border:3px solid gold;
-position:relative;
+border-radius:12px;
+background:#000;
 }
 
 .strip{
-position:absolute;
-width:100%;
+transition:transform 2s cubic-bezier(.1,.7,.2,1);
 }
 
 .symbol{
@@ -68,283 +59,188 @@ height:110px;
 display:flex;
 align-items:center;
 justify-content:center;
-}
-
-.symbol img{
-width:80px;
-height:80px;
-object-fit:contain;
-}
-
-.highlight img{
-animation:winFlash 0.6s infinite alternate;
-}
-
-@keyframes winFlash{
-0%{filter:drop-shadow(0 0 5px gold);}
-100%{filter:drop-shadow(0 0 20px yellow);}
+font-size:50px;
 }
 
 /* CONTROLES */
-
 .controls{margin-top:20px;}
 
 button{
-padding:14px 25px;
+padding:12px 25px;
 font-size:18px;
+background:orange;
 border:none;
 border-radius:8px;
-background:orange;
 cursor:pointer;
 }
 
-input{
-padding:10px;
-font-size:16px;
-width:120px;
-}
-
 /* RESULTADO */
-
 #resultado{
 margin-top:15px;
 font-size:22px;
-font-weight:bold;
 }
 
-/* FLASH */
-
-@keyframes telaFlash{
-0%{background:#000;}
-50%{background:#330000;}
-100%{background:#000;}
+/* WIN EFFECT */
+.win{
+animation:flash 0.5s infinite alternate;
 }
 
+@keyframes flash{
+from{color:white;}
+to{color:yellow;}
+}
 </style>
 </head>
 
 <body>
 
 <div class="topo">
-<div id="usuario">👤 {{session.username}}</div>
 <div>💰 <span id="saldo">R$ {{saldo}}</span></div>
-<div>💎 <span id="jackpot">{{jackpot}}</span></div>
+<div>💎 <span id="jackpot">0</span></div>
 </div>
 
-<h1>🎰 Slot Frutas</h1>
+<h1>🎰 SLOT MASTER</h1>
 
-<!-- 🎰 ROLINHOS -->
-<div class="window">
+<div class="slot">
 <div class="reel"><div class="strip" id="r1"></div></div>
 <div class="reel"><div class="strip" id="r2"></div></div>
 <div class="reel"><div class="strip" id="r3"></div></div>
 </div>
 
 <div class="controls">
-<input id="aposta" type="number" value="10" min="1">
+<input id="aposta" type="number" value="10">
 <br><br>
-<button onclick="girar()">🎰 GIRAR</button>
+<button onclick="girar()">GIRAR 🎰</button>
 </div>
 
 <div id="resultado"></div>
 
-<!-- SONS -->
-<audio id="somGiro" src="/static/audio/jogo2.mp3"></audio>
-<audio id="somWin" src="/static/win.mp3"></audio>
+<audio id="spin" src="/static/audio/jogo2.mp3"></audio>
+<audio id="win" src="/static/win.mp3"></audio>
 
 <script>
 
-/* MAPA DE IMAGENS (SEU TEMA FRUTAS) */
-const mapaImgs={
-1:"/static/items/apple.png",
-2:"/static/items/watermelon.png",
-3:"/static/items/orange.png",
-4:"/static/items/banana.png",
-5:"/static/items/grapes.png"
+/* MAPA */
+const mapa = {
+1:"🧙",
+2:"💀",
+3:"🎃",
+4:"👻",
+5:"🔱"
 };
 
-/* 🎰 STRIPS */
 const strips=[
 document.getElementById("r1"),
 document.getElementById("r2"),
 document.getElementById("r3")
 ];
 
-/* CRIAR SIMBOLO */
-function criarSimbolo(id){
-let div=document.createElement("div");
-div.className="symbol";
-div.innerHTML=`<img src="${mapaImgs[id]}">`;
-div.dataset.id=id;
-return div;
-}
-
-/* PREENCHER ROLOS */
+/* CRIAR SIMBOLOS */
 function preencher(){
 strips.forEach(strip=>{
-for(let i=0;i<30;i++){
+for(let i=0;i<40;i++){
 let r=Math.floor(Math.random()*5)+1;
-strip.appendChild(criarSimbolo(r));
+let div=document.createElement("div");
+div.className="symbol";
+div.innerText=mapa[r];
+strip.appendChild(div);
 }
 });
 }
 preencher();
 
-/* 💰 ANIMAÇÃO SALDO */
-function animarSaldo(valorFinal){
-
-let el=document.getElementById("saldo");
-let atual=parseFloat(el.innerText.replace("R$",""));
-
-let i=setInterval(()=>{
-atual+=(valorFinal-atual)*0.2;
-el.innerText="R$ "+atual.toFixed(2);
-
-if(Math.abs(valorFinal-atual)<0.05){
-el.innerText="R$ "+valorFinal.toFixed(2);
-clearInterval(i);
-}
-},30);
-}
-
 /* 🎰 GIRAR */
 function girar(){
 
 let aposta=parseFloat(document.getElementById("aposta").value);
+if(aposta<=0)return alert("Valor inválido");
 
-if(aposta<=0){
-alert("Aposta inválida");
-return;
-}
+document.getElementById("spin").play();
 
-document.getElementById("somGiro").play();
-
-   fetch("/api/slot",{
-      method:"POST",
-      body:new URLSearchParams({aposta:aposta})
-    })
+fetch("/api/slot_master",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({aposta:aposta,tema:"halloween"})
 })
 .then(r=>r.json())
 .then(data=>{
 
-if(data.erro){
-alert(data.erro);
-return;
-}
+if(data.erro)return alert(data.erro);
 
-animarRolos(data);
+animar(data);
 
 })
-.catch(()=>{
-alert("Erro servidor");
-});
+.catch(()=>alert("Erro servidor"));
 
 }
 
-/* 🎰 ANIMAÇÃO DOS ROLOS */
-function animarRolos(data){
+/* 🎰 ANIMAÇÃO */
+function animar(data){
 
 let grade=data.grade;
 
 strips.forEach((strip,i)=>{
 
-let items=[...strip.children];
+let symbols=strip.children;
+let base=Math.floor(symbols.length/2);
 
-// coluna do backend
-let coluna=[
-grade[0][i],
-grade[1][i],
-grade[2][i]
-];
+// 🎯 QUASE GANHAR (efeito cassino)
+let quase=Math.random()<0.3;
 
-// posição aleatória
-let index=Math.floor(Math.random()*(items.length-10))+5;
-
-// injeta resultado
 for(let j=0;j<3;j++){
-items[index+j].dataset.id=coluna[j];
-items[index+j].innerHTML=`<img src="${mapaImgs[coluna[j]]}">`;
+
+let val=grade[j][i];
+
+if(quase && j==2){
+val=Math.floor(Math.random()*5)+1;
 }
 
-// anima
-let offset=index*110;
-let total=(items.length*110)+offset;
+symbols[base+j].innerText=mapa[val];
+}
 
-strip.style.transition="none";
-
-setTimeout(()=>{
-strip.style.transition="transform "+(2+i*0.4)+"s ease-out";
-strip.style.transform="translateY(-"+total+"px)";
-},50);
-
-setTimeout(()=>{
-strip.style.transition="none";
-strip.style.transform="translateY(-"+offset+"px)";
-
-if(i===2) finalizar(data);
-
-},2200+i*400);
+// anima com delay diferente (cassino real)
+strip.style.transition="transform "+(1.5+i*0.5)+"s ease-out";
+strip.style.transform="translateY(-"+(base*110)+"px)";
 
 });
 
+/* FINALIZA */
+setTimeout(()=>finalizar(data),2500);
+
 }
 
-/* 🎉 FINAL */
+/* FINAL */
 function finalizar(data){
 
-animarSaldo(data.saldo);
+document.getElementById("saldo").innerText="R$ "+data.saldo;
 document.getElementById("jackpot").innerText=data.jackpot;
-
-// limpar destaque
-document.querySelectorAll(".symbol").forEach(e=>{
-e.classList.remove("highlight");
-});
-
-// destacar linhas
-if(data.linhas_ganhas){
-data.linhas_ganhas.forEach(linha=>{
-linha.forEach(idx=>{
-
-let col=idx%3;
-let row=Math.floor(idx/3);
-
-let strip=strips[col];
-let items=[...strip.children];
-
-let base=Math.floor(items.length/2);
-
-items[base+row].classList.add("highlight");
-
-});
-});
-}
 
 let res=document.getElementById("resultado");
 
 if(data.ganho>0){
 
-document.getElementById("somWin").play();
+document.getElementById("win").play();
 
-let texto="🎉 GANHOU R$ "+data.ganho;
+let txt="🎉 GANHOU R$ "+data.ganho;
 
 if(data.multiplicador>1){
-texto+=" x"+data.multiplicador+" 🔥";
+txt+=" x"+data.multiplicador;
 }
 
 if(data.bonus){
-texto+="<br>🎁 BONUS!";
+txt+=" 🎁 BONUS!";
 }
 
 if(data.ganho>500){
-texto+="<br>💎 JACKPOT!";
+txt+=" 💎 JACKPOT!";
 }
 
-res.innerHTML=texto;
-
-document.body.style.animation="telaFlash 0.3s 6";
+res.innerHTML=txt;
+res.classList.add("win");
 
 }else{
-res.innerHTML="Boa sorte!";
+res.innerHTML="Tente novamente...";
+res.classList.remove("win");
 }
 
 }
