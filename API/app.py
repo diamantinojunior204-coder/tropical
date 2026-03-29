@@ -97,7 +97,58 @@ def processar_aposta(user_id, jogo, aposta, calcular):
     conn.close()
 
     return {"ganho":ganho,"saldo":novo_saldo,**extra}
-    
+#=======ADMIN==============================
+@app.route("/admin")
+def admin():
+
+    if session.get("is_admin") != 1:
+        return redirect("/login")
+
+    conn = conectar()
+    c = conn.cursor()
+
+    # usuários
+    c.execute("SELECT id,username,saldo FROM users ORDER BY id")
+    users = c.fetchall()
+
+    # estatísticas
+    c.execute("SELECT COALESCE(SUM(aposta),0) FROM apostas")
+    total_apostado = float(c.fetchone()[0] or 0)
+
+    c.execute("SELECT COALESCE(SUM(ganho),0) FROM apostas WHERE ganho > 0")
+    total_pago = float(c.fetchone()[0] or 0)
+
+    lucro = total_apostado - total_pago
+
+    # depósitos
+    c.execute("""
+    SELECT depositos.id, users.username, depositos.valor, depositos.status
+    FROM depositos
+    JOIN users ON users.id = depositos.user_id
+    ORDER BY depositos.id DESC
+    """)
+    depositos = c.fetchall()
+
+    # saques
+    c.execute("""
+    SELECT saques.id, users.username, saques.valor, saques.status
+    FROM saques
+    JOIN users ON users.id = saques.user_id
+    ORDER BY saques.id DESC
+    """)
+    saques = c.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "admin.html",
+        users=users,
+        depositos=depositos,
+        saques=saques,
+        total_apostado=round(total_apostado,2),
+        total_pago=round(total_pago,2),
+        lucro=round(lucro,2)
+    )
 # =======SLOT NORMAL=====
 @app.route("/api/slot", methods=["POST"])
 def api_slot():
