@@ -16,7 +16,6 @@ color:white;
 text-align:center;
 }
 
-/* TOPO */
 .topo{
 padding:10px 20px;
 background:rgba(0,0,0,0.6);
@@ -38,8 +37,6 @@ animation:jackpotGlow 1s infinite alternate;
 from{transform:scale(1);}
 to{transform:scale(1.1);}
 }
-
-/* 🎰 ROLINHOS */
 
 .window{
 display:flex;
@@ -85,8 +82,6 @@ animation:winFlash 0.6s infinite alternate;
 100%{filter:drop-shadow(0 0 20px yellow);}
 }
 
-/* CONTROLES */
-
 .controls{margin-top:20px;}
 
 button{
@@ -98,21 +93,22 @@ background:orange;
 cursor:pointer;
 }
 
+button:disabled{
+background:gray;
+cursor:not-allowed;
+}
+
 input{
 padding:10px;
 font-size:16px;
 width:120px;
 }
 
-/* RESULTADO */
-
 #resultado{
 margin-top:15px;
 font-size:22px;
 font-weight:bold;
 }
-
-/* FLASH */
 
 @keyframes telaFlash{
 0%{background:#000;}
@@ -133,7 +129,6 @@ font-weight:bold;
 
 <h1>🎰 Diamantino</h1>
 
-<!-- 🎰 ROLINHOS -->
 <div class="window">
 <div class="reel"><div class="strip" id="r1"></div></div>
 <div class="reel"><div class="strip" id="r2"></div></div>
@@ -143,18 +138,18 @@ font-weight:bold;
 <div class="controls">
 <input id="aposta" type="number" value="10" min="1">
 <br><br>
-<button onclick="girar()">🎰 GIRAR</button>
+<button id="btnGirar" onclick="girar()">🎰 GIRAR</button>
 </div>
 
 <div id="resultado"></div>
 
-<!-- SONS -->
 <audio id="somGiro" src="/static/audio/jogo2.mp3"></audio>
 <audio id="somWin" src="/static/win.mp3"></audio>
 
 <script>
 
-/* MAPA DE IMAGENS (SEU TEMA FRUTAS) */
+let girando=false;
+
 const mapaImgs={
 1:"/static/img/folha.jpg",
 2:"/static/img/forte.jpg",
@@ -163,14 +158,12 @@ const mapaImgs={
 5:"/static/img/moeda.jpg"
 };
 
-/* 🎰 STRIPS */
 const strips=[
 document.getElementById("r1"),
 document.getElementById("r2"),
 document.getElementById("r3")
 ];
 
-/* CRIAR SIMBOLO */
 function criarSimbolo(id){
 let div=document.createElement("div");
 div.className="symbol";
@@ -179,7 +172,6 @@ div.dataset.id=id;
 return div;
 }
 
-/* PREENCHER ROLOS */
 function preencher(){
 strips.forEach(strip=>{
 for(let i=0;i<30;i++){
@@ -190,11 +182,9 @@ strip.appendChild(criarSimbolo(r));
 }
 preencher();
 
-/* 💰 ANIMAÇÃO SALDO */
 function animarSaldo(valorFinal){
-
 let el=document.getElementById("saldo");
-let atual=parseFloat(el.innerText.replace("R$",""));
+let atual=parseFloat(el.innerText.replace("R$","")) || 0;
 
 let i=setInterval(()=>{
 atual+=(valorFinal-atual)*0.2;
@@ -207,27 +197,39 @@ clearInterval(i);
 },30);
 }
 
-/* 🎰 GIRAR */
 function girar(){
+
+if(girando) return;
+
+let btn=document.getElementById("btnGirar");
+btn.disabled=true;
+girando=true;
 
 let aposta=parseFloat(document.getElementById("aposta").value);
 
-if(aposta<=0){
+if(!aposta || aposta<=0){
 alert("Aposta inválida");
+liberar();
 return;
 }
 
+document.getElementById("somGiro").currentTime=0;
 document.getElementById("somGiro").play();
-fetch("/api/slot2",{
+
+fetch("/api/slot_master",{
 method:"POST",
-body:new URLSearchParams({aposta:aposta})
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+aposta: aposta,
+tema: "diamantino"
+})
 })
 .then(r=>r.json())
-
 .then(data=>{
 
 if(data.erro){
 alert(data.erro);
+liberar();
 return;
 }
 
@@ -236,11 +238,11 @@ animarRolos(data);
 })
 .catch(()=>{
 alert("Erro servidor");
+liberar();
 });
 
 }
 
-/* 🎰 ANIMAÇÃO DOS ROLOS */
 function animarRolos(data){
 
 let grade=data.grade;
@@ -249,23 +251,19 @@ strips.forEach((strip,i)=>{
 
 let items=[...strip.children];
 
-// coluna do backend
 let coluna=[
 grade[0][i],
 grade[1][i],
 grade[2][i]
 ];
 
-// posição aleatória
 let index=Math.floor(Math.random()*(items.length-10))+5;
 
-// injeta resultado
 for(let j=0;j<3;j++){
 items[index+j].dataset.id=coluna[j];
 items[index+j].innerHTML=`<img src="${mapaImgs[coluna[j]]}">`;
 }
 
-// anima
 let offset=index*110;
 let total=(items.length*110)+offset;
 
@@ -288,18 +286,15 @@ if(i===2) finalizar(data);
 
 }
 
-/* 🎉 FINAL */
 function finalizar(data){
 
 animarSaldo(data.saldo);
 document.getElementById("jackpot").innerText=data.jackpot;
 
-// limpar destaque
 document.querySelectorAll(".symbol").forEach(e=>{
 e.classList.remove("highlight");
 });
 
-// destacar linhas
 if(data.linhas_ganhas){
 data.linhas_ganhas.forEach(linha=>{
 linha.forEach(idx=>{
@@ -346,6 +341,13 @@ document.body.style.animation="telaFlash 0.3s 6";
 res.innerHTML="Boa sorte!";
 }
 
+liberar();
+
+}
+
+function liberar(){
+document.getElementById("btnGirar").disabled=false;
+girando=false;
 }
 
 </script>
