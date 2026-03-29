@@ -218,16 +218,12 @@ return;
 }
 
 document.getElementById("somGiro").play();
-
 fetch("/api/slot2",{
 method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-aposta: aposta,
-tema: "frutas"
-})
+body:new URLSearchParams({aposta:aposta})
 })
 .then(r=>r.json())
+
 .then(data=>{
 
 if(data.erro){
