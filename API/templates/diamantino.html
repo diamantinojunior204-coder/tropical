@@ -216,13 +216,10 @@ return;
 document.getElementById("somGiro").currentTime=0;
 document.getElementById("somGiro").play();
 
+
 fetch("/api/slot2",{
 method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-aposta: aposta
-
-})
+body:new URLSearchParams({aposta:aposta})
 })
 .then(r=>r.json())
 .then(data=>{
@@ -232,7 +229,6 @@ alert(data.erro);
 liberar();
 return;
 }
-
 animarRolos(data);
 
 })
