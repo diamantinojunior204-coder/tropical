@@ -216,12 +216,12 @@ return;
 document.getElementById("somGiro").currentTime=0;
 document.getElementById("somGiro").play();
 
-fetch("/api/slot_master",{
+fetch("/api/slot2",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
-aposta: aposta,
-tema: "diamantino"
+aposta: aposta
+
 })
 })
 .then(r=>r.json())
