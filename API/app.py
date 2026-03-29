@@ -907,7 +907,48 @@ def resetar_cassino():
 
     except Exception as e:
         return f"Erro: {e}"
+#============rota motor ========
+@app.route("/api/slot2", methods=["POST"])
+def api_slot2():
 
+    aposta = float(request.form.get("aposta", 0))
+
+    if aposta <= 0:
+        return jsonify({"erro": "Aposta inválida"})
+
+    conn = conectar()
+    c = conn.cursor()
+
+    # pegar saldo
+    c.execute("SELECT saldo FROM users WHERE id=%s", (session["user_id"],))
+    saldo = float(c.fetchone()[0])
+
+    if aposta > saldo:
+        conn.close()
+        return jsonify({"erro": "Saldo insuficiente"})
+
+    # 🎰 chama motor
+    ganho, dados = slot_master(aposta, c, "frutas")
+
+    saldo_final = saldo - aposta + ganho
+
+    # salva saldo
+    c.execute("UPDATE users SET saldo=%s WHERE id=%s", (saldo_final, session["user_id"]))
+
+    # salvar aposta (importante pro RTP)
+    c.execute("""
+        INSERT INTO apostas(user_id, aposta, ganho)
+        VALUES(%s,%s,%s)
+    """, (session["user_id"], aposta, ganho))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "ganho": ganho,
+        "saldo": saldo_final,
+        **dados
+    })
 #=========motor unico ===≠=====
 def slot_master(aposta, c, tema):
 
