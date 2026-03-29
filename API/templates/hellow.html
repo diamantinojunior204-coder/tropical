@@ -194,12 +194,12 @@ function girar(){
 
   function resultadoFinal(){
 
-    fetch("/api/slot",{
+    fetch("/api/slot2",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
-        aposta: aposta,
-        tema: "halloween"
+        aposta: aposta
+      
       })
     })
     .then(r=>r.json())
