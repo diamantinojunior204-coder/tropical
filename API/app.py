@@ -400,6 +400,9 @@ def api_slot():
 
     if "user_id" not in session:
         return jsonify({"error":"login"}), 401
+    if aposta > saldo:
+        conn.close()
+        return jsonify({"erro": "Saldo insuficiente"})
 
     aposta = float(request.form["aposta"])
 
