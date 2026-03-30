@@ -402,12 +402,15 @@ def api_slot():
         return jsonify({"error":"login"}), 401
     
     aposta = float(request.form["aposta"])
-    MAX_APOSTA = saldo * 0.2  # max 20% do saldo
+    MIN_APOSTA = 1
+    MAX_APOSTA = 100
+
+    if aposta < MIN_APOSTA:
+        return jsonify({"erro": f"Aposta mínima é R$ {MIN_APOSTA}"})
 
     if aposta > MAX_APOSTA:
-        return jsonify({
-            "erro": f"Aposta máxima é R$ {MAX_APOSTA:.2f}"
-        }) 
+        return jsonify({"erro": f"Aposta máxima é R$ {MAX_APOSTA}"})
+    
     def calcular(aposta, c):
 
         simbolos = ["🍒","🍋","🍀","⭐","💎","7"]
