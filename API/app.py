@@ -400,10 +400,7 @@ def api_slot():
 
     if "user_id" not in session:
         return jsonify({"error":"login"}), 401
-    if aposta > saldo:
-        conn.close()
-        return jsonify({"erro": "Saldo insuficiente"})
-
+    
     aposta = float(request.form["aposta"])
 
     def calcular(aposta, c):
@@ -543,14 +540,14 @@ def api_slot():
             "jackpot": round(jackpot, 2)
         }
 
-    return jsonify(
-        processar_aposta(
+        return jsonify(
+            processar_aposta(
             session["user_id"],
             "slot",
             aposta,
             calcular
+           )
         )
-    )
 
 # ================================
 # ADMIN
