@@ -411,11 +411,7 @@ def api_slot():
 
     if aposta > MAX_APOSTA:
         return jsonify({"erro": f"Aposta máxima é R$ {MAX_APOSTA}"})
-    saldo = float(row[0])
-    if aposta > saldo:
-        conn.close()
-        return jsonify({"erro": "Saldo insuficiente"})
-        
+    
     def calcular(aposta, c):
 
         simbolos = ["🍒","🍋","🍀","⭐","💎","7"]
