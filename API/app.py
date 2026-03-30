@@ -400,11 +400,9 @@ def api_slot():
 
     if "user_id" not in session:
         return jsonify({"error":"login"}), 401
-    if aposta > saldo:
-        conn.close()
-        return jsonify({"erro": "Saldo insuficiente"})
-
+    
     aposta = float(request.form["aposta"])
+    
     MIN_APOSTA = 1
     MAX_APOSTA = 100
 
@@ -413,7 +411,11 @@ def api_slot():
 
     if aposta > MAX_APOSTA:
         return jsonify({"erro": f"Aposta máxima é R$ {MAX_APOSTA}"})
-    
+
+    if aposta > saldo:
+        conn.close()
+        return jsonify({"erro": "Saldo insuficiente"})
+        
     def calcular(aposta, c):
 
         simbolos = ["🍒","🍋","🍀","⭐","💎","7"]
