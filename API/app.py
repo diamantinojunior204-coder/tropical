@@ -540,14 +540,14 @@ def api_slot():
             "jackpot": round(jackpot, 2)
         }
 
-        return jsonify(
-            processar_aposta(
-            session["user_id"],
-            "slot",
-            aposta,
-            calcular
-           )
+    return jsonify(
+        processar_aposta(
+        session["user_id"],
+        "slot",
+        aposta,
+        calcular
         )
+    )
 
 # ================================
 # ADMIN
