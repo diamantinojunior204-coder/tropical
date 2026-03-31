@@ -550,12 +550,12 @@ def api_slot():
             "linhas_ganhas": linhas_ganhas,
             "jackpot": round(jackpot, 2)
         }
-    ganho, resultado = processar_aposta(
-    session["user_id"],
-    "slot",
-    aposta,
-    calcular
-    )
+   # ganho, resultado = processar_aposta(
+   # session["user_id"],
+   # "slot",
+    #aposta,
+    #calcular
+  #  )
 
     if resultado.get("erro"):
         return jsonify(resultado)
