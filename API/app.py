@@ -183,10 +183,7 @@ def processar_aposta(user_id, jogo, aposta, calcular):
     saldo = round(float(row[0]),2)
     
 
-    # ✅ AQUI É O LUGAR CERTO
-    if aposta > saldo:
-        return None, {"erro": "Saldo insuficiente"}
-
+    
     try:
         aposta = round(float(aposta),2)
     except:
