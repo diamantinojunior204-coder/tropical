@@ -557,14 +557,21 @@ def api_slot():
     #calcular
   #  )
 
-    if resultado.get("erro"):
-        return jsonify(resultado)
+    #if resultado.get("erro"):
+       # return jsonify(resultado)
 
-    return jsonify({
-        "ganho": ganho,
-        **resultado
-     })
-    
+   # return jsonify({
+      #  "ganho": ganho,
+       # **resultado
+    # })
+    return jsonify(
+        processar_aposta(
+        session["user_id"],
+        "slot",
+        aposta,
+        calcular
+        )
+    )
 
 # ================================
 # ADMIN
