@@ -1193,7 +1193,7 @@ def slot_master(aposta, c, user_id, tema):
 @app.route("/admin/stats")
 def stats():
 
-    if session.get("admin") != True:
+    if not session.get("is_admin"):
         return "Acesso negado"
 
     conn = conectar()
