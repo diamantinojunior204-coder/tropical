@@ -1229,8 +1229,8 @@ def resetar():
     c = conn.cursor()
 
     try:
-        # ⚠️ NÃO apaga admin
-        c.execute("DELETE FROM users WHERE is_admin = FALSE")
+        # 🔥 apaga só usuários normais (0 = user)
+        c.execute("DELETE FROM users WHERE is_admin = 0")
 
         c.execute("TRUNCATE TABLE apostas RESTART IDENTITY CASCADE")
         c.execute("TRUNCATE TABLE depositos RESTART IDENTITY CASCADE")
@@ -1239,6 +1239,7 @@ def resetar():
         c.execute("UPDATE jackpot SET valor=100 WHERE id=1")
 
         conn.commit()
+
         return "🔥 Cassino resetado com sucesso!"
 
     except Exception as e:
