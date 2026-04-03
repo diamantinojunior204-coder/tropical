@@ -1201,24 +1201,46 @@ def stats():
     conn = conectar()
     c = conn.cursor()
 
+    # 👥 usuários
     c.execute("SELECT COUNT(*) FROM users")
     usuarios = c.fetchone()[0]
 
-    c.execute("SELECT SUM(aposta), SUM(ganho) FROM apostas")
+    # 🎰 estatísticas de jogo
+    c.execute("""
+    SELECT 
+        COALESCE(SUM(aposta),0),
+        COALESCE(SUM(CASE WHEN ganho > 0 THEN ganho ELSE 0 END),0)
+    FROM apostas
+    """)
     total_apostado, total_pago = c.fetchone()
 
-    total_apostado = total_apostado or 0
-    total_pago = total_pago or 0
+    
+    # 💰 financeiro real
+    c.execute("SELECT COALESCE(SUM(valor),0) FROM depositos WHERE status='pago'")
+    depositos = c.fetchone()[0]
 
-    banca = total_apostado - total_pago
+    c.execute("SELECT COALESCE(SUM(valor),0) FROM saques WHERE status='pago'")
+    saques = c.fetchone()[0]
+
+    lucro = depositos - saques
+
+    # 📊 RTP
+    rtp = 0
+    if total_apostado > 0:
+        rtp = round((total_pago / total_apostado) * 100, 2)
 
     conn.close()
 
     return f"""
     👥 Usuários: {usuarios}
-    💰 Apostado: {total_apostado}
+
+    🎰 Apostado: {total_apostado}
     💸 Pago: {total_pago}
-    🏦 Lucro: {banca}
+    📊 RTP: {rtp}%
+
+    💰 Depositado: {depositos}
+    💸 Sacado: {saques}
+    🏦 Lucro REAL: {lucro}
     """
 #========RESETA TOTAL CASSINO====
 @app.route("/admin/resetar")
