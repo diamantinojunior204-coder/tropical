@@ -1189,7 +1189,35 @@ def slot_master(aposta, c, user_id, tema):
         "bonus": bonus
     }
 
+#===========resetar cassino=======
+@app.route("/admin/stats")
+def stats():
 
+    if session.get("admin") != True:
+        return "Acesso negado"
+
+    conn = conectar()
+    c = conn.cursor()
+
+    c.execute("SELECT COUNT(*) FROM users")
+    usuarios = c.fetchone()[0]
+
+    c.execute("SELECT SUM(aposta), SUM(ganho) FROM apostas")
+    total_apostado, total_pago = c.fetchone()
+
+    total_apostado = total_apostado or 0
+    total_pago = total_pago or 0
+
+    banca = total_apostado - total_pago
+
+    conn.close()
+
+    return f"""
+    👥 Usuários: {usuarios}
+    💰 Apostado: {total_apostado}
+    💸 Pago: {total_pago}
+    🏦 Lucro: {banca}
+    """
 
 #===================================
 # START
