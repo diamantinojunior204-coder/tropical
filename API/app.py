@@ -1194,7 +1194,7 @@ def slot_master(aposta, c, user_id, tema):
 
 #=========ADMIN PARA RESET====    
 @app.route("/admin")
-def admin():
+def admin2():
     if session.get("admin") != True:
         return "Acesso negado"
     return render_template("admin2.html") 
