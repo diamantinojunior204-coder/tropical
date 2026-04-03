@@ -1302,6 +1302,45 @@ def resetar_jackpot():
 
     return "🎰 Jackpot resetado!"
 #===================================
+#==========JACKPOT=========
+c.execute("SELECT valor FROM jackpot WHERE id=1")
+jackpot = c.fetchone()[0]
+@app.route("/admin/add_jackpot", methods=["POST"])
+def add_jackpot():
+
+    if not session.get("is_admin"):
+        return "Acesso negado"
+
+    valor = request.form.get("valor")
+
+    try:
+        valor = float(valor)
+
+        if valor <= 0:
+            return "Valor inválido"
+
+    except:
+        return "Erro no valor"
+
+    conn = conectar()
+    c = conn.cursor()
+
+    try:
+        c.execute("""
+        UPDATE jackpot
+        SET valor = valor + %s
+        WHERE id = 1
+        """, (valor,))
+
+        conn.commit()
+        return f"💰 Jackpot aumentado em R$ {valor}"
+
+    except Exception as e:
+        conn.rollback()
+        return str(e)
+
+    finally:
+        conn.close()
 # START
 # ================================
 if __name__=="__main__":
