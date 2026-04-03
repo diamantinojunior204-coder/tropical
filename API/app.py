@@ -1189,7 +1189,91 @@ def slot_master(aposta, c, user_id, tema):
         "bonus": bonus
     }
 
-      
+#=========RESET CASSINO=====
+#======RESETAR
+@app.route("/admin/resetar")
+def resetar():
+
+    if session.get("admin") != True:
+        return "Acesso negado"
+
+    conn = conectar()
+    c = conn.cursor()
+
+    try:
+        c.execute("TRUNCATE TABLE users RESTART IDENTITY CASCADE")
+        c.execute("TRUNCATE TABLE apostas RESTART IDENTITY CASCADE")
+        c.execute("TRUNCATE TABLE depositos RESTART IDENTITY CASCADE")
+        c.execute("TRUNCATE TABLE saques RESTART IDENTITY CASCADE")
+
+        c.execute("UPDATE jackpot SET valor=100 WHERE id=1")
+
+        conn.commit()
+        return "Banco resetado!"
+
+    except Exception as e:
+        conn.rollback()
+        return str(e)
+
+    finally:
+        conn.close()
+        
+#=======RESETAR SALDO
+@app.route("/admin/resetar_saldo")
+def resetar_saldo():
+
+    if session.get("admin") != True:
+        return "Acesso negado"
+
+    conn = conectar()
+    c = conn.cursor()
+
+    c.execute("UPDATE users SET saldo=0")
+    conn.commit()
+    conn.close()
+
+    return "Saldo resetado!"
+#===========RESETAR JACKPOT
+@app.route("/admin/resetar_jackpot")
+def resetar_jackpot():
+
+    if session.get("admin") != True:
+        return "Acesso negado"
+
+    conn = conectar()
+    c = conn.cursor()
+
+    c.execute("UPDATE jackpot SET valor=100 WHERE id=1")
+    conn.commit()
+    conn.close()
+
+    return "Jackpot resetado!"
+#========VER ESTASTISTICA
+@app.route("/admin/stats")
+def stats():
+
+    if session.get("admin") != True:
+        return "Acesso negado"
+
+    conn = conectar()
+    c = conn.cursor()
+
+    c.execute("SELECT COUNT(*) FROM users")
+    usuarios = c.fetchone()[0]
+
+    c.execute("SELECT SUM(aposta), SUM(ganho) FROM apostas")
+    total_apostado, total_pago = c.fetchone()
+
+    banca = (total_apostado or 0) - (total_pago or 0)
+
+    conn.close()
+
+    return f"""
+    👥 Usuários: {usuarios}
+    💰 Apostado: {total_apostado or 0}
+    💸 Pago: {total_pago or 0}
+    🏦 Lucro: {banca}
+    """
 
 #===================================
 # START
