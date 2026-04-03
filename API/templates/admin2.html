@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Painel Admin</title>
+
+<style>
+body{
+font-family:Arial;
+background:#0f172a;
+color:white;
+text-align:center;
+padding:20px;
+}
+
+.box{
+background:rgba(0,0,0,0.7);
+padding:20px;
+border-radius:10px;
+max-width:400px;
+margin:auto;
+}
+
+button{
+width:100%;
+padding:15px;
+margin:10px 0;
+border:none;
+border-radius:8px;
+font-size:16px;
+cursor:pointer;
+font-weight:bold;
+}
+
+.reset{background:red;color:white;}
+.saldo{background:orange;}
+.jackpot{background:gold;}
+.ver{background:#00eaff;}
+
+button:hover{opacity:0.8;}
+
+</style>
+</head>
+
+<body>
+
+<div class="box">
+
+<h2>🎛️ Painel Admin</h2>
+
+<button class="reset" onclick="acao('/admin/resetar')">
+🧨 Resetar Banco
+</button>
+
+<button class="saldo" onclick="acao('/admin/resetar_saldo')">
+💰 Resetar Saldo
+</button>
+
+<button class="jackpot" onclick="acao('/admin/resetar_jackpot')">
+💎 Resetar Jackpot
+</button>
+
+<button class="ver" onclick="acao('/admin/stats')">
+📊 Ver Estatísticas
+</button>
+
+<p id="res"></p>
+
+</div>
+
+<script>
+function acao(url){
+
+fetch(url)
+.then(r=>r.text())
+.then(t=>{
+document.getElementById("res").innerText = t;
+})
+.catch(()=>{
+alert("Erro");
+});
+
+}
+</script>
+
+</body>
+</html>
