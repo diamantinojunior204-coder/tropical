@@ -447,7 +447,9 @@ def api_slot():
         total_depositos = float(c.fetchone()[0] or 0)
 
         c.execute("""
-        SELECT COALESCE(SUM(aposta),0), COALESCE(SUM(ganho),0)
+        SELECT 
+        COALESCE(SUM(aposta),0),
+        COALESCE(SUM(CASE WHEN ganho > 0 THEN ganho ELSE 0 END),0)
         FROM apostas
         """)
         total_apostado, total_pago = c.fetchone()
