@@ -1257,12 +1257,17 @@ def resetar_saldo():
     conn = conectar()
     c = conn.cursor()
 
-    c.execute("UPDATE users SET saldo=0 WHERE is_admin = FALSE")
+    try:
+        c.execute("UPDATE users SET saldo=0 WHERE is_admin != 1")
+        conn.commit()
+        return "💸 Saldos zerados!"
 
-    conn.commit()
-    conn.close()
+    except Exception as e:
+        conn.rollback()
+        return str(e)
 
-    return "💸 Saldos zerados!"
+    finally:
+        conn.close()
 #=======RESETAR JACKPOT =============
 @app.route("/admin/resetar_jackpot")
 def resetar_jackpot():
