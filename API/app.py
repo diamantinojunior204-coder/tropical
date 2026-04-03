@@ -1274,6 +1274,7 @@ def stats():
     💸 Pago: {total_pago or 0}
     🏦 Lucro: {banca}
     """
+#========PAGINA ======RESET
 
 #===================================
 # START
