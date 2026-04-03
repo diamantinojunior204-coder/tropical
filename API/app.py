@@ -1303,8 +1303,7 @@ def resetar_jackpot():
     return "🎰 Jackpot resetado!"
 #===================================
 #==========JACKPOT=========
-c.execute("SELECT valor FROM jackpot WHERE id=1")
-jackpot = c.fetchone()[0]
+
 @app.route("/admin/add_jackpot", methods=["POST"])
 def add_jackpot():
 
