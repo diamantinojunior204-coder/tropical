@@ -1340,6 +1340,36 @@ def add_jackpot():
 
     finally:
         conn.close()
+ #========RESETA TOTAL CASSINO====
+@app.route("/admin/resetar")
+def resetar():
+
+    if not session.get("is_admin"):
+        return "Acesso negado"
+
+    conn = conectar()
+    c = conn.cursor()
+
+    try:
+        # 🔥 apaga só usuários normais (0 = user)
+        c.execute("DELETE FROM users WHERE is_admin = 0")
+
+        c.execute("TRUNCATE TABLE apostas RESTART IDENTITY CASCADE")
+        c.execute("TRUNCATE TABLE depositos RESTART IDENTITY CASCADE")
+        c.execute("TRUNCATE TABLE saques RESTART IDENTITY CASCADE")
+
+        c.execute("UPDATE jackpot SET valor=100 WHERE id=1")
+
+        conn.commit()
+
+        return "🔥 Cassino resetado com sucesso!"
+
+    except Exception as e:
+        conn.rollback()
+        return str(e)
+
+    finally:
+        conn.close()       
 # START
 # ================================
 if __name__=="__main__":
