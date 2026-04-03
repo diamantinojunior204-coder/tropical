@@ -1218,7 +1218,67 @@ def stats():
     💸 Pago: {total_pago}
     🏦 Lucro: {banca}
     """
+#========RESETA TOTAL CASSINO====
+@app.route("/admin/resetar")
+def resetar():
 
+    if not session.get("is_admin"):
+        return "Acesso negado"
+
+    conn = conectar()
+    c = conn.cursor()
+
+    try:
+        # ⚠️ NÃO apaga admin
+        c.execute("DELETE FROM users WHERE is_admin = FALSE")
+
+        c.execute("TRUNCATE TABLE apostas RESTART IDENTITY CASCADE")
+        c.execute("TRUNCATE TABLE depositos RESTART IDENTITY CASCADE")
+        c.execute("TRUNCATE TABLE saques RESTART IDENTITY CASCADE")
+
+        c.execute("UPDATE jackpot SET valor=100 WHERE id=1")
+
+        conn.commit()
+        return "🔥 Cassino resetado com sucesso!"
+
+    except Exception as e:
+        conn.rollback()
+        return str(e)
+
+    finally:
+        conn.close()
+#=============RESETAR SALDO=========
+@app.route("/admin/resetar_saldo")
+def resetar_saldo():
+
+    if not session.get("is_admin"):
+        return "Acesso negado"
+
+    conn = conectar()
+    c = conn.cursor()
+
+    c.execute("UPDATE users SET saldo=0 WHERE is_admin = FALSE")
+
+    conn.commit()
+    conn.close()
+
+    return "💸 Saldos zerados!"
+#=======RESETAR JACKPOT =============
+@app.route("/admin/resetar_jackpot")
+def resetar_jackpot():
+
+    if not session.get("is_admin"):
+        return "Acesso negado"
+
+    conn = conectar()
+    c = conn.cursor()
+
+    c.execute("UPDATE jackpot SET valor=100 WHERE id=1")
+
+    conn.commit()
+    conn.close()
+
+    return "🎰 Jackpot resetado!"
 #===================================
 # START
 # ================================
