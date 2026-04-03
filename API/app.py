@@ -1191,7 +1191,7 @@ def slot_master(aposta, c, user_id, tema):
         "bonus": bonus
     }
 
-#===========resetar cassino=======
+#===========STATUS cassino=======
 @app.route("/admin/stats")
 def stats():
 
@@ -1201,11 +1201,11 @@ def stats():
     conn = conectar()
     c = conn.cursor()
 
-    # 👥 usuários
+    # 👥 total de usuários
     c.execute("SELECT COUNT(*) FROM users")
     usuarios = c.fetchone()[0]
 
-    # 🎰 estatísticas de jogo
+    # 🎰 estatísticas do jogo
     c.execute("""
     SELECT 
         COALESCE(SUM(aposta),0),
@@ -1214,64 +1214,56 @@ def stats():
     """)
     total_apostado, total_pago = c.fetchone()
 
-    
-    # 💰 financeiro real
-    c.execute("SELECT COALESCE(SUM(valor),0) FROM depositos WHERE status='pago'")
-    depositos = c.fetchone()[0]
-
-    c.execute("SELECT COALESCE(SUM(valor),0) FROM saques WHERE status='pago'")
-    saques = c.fetchone()[0]
-
-    lucro = depositos - saques
-
     # 📊 RTP
     rtp = 0
     if total_apostado > 0:
         rtp = round((total_pago / total_apostado) * 100, 2)
+
+    # 💰 depósitos
+    c.execute("""
+    SELECT COALESCE(SUM(valor),0) 
+    FROM depositos 
+    WHERE status='pago'
+    """)
+    depositos = c.fetchone()[0]
+
+    # 💸 saques
+    c.execute("""
+    SELECT COALESCE(SUM(valor),0) 
+    FROM saques 
+    WHERE status='pago'
+    """)
+    saques = c.fetchone()[0]
+
+    # 🏦 lucro real
+    lucro = depositos - saques
+
+    # 💼 saldo atual dos jogadores (sem admin)
+    c.execute("""
+    SELECT COALESCE(SUM(saldo),0) 
+    FROM users 
+    WHERE is_admin = 0
+    """)
+    saldo_usuarios = c.fetchone()[0]
 
     conn.close()
 
     return f"""
     👥 Usuários: {usuarios}
 
-    🎰 Apostado: {total_apostado}
+    🎰 APOSTAS
+    💰 Apostado: {total_apostado}
     💸 Pago: {total_pago}
     📊 RTP: {rtp}%
 
+    💳 FINANCEIRO
     💰 Depositado: {depositos}
     💸 Sacado: {saques}
     🏦 Lucro REAL: {lucro}
+
+    💼 Saldo dos Jogadores: {saldo_usuarios}
     """
-#========RESETA TOTAL CASSINO====
-@app.route("/admin/resetar")
-def resetar():
 
-    if not session.get("is_admin"):
-        return "Acesso negado"
-
-    conn = conectar()
-    c = conn.cursor()
-
-    try:
-        # 🔥 apaga só usuários normais (0 = user)
-        c.execute("DELETE FROM users WHERE is_admin = 0")
-
-        c.execute("TRUNCATE TABLE apostas RESTART IDENTITY CASCADE")
-        c.execute("TRUNCATE TABLE depositos RESTART IDENTITY CASCADE")
-        c.execute("TRUNCATE TABLE saques RESTART IDENTITY CASCADE")
-
-        c.execute("UPDATE jackpot SET valor=100 WHERE id=1")
-
-        conn.commit()
-
-        return "🔥 Cassino resetado com sucesso!"
-
-    except Exception as e:
-        conn.rollback()
-        return str(e)
-
-    finally:
-        conn.close()
 #=============RESETAR SALDO=========
 @app.route("/admin/resetar_saldo")
 def resetar_saldo():
