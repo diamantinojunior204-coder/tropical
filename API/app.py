@@ -478,15 +478,21 @@ def api_slot():
         # =========================
         # 🧠 RTP DINÂMICO
         # =========================
+        # ========================
         if banca < 0:
-           rtp_final += 0.05
+            rtp_final += 0.05
         elif banca < 1000:
-    
-            rtp = 0.94
-        elif banca < 5000:
-            rtp = 0.92
-        else:
-            rtp = 0.88
+            rtp_final += 0.02
+        elif banca > 5000:
+            rtp_final -= 0.05
+
+        # ajuste por jogador
+        if apostado > 0:
+            if ganho_user < apostado * 0.5:
+                rtp_final += 0.05
+            elif ganho_user > apostado * 1.5:
+                rtp_final -= 0.05
+        
 
         # ajuste por jogador
         if apostado > 0:
