@@ -655,7 +655,6 @@ def api_slot():
      
        
         }
-
 return jsonify(
         processar_aposta(
             session["user_id"],
