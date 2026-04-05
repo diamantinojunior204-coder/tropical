@@ -494,12 +494,7 @@ def api_slot():
                 rtp_final -= 0.05
         
 
-        # ajuste por jogador
-        if apostado > 0:
-            if ganho_user < apostado * 0.5:
-                rtp_final += 0.05
-            elif ganho_user > apostado * 1.5:
-                rtp_final -= 0.05
+        
 
         # sequência
         c.execute("""
