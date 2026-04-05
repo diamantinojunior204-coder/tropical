@@ -413,7 +413,16 @@ def api_slot():
 
     if aposta > MAX_APOSTA:
         return jsonify({"erro": f"Aposta máxima é R$ {MAX_APOSTA}"})
+    conn = conectar()
+    c = conn.cursor()
 
+    # pegar saldo
+    c.execute("SELECT saldo FROM users WHERE id=%s", (session["user_id"],))
+    saldo = float(c.fetchone()[0] or 0)
+
+    if aposta > saldo:
+        conn.close()
+        return jsonify({"erro": "Saldo insuficiente"})
 
     def calcular(aposta, c):
 
