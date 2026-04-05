@@ -497,9 +497,9 @@ def api_slot():
         # ajuste por jogador
         if apostado > 0:
             if ganho_user < apostado * 0.5:
-                rtp += 0.05
+                rtp_final += 0.05
             elif ganho_user > apostado * 1.5:
-                rtp -= 0.05
+                rtp_final -= 0.05
 
         # sequência
         c.execute("""
@@ -512,12 +512,12 @@ def api_slot():
 
         if len(ultimas) >= 5:
             if all(g <= 0 for g in ultimas):
-                rtp += 0.07
+                rtp_final+= 0.07
             if sum(1 for g in ultimas if g > 0) >= 3:
-                rtp -= 0.05
+                rtp_final-= 0.05
 
-        # limite
-        rtp = max(0.80, min(rtp, 0.98))
+        
+    
 
         # =========================
         # 🎯 DECISÃO
