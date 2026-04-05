@@ -401,10 +401,10 @@ def wellho_page():
 def api_slot():
 
     if "user_id" not in session:
-        return jsonify({"error":"login"}), 401
-    
+        return jsonify({"erro":"login"}), 401
+
     aposta = float(request.form["aposta"])
-    
+
     MIN_APOSTA = 1
     MAX_APOSTA = 100
 
@@ -413,8 +413,18 @@ def api_slot():
 
     if aposta > MAX_APOSTA:
         return jsonify({"erro": f"Aposta máxima é R$ {MAX_APOSTA}"})
-    
+
+
     def calcular(aposta, c):
+
+        # =========================
+        # 💰 VALIDAR SALDO
+        # =========================
+        c.execute("SELECT saldo FROM users WHERE id=%s", (session["user_id"],))
+        saldo = float(c.fetchone()[0] or 0)
+
+        if aposta > saldo:
+            return 0, {"erro": "Saldo insuficiente"}
 
         simbolos = ["🍒","🍋","🍀","⭐","💎","7"]
 
@@ -424,21 +434,20 @@ def api_slot():
         linhas_ganhas = []
 
         # =========================
-        # PEGAR JACKPOT
+        # JACKPOT
         # =========================
         c.execute("SELECT valor FROM jackpot WHERE id=1")
         jackpot = float(c.fetchone()[0])
 
-        # acumula jackpot (3%)
         jackpot += aposta * 0.03
 
         # =========================
-        # RTP CONTROL (~92%)
+        # RTP
         # =========================
         rtp_base = 0.92
 
         # =========================
-        # DADOS DA BANCA
+        # BANCA
         # =========================
         c.execute("""
         SELECT COALESCE(SUM(valor),0)
@@ -468,7 +477,7 @@ def api_slot():
             return 0
 
         # =========================
-        # CONTROLE JACKPOT
+        # JACKPOT
         # =========================
         def pode_pagar_jackpot():
 
@@ -481,7 +490,6 @@ def api_slot():
             if jackpot > banca * 0.3:
                 return False
 
-            # chance progressiva
             chance = 0.05
 
             if jackpot > total_depositos * 2:
@@ -493,7 +501,7 @@ def api_slot():
             return random.random() < chance
 
         # =========================
-        # APLICAR PREMIO
+        # APLICAR PRÊMIO
         # =========================
         def aplicar(simbolo):
             nonlocal ganho, jackpot
@@ -505,75 +513,81 @@ def api_slot():
                     ganho += jackpot
                     jackpot = 100
                 else:
-                    # disfarce (alto prêmio)
                     ganho += aposta * random.choice([8, 10])
             else:
                 ganho += premio
 
         # =========================
-        # CHECAR LINHAS
+        # 🎯 MELHOR LINHA
         # =========================
+        melhor_premio = 0
+        melhor_linha = None
+
+        def testar_linha(indices, simbolo):
+            nonlocal melhor_premio, melhor_linha
+
+            premio = calcular_premio(simbolo)
+
+            if premio == "jackpot":
+                valor = aposta * 10
+            else:
+                valor = premio
+
+            if valor > melhor_premio:
+                melhor_premio = valor
+                melhor_linha = (indices, simbolo)
+
+        # horizontais
         for i, linha in enumerate(grade):
             if linha[0] == linha[1] == linha[2]:
-                linhas_ganhas.append([i*3, i*3+1, i*3+2])
-                aplicar(linha[0])
+                testar_linha([i*3, i*3+1, i*3+2], linha[0])
 
+        # verticais
         for col in range(3):
             if grade[0][col] == grade[1][col] == grade[2][col]:
-                linhas_ganhas.append([col, col+3, col+6])
-                aplicar(grade[0][col])
+                testar_linha([col, col+3, col+6], grade[0][col])
 
+        # diagonais
         if grade[0][0] == grade[1][1] == grade[2][2]:
-            linhas_ganhas.append([0,4,8])
-            aplicar(grade[0][0])
+            testar_linha([0,4,8], grade[0][0])
 
         if grade[0][2] == grade[1][1] == grade[2][0]:
-            linhas_ganhas.append([2,4,6])
-            aplicar(grade[0][2])
+            testar_linha([2,4,6], grade[0][2])
+
+        # aplicar só a melhor
+        if melhor_linha:
+            indices, simbolo = melhor_linha
+            linhas_ganhas.append(indices)
+            aplicar(simbolo)
 
         # =========================
-        # AJUSTE FINAL RTP
+        # RTP FINAL
         # =========================
         if ganho > 0:
             if random.random() > rtp_base:
-                ganho = 0  # corta alguns ganhos pra manter RTP
+                ganho = 0
 
-        # =========================
-        # SALVAR JACKPOT
-        # =========================
+        # salvar jackpot
         c.execute("UPDATE jackpot SET valor=%s WHERE id=1", (jackpot,))
 
-        # mapa visual
         mapa = {"🍒":1,"🍋":2,"🍀":3,"⭐":4,"💎":5,"7":6}
         grade_numerica = [[mapa[s] for s in linha] for linha in grade]
 
-        return round(ganho, 2), {
+        return round(ganho,2), {
             "grade": grade_numerica,
             "linhas_ganhas": linhas_ganhas,
-            "jackpot": round(jackpot, 2)
+            "jackpot": round(jackpot,2)
         }
-   # ganho, resultado = processar_aposta(
-   # session["user_id"],
-   # "slot",
-    #aposta,
-    #calcular
-  #  )
 
-    #if resultado.get("erro"):
-       # return jsonify(resultado)
-
-   # return jsonify({
-      #  "ganho": ganho,
-       # **resultado
-    # })
     return jsonify(
         processar_aposta(
-        session["user_id"],
-        "slot",
-        aposta,
-        calcular
+            session["user_id"],
+            "slot",
+            aposta,
+            calcular
         )
     )
+            
 
 # ================================
 # ADMIN
