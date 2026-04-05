@@ -2,8 +2,7 @@ import os
 import random
 import psycopg2
 from urllib.parse import urlparse
-
-from flask import Flask, render_template, request, redirect, session, jsonify
+from flask import Flask, render_template, render_template_string, request, redirect, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
