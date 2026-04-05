@@ -444,7 +444,8 @@ def api_slot():
     def calcular(aposta, c):
         c.execute("SELECT rtp, chance_loss, chance_small, chance_big FROM config LIMIT 1")
         rtp, chance_loss, chance_small, chance_big = c.fetchone()
-
+        rtp_base = rtp
+        rtp_final = rtp_base
         simbolos = ["🍒","🍋","🍀","⭐","💎","7"]
 
         # =========================
@@ -478,7 +479,7 @@ def api_slot():
         # 🧠 RTP DINÂMICO
         # =========================
         if banca < 0:
-            rtp = 0.98
+           rtp_final += 0.05
         elif banca < 1000:
             rtp = 0.94
         elif banca < 5000:
@@ -514,7 +515,8 @@ def api_slot():
         # =========================
         # 🎯 DECISÃO
         # =========================
-        pode_pagar = random.random() < rtp
+        pode_pagar = random.random() < rtp_final
+        
 
         # =========================
         # 🎰 GERAR GRADE INTELIGENTE
