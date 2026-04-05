@@ -112,13 +112,13 @@ def criar_db():
     chance_small REAL DEFAULT 0.3,
     chance_big REAL DEFAULT 0.1
     )""")
-    
     c.execute("SELECT COUNT(*) FROM config")
     if c.fetchone()[0] == 0:
-    c.execute("""
-    INSERT INTO config (rtp, chance_loss, chance_small, chance_big)
-    VALUES (%s, %s, %s, %s)
-    """, (0.92, 0.6, 0.3, 0.1))
+        c.execute("""
+        INSERT INTO config (rtp, chance_loss, chance_small, chance_big)
+        VALUES (%s, %s, %s, %s)
+        """, (0.92, 0.6, 0.3, 0.1))
+    
     # GARANTIR JACKPOT INICIAL
     c.execute("SELECT id FROM jackpot WHERE id=1")
     if not c.fetchone():
