@@ -103,7 +103,19 @@ def criar_db():
         data TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
-
+    #=======controle de RTP====
+    c.execute("""
+    CREATE TABLE config (
+    id SERIAL PRIMARY KEY,
+    rtp REAL DEFAULT 0.92,
+    chance_loss REAL DEFAULT 0.6,
+    chance_small REAL DEFAULT 0.3,
+    chance_big REAL DEFAULT 0.1
+    )""")
+    c.execute("""
+    INSERT INTO config (rtp, chance_loss, chance_small, chance_big)
+    VALUES (%s, %s, %s, %s)
+    """, (0.92, 0.6, 0.3, 0.1))
     # GARANTIR JACKPOT INICIAL
     c.execute("SELECT id FROM jackpot WHERE id=1")
     if not c.fetchone():
@@ -427,6 +439,8 @@ def api_slot():
 
 
     def calcular(aposta, c):
+        c.execute("SELECT rtp, chance_loss, chance_small, chance_big FROM config LIMIT 1")
+        rtp, chance_loss, chance_small, chance_big = c.fetchone()
 
         simbolos = ["🍒","🍋","🍀","⭐","💎","7"]
 
@@ -502,13 +516,12 @@ def api_slot():
         # =========================
         # 🎰 GERAR GRADE INTELIGENTE
         # =========================
-        
-        def gerar_grade_inteligente(simbolos):
+        def gerar_grade_controlada(simbolos, chance_loss, chance_small, chance_big):
 
           tipo = random.random()
 
-          # ❌ PERDE (sem linha)
-          if tipo < 0.6:
+          if tipo < chance_loss:
+              # perde
               while True:
                   g = [[random.choice(simbolos) for _ in range(3)] for _ in range(3)]
 
@@ -523,14 +536,18 @@ def api_slot():
                   if not tem_linha:
                       return g
 
-          # 🟡 GANHO PEQUENO
-          elif tipo < 0.9:
+          elif tipo < chance_loss + chance_small:
               simb = random.choice(["🍒","🍋","🍀"])
-
               g = [[random.choice(simbolos) for _ in range(3)] for _ in range(3)]
-              g[1] = [simb, simb, simb]  # linha do meio
-
+              g[1] = [simb, simb, simb]
               return g
+
+          else:
+              simb = random.choice(["⭐","💎","7"])
+              g = [[random.choice(simbolos) for _ in range(3)] for _ in range(3)]
+              g[1] = [simb, simb, simb]
+              return g
+        
 
           # 🔥 GANHO GRANDE
           else:
@@ -1441,7 +1458,48 @@ def resetar():
         return str(e)
 
     finally:
-        conn.close()       
+        conn.close() 
+#  =========rota admin controle de rtp====
+@app.route("/admin/rtp", methods=["GET","POST"])
+def admin_rtp():
+
+    if not session.get("is_admin"):
+        return "Acesso negado"
+
+    conn = conectar()
+    c = conn.cursor()
+
+    if request.method == "POST":
+        rtp = float(request.form["rtp"])
+        loss = float(request.form["loss"])
+        small = float(request.form["small"])
+        big = float(request.form["big"])
+
+        c.execute("""
+        UPDATE config
+        SET rtp=%s, chance_loss=%s, chance_small=%s, chance_big=%s
+        WHERE id=1
+        """, (rtp, loss, small, big))
+
+        conn.commit()
+
+    c.execute("SELECT rtp, chance_loss, chance_small, chance_big FROM config LIMIT 1")
+    cfg = c.fetchone()
+
+    conn.close()
+
+    return render_template_string("""
+    <h2>Controle RTP 🎰</h2>
+
+    <form method="POST">
+        RTP: <input name="rtp" value="{{cfg[0]}}"><br><br>
+        Perda: <input name="loss" value="{{cfg[1]}}"><br><br>
+        Ganho Pequeno: <input name="small" value="{{cfg[2]}}"><br><br>
+        Ganho Grande: <input name="big" value="{{cfg[3]}}"><br><br>
+
+        <button>Salvar</button>
+    </form>
+    """, cfg=cfg)
 # START
 # ================================
 if __name__=="__main__":
