@@ -3,275 +3,209 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🎰 Slot Cassino PRO</title>
+<title>🎰 Slot Real</title>
 
 <style>
 body{
   margin:0;
-  font-family:Arial;
-  background:url("/static/fundo.jpg");
-  background-size:cover;
+  background:#111;
   color:white;
   text-align:center;
-  overflow-x:hidden;
+  font-family:Arial;
 }
 
 /* topo */
 .topo{
-  padding:10px 20px;
-  background:rgba(0,0,0,0.6);
   display:flex;
-  justify-content:space-between;
-  align-items:center;
+  justify-content:space-around;
+  padding:10px;
+  background:#000;
 }
 
-#saldo{color:gold;font-size:24px;}
-#jackpot{
-  color:#ffd700;
-  font-size:26px;
-  animation:jackpotGlow 1s infinite alternate;
-}
-@keyframes jackpotGlow{
-  from{transform:scale(1);}
-  to{transform:scale(1.08);}
-}
-
-/* slot */
+/* SLOT */
 .slot{
-  margin-top:30px;
-  display:grid;
-  grid-template-columns:repeat(3,100px);
-  gap:10px;
+  display:flex;
   justify-content:center;
+  margin-top:40px;
+  gap:10px;
 }
 
-.celula{
+/* coluna (reel) */
+.reel{
+  width:100px;
+  height:300px;
+  overflow:hidden;
+  border:3px solid gold;
+  border-radius:10px;
+  background:black;
+  position:relative;
+}
+
+/* faixa que se move */
+.reel-track{
+  position:absolute;
+  width:100%;
+  top:0;
+}
+
+/* símbolos */
+.symbol{
   width:100px;
   height:100px;
-  background:black;
-  border-radius:10px;
-  border:3px solid gold;
   display:flex;
   align-items:center;
   justify-content:center;
 }
 
-.celula img{width:80px;}
-
-.win{
-  animation:piscar 0.3s infinite;
-}
-@keyframes piscar{
-  0%{box-shadow:0 0 10px gold;}
-  50%{box-shadow:0 0 40px orange,0 0 60px red;}
-  100%{box-shadow:0 0 10px gold;}
+.symbol img{
+  width:80px;
 }
 
+/* botão */
 button{
   margin-top:20px;
-  padding:14px 25px;
+  padding:15px 30px;
   font-size:18px;
   background:orange;
   border:none;
-  border-radius:8px;
+  border-radius:10px;
 }
 
-#resultado{font-size:24px;margin-top:15px;}
-
-/* 🔥 fogo */
-#fireWin{
-  position:fixed;
-  bottom:0;
-  width:100%;
-  height:0;
-  background:linear-gradient(to top,red,orange,yellow,transparent);
-  pointer-events:none;
-}
-@keyframes fogo{
-  0%{height:0;}
-  50%{height:100%;}
-  100%{height:0;}
+/* efeitos */
+.win{
+  box-shadow:0 0 20px gold;
 }
 
-/* 💥 mega win */
-#megaWin{
-  position:fixed;
-  top:40%;
-  left:50%;
-  transform:translate(-50%,-50%) scale(0);
-  font-size:60px;
-  color:gold;
-  text-shadow:0 0 30px red;
-}
-
-/* 🎇 partículas */
-.particle{
-  position:fixed;
-  width:8px;
-  height:8px;
-  background:gold;
-  border-radius:50%;
-  animation:explodir 1s linear forwards;
-}
-@keyframes explodir{
-  to{
-    transform:translate(var(--x),var(--y));
-    opacity:0;
-  }
-}
-
-/* 💥 tremor */
-@keyframes tremer{
-  0%{transform:translate(2px,2px);}
-  50%{transform:translate(-2px,-2px);}
-  100%{transform:translate(0,0);}
-}
 </style>
 </head>
 
 <body>
 
 <div class="topo">
-<div>👤 {{session.username}}</div>
-<div>💰 <span id="saldo">R$ {{saldo}}</span></div>
-<div>💎 <span id="jackpot">{{jackpot}}</span></div>
+<div>💰 <span id="saldo">R$ 1000</span></div>
+<div>💎 <span id="jackpot">5000</span></div>
 </div>
 
-<h1>🎰 SLOT PRO</h1>
+<h1>🎰 SLOT REAL</h1>
 
 <div class="slot">
-<img id="c0" src="/static/slot/1.jpeg">
-<img id="c1" src="/static/slot/2.jpeg">
-<img id="c2" src="/static/slot/3.jpeg">
-<img id="c3" src="/static/slot/4.jpeg">
-<img id="c4" src="/static/slot/5.jpeg">
-<img id="c5" src="/static/slot/1.jpeg">
-<img id="c6" src="/static/slot/2.jpeg">
-<img id="c7" src="/static/slot/3.jpeg">
-<img id="c8" src="/static/slot/4.jpeg">
+
+<div class="reel"><div class="reel-track" id="r0"></div></div>
+<div class="reel"><div class="reel-track" id="r1"></div></div>
+<div class="reel"><div class="reel-track" id="r2"></div></div>
+
 </div>
 
 <input id="aposta" type="number" value="10">
+<br>
 <button onclick="girar()">🎰 GIRAR</button>
 
 <div id="resultado"></div>
 
-<div id="fireWin"></div>
-<div id="megaWin">💥 MEGA WIN 💥</div>
-
 <script>
 
-let girando=false;
+let simbolos = [1,2,3,4,5,6];
 
-/* 🎰 rolagem */
-function girarColuna(col,tempo){
-return new Promise(r=>{
-let i=setInterval(()=>{
-for(let j=0;j<3;j++){
-let idx=col+(j*3);
-document.getElementById("c"+idx).src="/static/slot/"+(Math.floor(Math.random()*6)+1)+".jpeg";
-}
-},80);
-setTimeout(()=>{clearInterval(i);r();},tempo);
-});
-}
+function criarReel(id){
+  let reel = document.getElementById(id);
+  reel.innerHTML="";
 
-/* 💸 contador */
-function animarGanho(v){
-let r=0;
-let el=document.getElementById("resultado");
-let i=setInterval(()=>{
-r+=v*0.1;
-if(r>=v){r=v;clearInterval(i);}
-el.innerHTML="💰 R$ "+r.toFixed(2);
-},30);
+  // cria vários símbolos (loop infinito fake)
+  for(let i=0;i<20;i++){
+    let s = simbolos[Math.floor(Math.random()*simbolos.length)];
+    let div = document.createElement("div");
+    div.className="symbol";
+    div.innerHTML = `<img src="/static/slot/${s}.jpeg">`;
+    reel.appendChild(div);
+  }
 }
 
-/* 🔥 efeitos */
-function fogo(){
-let f=document.getElementById("fireWin");
-f.style.animation="fogo 2s";
-setTimeout(()=>f.style.animation="",2000);
-}
+// inicializa
+criarReel("r0");
+criarReel("r1");
+criarReel("r2");
 
-function mega(){
-let m=document.getElementById("megaWin");
-m.style.transform="translate(-50%,-50%) scale(1)";
-setTimeout(()=>m.style.transform="translate(-50%,-50%) scale(0)",1500);
-}
-
-function particulas(){
-for(let i=0;i<40;i++){
-let p=document.createElement("div");
-p.className="particle";
-p.style.setProperty("--x",(Math.random()*500-250)+"px");
-p.style.setProperty("--y",(Math.random()*500-250)+"px");
-p.style.left="50%";
-p.style.top="50%";
-document.body.appendChild(p);
-setTimeout(()=>p.remove(),1000);
-}
-}
-
-function tremer(){
-document.body.style.animation="tremer 0.3s";
-setTimeout(()=>document.body.style.animation="",300);
-}
-
-/* 🧠 quase ganhou */
-function quase(g){
-if(Math.random()<0.3){
-g[0][0]=g[0][1];
-}
-return g;
-}
-
+/* 🎰 girar */
 function girar(){
 
-if(girando) return;
-girando=true;
+let aposta = parseFloat(document.getElementById("aposta").value);
 
-let aposta=parseFloat(document.getElementById("aposta").value);
-
-/* 🎰 animação */
 Promise.all([
-girarColuna(0,1000),
-girarColuna(1,1400),
-girarColuna(2,1800)
+  girarReel("r0", 1500),
+  girarReel("r1", 2000),
+  girarReel("r2", 2500)
 ]).then(()=>{
+  resultadoFinal(aposta);
+});
 
-fetch("/api/slot",{
-method:"POST",
-body:new URLSearchParams({aposta})
-})
-.then(r=>r.json())
-.then(d=>{
-
-d.grade=quase(d.grade);
-
-let g=d.grade.flat();
-
-for(let i=0;i<9;i++){
-document.getElementById("c"+i).src="/static/slot/"+g[i]+".jpeg";
 }
 
-if(d.ganho>0){
+/* 🎰 animação real */
+function girarReel(id, tempo){
 
-animarGanho(d.ganho);
+return new Promise(resolve=>{
 
-if(d.ganho>=aposta*10){
-fogo(); mega(); particulas(); tremer();
-}else if(d.ganho>=aposta*5){
-fogo(); particulas();
-}
+  let reel = document.getElementById(id);
 
-}else{
-document.getElementById("resultado").innerHTML="Boa sorte!";
-}
+  let pos = 0;
+  let speed = 50;
 
-girando=false;
+  let intervalo = setInterval(()=>{
+    pos += speed;
+    reel.style.transform = `translateY(-${pos}px)`;
+  },16);
+
+  setTimeout(()=>{
+    clearInterval(intervalo);
+
+    // posição final alinhada (multiplo de 100)
+    let final = Math.floor(pos/100)*100;
+    reel.style.transform = `translateY(-${final}px)`;
+
+    resolve();
+  },tempo);
 
 });
+
+}
+
+/* 🎯 resultado */
+function resultadoFinal(aposta){
+
+fetch("/api/slot",{
+  method:"POST",
+  body:new URLSearchParams({aposta})
+})
+.then(r=>r.json())
+.then(data=>{
+
+let grade = data.grade;
+
+/* aplica resultado visual REAL */
+for(let col=0;col<3;col++){
+
+  let reel = document.getElementById("r"+col);
+
+  reel.innerHTML="";
+
+  for(let i=0;i<10;i++){
+    let s = grade[i%3][col];
+    let div = document.createElement("div");
+    div.className="symbol";
+    div.innerHTML=`<img src="/static/slot/${s}.jpeg">`;
+    reel.appendChild(div);
+  }
+
+}
+
+/* ganho */
+let res = document.getElementById("resultado");
+
+if(data.ganho>0){
+  res.innerHTML = "🎉 GANHOU R$ "+data.ganho;
+}else{
+  res.innerHTML = "Boa sorte!";
+}
 
 });
 
