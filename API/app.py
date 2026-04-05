@@ -502,7 +502,7 @@ def api_slot():
         # =========================
         # 🎰 GERAR GRADE INTELIGENTE
         # =========================
-        def gerar_grade():
+        
         def gerar_grade_inteligente(simbolos):
 
           tipo = random.random()
