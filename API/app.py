@@ -503,24 +503,44 @@ def api_slot():
         # 🎰 GERAR GRADE INTELIGENTE
         # =========================
         def gerar_grade():
-            while True:
-                g = [[random.choice(simbolos) for _ in range(3)] for _ in range(3)]
+        def gerar_grade_inteligente(simbolos):
 
-                tem_linha = (
-                    g[0][0] == g[0][1] == g[0][2] or
-                    g[1][0] == g[1][1] == g[1][2] or
-                    g[2][0] == g[2][1] == g[2][2] or
-                    g[0][0] == g[1][1] == g[2][2] or
-                    g[0][2] == g[1][1] == g[2][0]
-                )
+          tipo = random.random()
 
-                if pode_pagar and tem_linha:
-                    return g
+          # ❌ PERDE (sem linha)
+          if tipo < 0.6:
+              while True:
+                  g = [[random.choice(simbolos) for _ in range(3)] for _ in range(3)]
 
-                if not pode_pagar and not tem_linha:
-                    return g
+                  tem_linha = (
+                      g[0][0] == g[0][1] == g[0][2] or
+                      g[1][0] == g[1][1] == g[1][2] or
+                      g[2][0] == g[2][1] == g[2][2] or
+                      g[0][0] == g[1][1] == g[2][2] or
+                      g[0][2] == g[1][1] == g[2][0]
+                  )
 
-        grade = gerar_grade()
+                  if not tem_linha:
+                      return g
+
+          # 🟡 GANHO PEQUENO
+          elif tipo < 0.9:
+              simb = random.choice(["🍒","🍋","🍀"])
+
+              g = [[random.choice(simbolos) for _ in range(3)] for _ in range(3)]
+              g[1] = [simb, simb, simb]  # linha do meio
+
+              return g
+
+          # 🔥 GANHO GRANDE
+          else:
+              simb = random.choice(["⭐","💎","7"])
+
+              g = [[random.choice(simbolos) for _ in range(3)] for _ in range(3)]
+              g[1] = [simb, simb, simb]
+
+              return g
+        grade = gerar_grade_inteligente(simbolos)
 
         # quase ganhou
         if not pode_pagar and random.random() < 0.3:
