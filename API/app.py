@@ -105,13 +105,17 @@ def criar_db():
     """)
     #=======controle de RTP====
     c.execute("""
-    CREATE TABLE config (
+    CREATE TABLE IF NOT EXISTS config (
     id SERIAL PRIMARY KEY,
     rtp REAL DEFAULT 0.92,
     chance_loss REAL DEFAULT 0.6,
     chance_small REAL DEFAULT 0.3,
     chance_big REAL DEFAULT 0.1
     )""")
+    c.execute("""
+    
+    c.execute("SELECT COUNT(*) FROM config")
+    if c.fetchone()[0] == 0:
     c.execute("""
     INSERT INTO config (rtp, chance_loss, chance_small, chance_big)
     VALUES (%s, %s, %s, %s)
@@ -120,6 +124,7 @@ def criar_db():
     c.execute("SELECT id FROM jackpot WHERE id=1")
     if not c.fetchone():
         c.execute("INSERT INTO jackpot (id,valor) VALUES (1,100)")
+    """)
 
     # GARANTIR ESTATÍSTICAS INICIAIS
     c.execute("SELECT id FROM estatisticas WHERE id=1")
@@ -549,15 +554,8 @@ def api_slot():
               return g
         
 
-          # 🔥 GANHO GRANDE
-          else:
-              simb = random.choice(["⭐","💎","7"])
-
-              g = [[random.choice(simbolos) for _ in range(3)] for _ in range(3)]
-              g[1] = [simb, simb, simb]
-
-              return g
-        grade = gerar_grade_inteligente(simbolos)
+          
+        grade = gerar_grade_controlada(simbolos, chance_loss, chance_small, chance_big)
 
         # quase ganhou
         if not pode_pagar and random.random() < 0.3:
