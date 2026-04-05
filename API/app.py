@@ -481,6 +481,7 @@ def api_slot():
         if banca < 0:
            rtp_final += 0.05
         elif banca < 1000:
+    
             rtp = 0.94
         elif banca < 5000:
             rtp = 0.92
@@ -515,6 +516,7 @@ def api_slot():
         # =========================
         # 🎯 DECISÃO
         # =========================
+        rtp_final = max(0.0, min(rtp_final, 0.98))
         pode_pagar = random.random() < rtp_final
         
 
