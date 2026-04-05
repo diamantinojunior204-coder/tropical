@@ -112,7 +112,6 @@ def criar_db():
     chance_small REAL DEFAULT 0.3,
     chance_big REAL DEFAULT 0.1
     )""")
-    c.execute("""
     
     c.execute("SELECT COUNT(*) FROM config")
     if c.fetchone()[0] == 0:
@@ -124,7 +123,7 @@ def criar_db():
     c.execute("SELECT id FROM jackpot WHERE id=1")
     if not c.fetchone():
         c.execute("INSERT INTO jackpot (id,valor) VALUES (1,100)")
-    """)
+    
 
     # GARANTIR ESTATÍSTICAS INICIAIS
     c.execute("SELECT id FROM estatisticas WHERE id=1")
