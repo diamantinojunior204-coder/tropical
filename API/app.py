@@ -416,9 +416,12 @@ def wellho_page():
 def api_slot():
 
     if "user_id" not in session:
-        return jsonify({"erro":"login"}), 401
+        return jsonify({"erro": "login"}), 401
 
-    aposta = float(request.form["aposta"])
+    try:
+        aposta = float(request.form["aposta"])
+    except:
+        return jsonify({"erro": "Aposta inválida"})
 
     MIN_APOSTA = 1
     MAX_APOSTA = 100
@@ -440,222 +443,213 @@ def api_slot():
         conn.close()
         return jsonify({"erro": "Saldo insuficiente"})
 
-
+    # =========================================
+    # 🎰 FUNÇÃO DO SLOT
+    # =========================================
     def calcular(aposta, c):
+        import random
 
-    import random
+        # 🎛 CONFIG
+        c.execute("SELECT rtp, chance_loss, chance_small, chance_big FROM config LIMIT 1")
+        rtp, chance_loss, chance_small, chance_big = c.fetchone()
 
-    # =========================
-    # 🎛 CONFIG
-    # =========================
-    c.execute("SELECT rtp, chance_loss, chance_small, chance_big FROM config LIMIT 1")
-    rtp, chance_loss, chance_small, chance_big = c.fetchone()
+        rtp_final = float(rtp)
 
-    rtp_base = float(rtp)
-    rtp_final = rtp_base
+        simbolos = ["🍒","🍋","🍀","⭐","💎","7"]
 
-    simbolos = ["🍒","🍋","🍀","⭐","💎","7"]
+        # 📊 BANCA
+        c.execute("""
+        SELECT 
+        COALESCE(SUM(aposta),0),
+        COALESCE(SUM(CASE WHEN ganho > 0 THEN ganho ELSE 0 END),0)
+        FROM apostas
+        """)
+        total_apostado, total_pago = c.fetchone()
+        banca = float(total_apostado or 0) - float(total_pago or 0)
 
-    # =========================
-    # 📊 BANCA
-    # =========================
-    c.execute("""
-    SELECT 
-    COALESCE(SUM(aposta),0),
-    COALESCE(SUM(CASE WHEN ganho > 0 THEN ganho ELSE 0 END),0)
-    FROM apostas
-    """)
-    total_apostado, total_pago = c.fetchone()
-    banca = float(total_apostado or 0) - float(total_pago or 0)
+        # 👤 JOGADOR
+        c.execute("""
+        SELECT 
+        COALESCE(SUM(aposta),0),
+        COALESCE(SUM(ganho),0)
+        FROM apostas
+        WHERE user_id=%s
+        """, (session["user_id"],))
 
-    # =========================
-    # 👤 JOGADOR
-    # =========================
-    c.execute("""
-    SELECT 
-    COALESCE(SUM(aposta),0),
-    COALESCE(SUM(ganho),0)
-    FROM apostas
-    WHERE user_id=%s
-    """, (session["user_id"],))
+        apostado, ganho_user = c.fetchone()
+        apostado = float(apostado or 0)
+        ganho_user = float(ganho_user or 0)
 
-    apostado, ganho_user = c.fetchone()
-    apostado = float(apostado or 0)
-    ganho_user = float(ganho_user or 0)
-
-    # =========================
-    # 🧠 RTP DINÂMICO
-    # =========================
-    if banca < 0:
-        rtp_final += 0.05
-    elif banca < 1000:
-        rtp_final += 0.02
-    elif banca > 5000:
-        rtp_final -= 0.05
-
-    if apostado > 0:
-        if ganho_user < apostado * 0.5:
+        # 🧠 RTP DINÂMICO
+        if banca < 0:
             rtp_final += 0.05
-        elif ganho_user > apostado * 1.5:
+        elif banca < 1000:
+            rtp_final += 0.02
+        elif banca > 5000:
             rtp_final -= 0.05
 
-    # sequência recente
-    c.execute("""
-    SELECT ganho FROM apostas
-    WHERE user_id=%s
-    ORDER BY id DESC LIMIT 5
-    """, (session["user_id"],))
+        if apostado > 0:
+            if ganho_user < apostado * 0.5:
+                rtp_final += 0.05
+            elif ganho_user > apostado * 1.5:
+                rtp_final -= 0.05
 
-    ultimas = [float(x[0]) for x in c.fetchall()]
+        # sequência
+        c.execute("""
+        SELECT ganho FROM apostas
+        WHERE user_id=%s
+        ORDER BY id DESC LIMIT 5
+        """, (session["user_id"],))
 
-    if len(ultimas) >= 5:
-        if all(g <= 0 for g in ultimas):
-            rtp_final += 0.07
-        if sum(1 for g in ultimas if g > 0) >= 3:
-            rtp_final -= 0.05
+        ultimas = [float(x[0]) for x in c.fetchall()]
 
-    # limite
-    rtp_final = max(0.05, min(rtp_final, 0.98))
+        if len(ultimas) >= 5:
+            if all(g <= 0 for g in ultimas):
+                rtp_final += 0.07
+            if sum(1 for g in ultimas if g > 0) >= 3:
+                rtp_final -= 0.05
 
-    # decisão
-    pode_pagar = random.random() < rtp_final
+        # limite RTP
+        rtp_final = max(0.05, min(rtp_final, 0.98))
 
-    # =========================
-    # 🎰 GRADE CONTROLADA
-    # =========================
-    def gerar_perdedor():
-        while True:
-            g = [[random.choice(simbolos) for _ in range(3)] for _ in range(3)]
+        # decisão
+        pode_pagar = random.random() < rtp_final
 
-            tem_linha = (
-                g[0][0] == g[0][1] == g[0][2] or
-                g[1][0] == g[1][1] == g[1][2] or
-                g[2][0] == g[2][1] == g[2][2] or
-                g[0][0] == g[1][1] == g[2][2] or
-                g[0][2] == g[1][1] == g[2][0]
-            )
+        # =========================
+        # 🎰 GRADE
+        # =========================
+        def gerar_perdedor():
+            while True:
+                g = [[random.choice(simbolos) for _ in range(3)] for _ in range(3)]
 
-            if not tem_linha:
-                return g
+                tem_linha = (
+                    g[0][0] == g[0][1] == g[0][2] or
+                    g[1][0] == g[1][1] == g[1][2] or
+                    g[2][0] == g[2][1] == g[2][2] or
+                    g[0][0] == g[1][1] == g[2][2] or
+                    g[0][2] == g[1][1] == g[2][0]
+                )
 
-    def gerar_ganho():
-        tipo = random.random()
+                if not tem_linha:
+                    return g
 
-        if tipo < chance_small:
-            simb = random.choice(["🍒","🍋","🍀"])
-        else:
-            simb = random.choice(["⭐","💎","7"])
+        def gerar_ganho():
+            tipo = random.random()
 
-        g = [[random.choice(simbolos) for _ in range(3)] for _ in range(3)]
-        g[1] = [simb, simb, simb]
-
-        return g
-
-    # aplica decisão
-    if pode_pagar:
-        grade = gerar_ganho()
-    else:
-        grade = gerar_perdedor()
-
-    # quase ganhou (efeito psicológico)
-    if not pode_pagar and random.random() < 0.3:
-        grade[0][0] = grade[0][1]
-
-    # =========================
-    # 💰 GANHO
-    # =========================
-    ganho = 0
-    linhas_ganhas = []
-
-    # jackpot
-    c.execute("SELECT valor FROM jackpot WHERE id=1")
-    jackpot = float(c.fetchone()[0])
-    jackpot += aposta * 0.03
-
-    def premio(simbolo):
-        if simbolo == "🍒": return aposta * 1
-        if simbolo == "🍋": return aposta * 2
-        if simbolo == "🍀": return aposta * 3
-        if simbolo == "⭐": return aposta * 5
-        if simbolo == "💎": return aposta * 7
-        if simbolo == "7": return "jackpot"
-        return 0
-
-    def pode_jackpot():
-        if jackpot < 1000:
-            return False
-        if banca > 0 and jackpot > banca * 0.3:
-            return False
-        return random.random() < 0.1
-
-    def aplicar(simbolo):
-        nonlocal ganho, jackpot
-
-        p = premio(simbolo)
-
-        if p == "jackpot":
-            if pode_jackpot():
-                ganho += jackpot
-                jackpot = 100
+            if tipo < chance_small:
+                simb = random.choice(["🍒","🍋","🍀"])
             else:
-                ganho += aposta * random.choice([8, 10])
+                simb = random.choice(["⭐","💎","7"])
+
+            g = [[random.choice(simbolos) for _ in range(3)] for _ in range(3)]
+            g[1] = [simb, simb, simb]
+            return g
+
+        if pode_pagar:
+            grade = gerar_ganho()
         else:
-            ganho += p
+            grade = gerar_perdedor()
 
-    # =========================
-    # 🏆 MELHOR LINHA APENAS
-    # =========================
-    melhor = 0
-    melhor_linha = None
+        # quase ganhou
+        if not pode_pagar and random.random() < 0.3:
+            grade[0][0] = grade[0][1]
 
-    def testar(indices, simbolo):
-        nonlocal melhor, melhor_linha
+        # =========================
+        # 💰 GANHO
+        # =========================
+        ganho = 0
+        linhas_ganhas = []
 
-        p = premio(simbolo)
-        valor = aposta * 10 if p == "jackpot" else p
+        # jackpot
+        c.execute("SELECT valor FROM jackpot WHERE id=1")
+        jackpot = float(c.fetchone()[0])
+        jackpot += aposta * 0.03
 
-        if valor > melhor:
-            melhor = valor
-            melhor_linha = (indices, simbolo)
+        def premio(simbolo):
+            if simbolo == "🍒": return aposta * 1
+            if simbolo == "🍋": return aposta * 2
+            if simbolo == "🍀": return aposta * 3
+            if simbolo == "⭐": return aposta * 5
+            if simbolo == "💎": return aposta * 7
+            if simbolo == "7": return "jackpot"
+            return 0
 
-    # linhas
-    for i, linha in enumerate(grade):
-        if linha[0] == linha[1] == linha[2]:
-            testar([i*3, i*3+1, i*3+2], linha[0])
+        def pode_jackpot():
+            if jackpot < 1000:
+                return False
+            if banca > 0 and jackpot > banca * 0.3:
+                return False
+            return random.random() < 0.1
 
-    for col in range(3):
-        if grade[0][col] == grade[1][col] == grade[2][col]:
-            testar([col, col+3, col+6], grade[0][col])
+        def aplicar(simbolo):
+            nonlocal ganho, jackpot
 
-    if grade[0][0] == grade[1][1] == grade[2][2]:
-        testar([0,4,8], grade[0][0])
+            p = premio(simbolo)
 
-    if grade[0][2] == grade[1][1] == grade[2][0]:
-        testar([2,4,6], grade[0][2])
+            if p == "jackpot":
+                if pode_jackpot():
+                    ganho += jackpot
+                    jackpot = 100
+                else:
+                    ganho += aposta * random.choice([8, 10])
+            else:
+                ganho += p
 
-    # aplica apenas a melhor
-    if melhor_linha:
-        idx, simb = melhor_linha
-        linhas_ganhas.append(idx)
-        aplicar(simb)
+        # =========================
+        # 🏆 MELHOR LINHA
+        # =========================
+        melhor = 0
+        melhor_linha = None
 
-    # desconta aposta
-    ganho -= aposta
+        def testar(indices, simbolo):
+            nonlocal melhor, melhor_linha
 
-    # salva jackpot
-    c.execute("UPDATE jackpot SET valor=%s WHERE id=1", (jackpot,))
+            p = premio(simbolo)
+            valor = aposta * 10 if p == "jackpot" else p
 
-    mapa = {"🍒":1,"🍋":2,"🍀":3,"⭐":4,"💎":5,"7":6}
-    grade_num = [[mapa[s] for s in linha] for linha in grade]
+            if valor > melhor:
+                melhor = valor
+                melhor_linha = (indices, simbolo)
 
-    return round(ganho, 2), {
-        "grade": grade_num,
-        "linhas_ganhas": linhas_ganhas,
-        "jackpot": round(jackpot, 2)
-     
-       
+        # linhas
+        for i, linha in enumerate(grade):
+            if linha[0] == linha[1] == linha[2]:
+                testar([i*3, i*3+1, i*3+2], linha[0])
+
+        for col in range(3):
+            if grade[0][col] == grade[1][col] == grade[2][col]:
+                testar([col, col+3, col+6], grade[0][col])
+
+        if grade[0][0] == grade[1][1] == grade[2][2]:
+            testar([0,4,8], grade[0][0])
+
+        if grade[0][2] == grade[1][1] == grade[2][0]:
+            testar([2,4,6], grade[0][2])
+
+        if melhor_linha:
+            idx, simb = melhor_linha
+            linhas_ganhas.append(idx)
+            aplicar(simb)
+
+        # desconta aposta (CORRETO)
+        ganho -= aposta
+
+        # salvar jackpot
+        c.execute("UPDATE jackpot SET valor=%s WHERE id=1", (jackpot,))
+
+        mapa = {"🍒":1,"🍋":2,"🍀":3,"⭐":4,"💎":5,"7":6}
+        grade_num = [[mapa[s] for s in linha] for linha in grade]
+
+        return round(ganho, 2), {
+            "grade": grade_num,
+            "linhas_ganhas": linhas_ganhas,
+            "jackpot": round(jackpot, 2)
         }
-return jsonify(
+
+    # =========================================
+    # 🚀 EXECUTA APOSTA
+    # =========================================
+    return jsonify(
         processar_aposta(
             session["user_id"],
             "slot",
@@ -664,8 +658,6 @@ return jsonify(
         )
     )
 
-        
-        
              
 
 # ================================
