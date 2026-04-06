@@ -510,7 +510,7 @@ def api_slot():
                 #rtp_final -= 0.05
 
         # limite RTP
-        rtp_final = max(0.05, min(rtp_final, 0.98))
+        rtp_final = max(0.0, min(rtp_final, 0.98))
 
         # decisão
         pode_pagar = random.random() < rtp_final
