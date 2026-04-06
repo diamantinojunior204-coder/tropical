@@ -481,18 +481,18 @@ def api_slot():
         ganho_user = float(ganho_user or 0)
 
         # 🧠 RTP DINÂMICO
-        if banca < 0:
-            rtp_final += 0.05
-        elif banca < 1000:
-            rtp_final += 0.02
-        elif banca > 5000:
-            rtp_final -= 0.05
+        #if banca < 0:
+           # rtp_final += 0.05
+       # elif banca < 1000:
+           # rtp_final += 0.02
+        #elif banca > 5000:
+            #rtp_final -= 0.05
 
-        if apostado > 0:
-            if ganho_user < apostado * 0.5:
-                rtp_final += 0.05
-            elif ganho_user > apostado * 1.5:
-                rtp_final -= 0.05
+        #if apostado > 0:
+            #if ganho_user < apostado * 0.5:
+                #rtp_final += 0.05
+           # elif ganho_user > apostado * 1.5:
+               # rtp_final -= 0.05
 
         # sequência
         c.execute("""
