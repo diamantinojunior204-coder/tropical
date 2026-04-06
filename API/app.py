@@ -663,6 +663,7 @@ def api_slot():
 # ================================
 # ADMIN
 # ================================
+
 @app.route("/admin")
 def admin():
 
@@ -671,77 +672,59 @@ def admin():
 
     conn = conectar()
     c = conn.cursor()
-    # usuários
-    c.execute("SELECT id,username,saldo FROM users ORDER BY id")
+
+    # 👥 Usuários
+    c.execute("SELECT id, username, saldo FROM users ORDER BY id")
     users = c.fetchall()
 
-    # total apostado
+    # 💰 Total apostado
     c.execute("SELECT COALESCE(SUM(aposta),0) FROM apostas")
-    total_apostado = c.fetchone()[0] or 0
-    total_apostado = float(total_apostado)
+    total_apostado = float(c.fetchone()[0] or 0)
 
-    # total pago (somente ganhos positivos)
-    c.execute("""
-    SELECT COALESCE(SUM(ganho),0)
-    FROM apostas
-    WHERE ganho > 0
-    """)
-    total_pago = c.fetchone()[0] or 0
-    total_pago = float(total_pago)
+    # 💵 Total pago (somente ganhos positivos)
+    c.execute("SELECT COALESCE(SUM(ganho),0) FROM apostas WHERE ganho > 0")
+    total_pago = float(c.fetchone()[0] or 0)
 
-    # lucro cassino
+    # 💸 Lucro do cassino
     lucro = total_apostado - total_pago
-    # usuários
-    #c.execute("SELECT id,username,saldo FROM users ORDER BY id")
-    #users = c.fetchall()
 
-    #statistica2
-    #c.execute("SELECT COALESCE(SUM(aposta),0) FROM apostas")
-    #total_apostado = float(c.fetchone()[0] or 0)
+    # 🎰 RTP do cassino
+    if total_apostado > 0:
+        rtp_cassino = round(total_pago / total_apostado, 4)  # Ex: 0.9234
+    else:
+        rtp_cassino = 0
 
-    #c.execute("SELECT COALESCE(SUM(ganho),0) FROM apostas")
-    #total_pago = float(c.fetchone()[0] or 0)
-
-    #lucro = total_apostado - total_pago
-
-    # estatísticas
-    #c.execute("SELECT COALESCE(SUM(aposta),0) FROM apostas")
-    #total_apostado = c.fetchone()[0]
-
-    #c.execute("SELECT COALESCE(SUM(ganho),0) FROM apostas")
-    #total_pago = c.fetchone()[0]
-
-    #lucro = total_apostado - total_pago
-
-    # depósitos PIX
+    # 💳 Depósitos PIX
     c.execute("""
-    SELECT depositos.id, users.username, depositos.valor, depositos.status, depositos.data
-    FROM depositos
-    JOIN users ON users.id = depositos.user_id
-    ORDER BY depositos.id DESC
+        SELECT depositos.id, users.username, depositos.valor, depositos.status, depositos.data
+        FROM depositos
+        JOIN users ON users.id = depositos.user_id
+        ORDER BY depositos.id DESC
     """)
     depositos = c.fetchall()
 
-    # saques
+    # 💸 Saques
     c.execute("""
-    SELECT saques.id, users.username, saques.valor, saques.chave_pix, saques.status
-    FROM saques
-    JOIN users ON users.id = saques.user_id
-    ORDER BY saques.id DESC
+        SELECT saques.id, users.username, saques.valor, saques.chave_pix, saques.status
+        FROM saques
+        JOIN users ON users.id = saques.user_id
+        ORDER BY saques.id DESC
     """)
     saques = c.fetchall()
 
     conn.close()
-    return render_template(
-    "admin.html",
-    users=users,
-    depositos=depositos,
-    saques=saques,
-    total_apostado=round(total_apostado, 2),
-    total_pago=round(total_pago, 2),
-    lucro=round(lucro, 2)
-    )
 
+    return render_template(
+        "admin.html",
+        users=users,
+        depositos=depositos,
+        saques=saques,
+        total_apostado=round(total_apostado, 2),
+        total_pago=round(total_pago, 2),
+        lucro=round(lucro, 2),
+        rtp=rtp_cassino
+    )
+ 
 
 # ================================
 # LOGOUT
