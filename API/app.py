@@ -452,7 +452,7 @@ def api_slot():
         # 🎛 CONFIG
         c.execute("SELECT rtp, chance_loss, chance_small, chance_big FROM config LIMIT 1")
         rtp, chance_loss, chance_small, chance_big = c.fetchone()
-
+        
         rtp_final = float(rtp)
 
         simbolos = ["🍒","🍋","🍀","⭐","💎","7"]
@@ -1496,6 +1496,22 @@ def admin_rtp():
         <button>Salvar</button>
     </form>
     """, cfg=cfg)
+#========corrigir RTP   
+@app.route("/admin/fix_rtp")
+def fix_rtp():
+
+    if not session.get("is_admin"):
+        return "Acesso negado"
+
+    conn = conectar()
+    c = conn.cursor()
+
+    c.execute("UPDATE config SET rtp = 0.92 WHERE id=1")
+
+    conn.commit()
+    conn.close()
+
+    return "RTP corrigido para 0.92 ✅"   
 # START
 # ================================
 if __name__=="__main__":
