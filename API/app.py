@@ -495,19 +495,19 @@ def api_slot():
                # rtp_final -= 0.05
 
         # sequência
-        c.execute("""
-        SELECT ganho FROM apostas
-        WHERE user_id=%s
-        ORDER BY id DESC LIMIT 5
-        """, (session["user_id"],))
+       # c.execute("""
+        #SELECT ganho FROM apostas
+       # WHERE user_id=%s
+       # ORDER BY id DESC LIMIT 5
+      #  """, (session["user_id"],))
 
-        ultimas = [float(x[0]) for x in c.fetchall()]
+    #    ultimas = [float(x[0]) for x in c.fetchall()]
 
-        if len(ultimas) >= 5:
-            if all(g <= 0 for g in ultimas):
-                rtp_final += 0.07
-            if sum(1 for g in ultimas if g > 0) >= 3:
-                rtp_final -= 0.05
+      #  if len(ultimas) >= 5:
+          #  if all(g <= 0 for g in ultimas):
+               # rtp_final += 0.07
+           # if sum(1 for g in ultimas if g > 0) >= 3:
+                #rtp_final -= 0.05
 
         # limite RTP
         rtp_final = max(0.05, min(rtp_final, 0.98))
