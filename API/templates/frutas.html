@@ -22,11 +22,16 @@ display:flex;
 justify-content:space-between;
 align-items:center;
 flex-wrap:wrap;
+gap: 15px;
 }
 
 #usuario{color:#00eaff;}
 
 /* 🌟 SALDO COM EFEITO NEON */
+.saldo-label {
+    color: #fff;
+    font-size: 16px;
+}
 #saldo{
 color:gold;
 font-size:26px;
@@ -41,6 +46,10 @@ to{ transform:scale(1.08); text-shadow:0 0 20px #39ff14, 0 0 35px #39ff14, 0 0 4
 }
 
 /* 💎 JACKPOT PISCANDO FORTE */
+.jackpot-label {
+    color: #fff;
+    font-size: 16px;
+}
 #jackpot{
 color:#ffd700;
 font-size:26px;
@@ -157,9 +166,15 @@ text-shadow:0 0 10px black;
 <body>
 
 <div class="topo">
-<div id="usuario">👤 {{session.username}}</div>
-<div>💰 <span id="saldo">R$ {{saldo}}</span></div>
-<div>💎 <span id="jackpot">{{jackpot}}</span></div>
+    <div id="usuario">👤 {{session.username}}</div>
+    <div>
+        <span class="saldo-label">💰 Saldo:</span><br>
+        <span id="saldo">R$ {{saldo}}</span>
+    </div>
+    <div>
+        <span class="jackpot-label">💎 Jackpot:</span><br>
+        <span id="jackpot">{{jackpot}}</span>
+    </div>
 </div>
 
 <h1>🍒🍋 SLOT FRUTAS 🍇🍊</h1>
@@ -285,7 +300,8 @@ grade[1][i],
 grade[2][i]
 ];
 
-let index=Math.floor(Math.random()*(items.length-10))+5;
+// Posição segura no meio da lista
+let index=Math.floor(items.length / 2) - 1; 
 
 for(let j=0;j<3;j++){
 items[index+j].dataset.id=coluna[j];
@@ -319,6 +335,7 @@ function finalizar(data){
 animarSaldo(data.saldo);
 document.getElementById("jackpot").innerText=data.jackpot;
 
+// Apaga o brilho de todos primeiro
 document.querySelectorAll(".symbol").forEach(e=>{
 e.classList.remove("highlight");
 });
@@ -333,9 +350,10 @@ let row=Math.floor(idx/3);
 let strip=strips[col];
 let items=[...strip.children];
 
-let base=Math.floor(items.length/2);
+// Pega sempre o centro exato
+let centro = Math.floor(items.length / 2); 
 
-items[base+row].classList.add("highlight");
+items[centro + row].classList.add("highlight");
 
 });
 });
