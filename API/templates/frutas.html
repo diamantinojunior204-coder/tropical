@@ -341,31 +341,25 @@ e.classList.remove("highlight");
 });
 
 if(data.linhas_ganhas){
-data.linhas_ganhas.forEach(linha=>{
     
-    // --- 🔧 CORREÇÃO AQUI ---
-    // Pega o centro da tela
-    const centroBase = Math.floor(strips[0].children.length / 2);
+    // Posição do centro da lista
+    const centro = Math.floor(strips[0].children.length / 2);
 
-    linha.forEach((posicaoNaTabela, indiceDoRolo) => {
+    data.linhas_ganhas.forEach(linha=>{
         
-        // Converte o número da matriz (0 a 8) em linha e coluna
-        const colunaReal = posicaoNaTabela % 3;
-        const linhaReal = Math.floor(posicaoNaTabela / 3);
+        // Para cada posição na linha vencedora (ex: 0, 4, 8)
+        for(let k=0; k < linha.length; k++){
+            let pos = linha[k];
+            
+            // Descobre em qual linha da tela está (0, 1 ou 2)
+            let linhaTela = Math.floor(pos / 3); 
+            // Descobre em qual coluna da tela está (0, 1 ou 2)
+            let colunaTela = pos % 3; 
 
-        // Seleciona o rolo correto
-        const stripAlvo = strips[colunaReal];
-        const items = [...stripAlvo.children];
-
-        // Calcula qual item da lista gigante é o que está aparecendo na tela
-        // linhaReal = 0 (cima), 1 (meio), 2 (baixo)
-        const itemCorreto = items[centroBase + linhaReal];
-        
-        // Adiciona o brilho
-        itemCorreto.classList.add("highlight");
+            // Pega o item exato na lista e acende
+            strips[colunaTela].children[centro + linhaTela].classList.add("highlight");
+        }
     });
-    // --- FIM DA CORREÇÃO ---
-});
 }
 
 let res=document.getElementById("resultado");
