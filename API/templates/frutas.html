@@ -342,20 +342,29 @@ e.classList.remove("highlight");
 
 if(data.linhas_ganhas){
 data.linhas_ganhas.forEach(linha=>{
-linha.forEach(idx=>{
+    
+    // --- 🔧 CORREÇÃO AQUI ---
+    // Pega o centro da tela
+    const centroBase = Math.floor(strips[0].children.length / 2);
 
-let col=idx%3;
-let row=Math.floor(idx/3);
+    linha.forEach((posicaoNaTabela, indiceDoRolo) => {
+        
+        // Converte o número da matriz (0 a 8) em linha e coluna
+        const colunaReal = posicaoNaTabela % 3;
+        const linhaReal = Math.floor(posicaoNaTabela / 3);
 
-let strip=strips[col];
-let items=[...strip.children];
+        // Seleciona o rolo correto
+        const stripAlvo = strips[colunaReal];
+        const items = [...stripAlvo.children];
 
-// Pega sempre o centro exato
-let centro = Math.floor(items.length / 2); 
-
-items[centro + row].classList.add("highlight");
-
-});
+        // Calcula qual item da lista gigante é o que está aparecendo na tela
+        // linhaReal = 0 (cima), 1 (meio), 2 (baixo)
+        const itemCorreto = items[centroBase + linhaReal];
+        
+        // Adiciona o brilho
+        itemCorreto.classList.add("highlight");
+    });
+    // --- FIM DA CORREÇÃO ---
 });
 }
 
