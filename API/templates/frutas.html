@@ -28,10 +28,7 @@ gap: 15px;
 #usuario{color:#00eaff;}
 
 /* 🌟 SALDO COM EFEITO NEON */
-.saldo-label {
-    color: #fff;
-    font-size: 16px;
-}
+.saldo-label { color: #fff; font-size: 16px; }
 #saldo{
 color:gold;
 font-size:26px;
@@ -46,10 +43,7 @@ to{ transform:scale(1.08); text-shadow:0 0 20px #39ff14, 0 0 35px #39ff14, 0 0 4
 }
 
 /* 💎 JACKPOT PISCANDO FORTE */
-.jackpot-label {
-    color: #fff;
-    font-size: 16px;
-}
+.jackpot-label { color: #fff; font-size: 16px; }
 #jackpot{
 color:#ffd700;
 font-size:26px;
@@ -300,7 +294,6 @@ grade[1][i],
 grade[2][i]
 ];
 
-// Posição segura no meio da lista
 let index=Math.floor(items.length / 2) - 1; 
 
 for(let j=0;j<3;j++){
@@ -335,30 +328,24 @@ function finalizar(data){
 animarSaldo(data.saldo);
 document.getElementById("jackpot").innerText=data.jackpot;
 
-// Apaga o brilho de todos primeiro
 document.querySelectorAll(".symbol").forEach(e=>{
 e.classList.remove("highlight");
 });
 
 if(data.linhas_ganhas){
     
-    // Posição do centro da lista
-    const centro = Math.floor(strips[0].children.length / 2);
-
-    data.linhas_ganhas.forEach(linha=>{
+    // A MAGICA AQUI!
+    data.linhas_ganhas.forEach(function(linha){
         
-        // Para cada posição na linha vencedora (ex: 0, 4, 8)
-        for(let k=0; k < linha.length; k++){
-            let pos = linha[k];
+        linha.forEach(function(posicao){
             
-            // Descobre em qual linha da tela está (0, 1 ou 2)
-            let linhaTela = Math.floor(pos / 3); 
-            // Descobre em qual coluna da tela está (0, 1 ou 2)
-            let colunaTela = pos % 3; 
-
-            // Pega o item exato na lista e acende
-            strips[colunaTela].children[centro + linhaTela].classList.add("highlight");
-        }
+            let coluna = posicao % 3;
+            let linhaReal = Math.floor(posicao / 3);
+            let items = strips[coluna].children;
+            let centro = Math.floor(items.length / 2);
+            
+            items[centro + linhaReal].classList.add("highlight");
+        });
     });
 }
 
@@ -390,7 +377,6 @@ document.body.style.animation="telaFlash 0.3s 8";
 res.innerHTML="Boa sorte!";
 }
 
-// 🔓 LIBERA BOTÃO
 liberar();
 
 }
