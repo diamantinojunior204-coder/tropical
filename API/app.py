@@ -16,57 +16,27 @@ app.config["SESSION_COOKIE_HTTPONLY"] = True
 # ================================
 # CONEXÃO POSTGRES
 # ================================
-#def conectar():
+def conectar():
 
-   # db_url = os.getenv("DATABASE_URL")
-    #result = urlparse(db_url)
-
-   # conn = psycopg2.connect(
-       # database=result.path[1:],
-       # user=result.username,
-        #password=result.password,
-       # host=result.hostname,
-        #port=result.port,
-        #sslmode='require'
-    #)
-
-    #return conn
-#import os
-#import psycopg2
-
-
-
-
-def conectar(max_tentativas=5, delay=5):
     db_url = os.getenv("DATABASE_URL")
+    result = urlparse(db_url)
 
-    if not db_url:
-        print("❌ DATABASE_URL não encontrada")
-        return None
+    conn = psycopg2.connect(
+        database=result.path[1:],
+        user=result.username,
+        password=result.password,
+        host=result.hostname,
+        port=result.port
+        
+    )
 
-    for tentativa in range(max_tentativas):
-        try:
-            print(f"📡 Tentando conectar ao banco... ({tentativa+1}/{max_tentativas})")
+    return conn
 
-            conn = psycopg2.connect(
-                db_url,
-                sslmode='require',
-                connect_timeout=10
-            )
 
-            print("✅ Conectado com sucesso!")
-            return conn
 
-        except Exception as e:
-            print(f"❌ Erro na conexão: {e}")
+    
 
-            if tentativa < max_tentativas - 1:
-                print(f"🔁 Tentando novamente em {delay}s...")
-                time.sleep(delay)
-            else:
-                print("💥 Falha total ao conectar no banco")
-
-    return None
+      
 
 # ================================
 # CRIAR BANCO
