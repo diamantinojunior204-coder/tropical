@@ -25,17 +25,33 @@ flex-wrap:wrap;
 }
 
 #usuario{color:#00eaff;}
-#saldo{color:gold;font-size:22px;}
 
+/* 🌟 SALDO COM EFEITO NEON */
+#saldo{
+color:gold;
+font-size:26px;
+font-weight:bold;
+animation: saldoBrilho 0.8s infinite alternate;
+text-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700;
+}
+
+@keyframes saldoBrilho{
+from{ transform:scale(1); text-shadow:0 0 10px #ffd700, 0 0 20px #ffd700; }
+to{ transform:scale(1.08); text-shadow:0 0 20px #39ff14, 0 0 35px #39ff14, 0 0 45px #ffd700; }
+}
+
+/* 💎 JACKPOT PISCANDO FORTE */
 #jackpot{
 color:#ffd700;
-font-size:24px;
-animation:jackpotGlow 1s infinite alternate;
+font-size:26px;
+font-weight:bold;
+animation:jackpotGlow 0.6s infinite alternate;
+text-shadow: 0 0 15px red, 0 0 30px orange;
 }
 
 @keyframes jackpotGlow{
-from{transform:scale(1);}
-to{transform:scale(1.1);}
+from{ transform:scale(1); opacity:1; text-shadow:0 0 15px red, 0 0 30px orange; }
+to{ transform:scale(1.15); opacity:0.8; text-shadow:0 0 25px yellow, 0 0 50px white; }
 }
 
 .window{
@@ -53,6 +69,7 @@ background:radial-gradient(circle,#111,#000);
 border-radius:12px;
 border:3px solid gold;
 position:relative;
+box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
 }
 
 .strip{
@@ -73,13 +90,14 @@ height:80px;
 object-fit:contain;
 }
 
+/* ✨ EFEITO NAS FRUTAS GANHADORAS */
 .highlight img{
-animation:winFlash 0.6s infinite alternate;
+animation:winFlash 0.4s infinite alternate;
 }
 
 @keyframes winFlash{
-0%{filter:drop-shadow(0 0 5px gold);}
-100%{filter:drop-shadow(0 0 20px yellow);}
+0%{ filter:drop-shadow(0 0 10px lime) drop-shadow(0 0 20px yellow); transform:scale(1.05); }
+100%{ filter:drop-shadow(0 0 25px lime) drop-shadow(0 0 40px gold); transform:scale(1.15); }
 }
 
 .controls{margin-top:20px;}
@@ -89,31 +107,49 @@ padding:14px 25px;
 font-size:18px;
 border:none;
 border-radius:8px;
-background:orange;
+background:linear-gradient(45deg, green, limegreen);
+color:white;
+font-weight:bold;
 cursor:pointer;
+box-shadow: 0 0 15px rgba(0,255,0,0.5);
+transition: 0.2s;
+}
+
+button:hover{
+transform: scale(1.05);
+box-shadow: 0 0 25px rgba(0,255,0,0.8);
 }
 
 button:disabled{
 opacity:0.5;
 cursor:not-allowed;
+transform:none;
+box-shadow:none;
 }
 
 input{
 padding:10px;
 font-size:16px;
 width:120px;
+border-radius:8px;
+border:2px solid gold;
+background:#111;
+color:white;
+text-align:center;
 }
 
 #resultado{
 margin-top:15px;
-font-size:22px;
+font-size:24px;
 font-weight:bold;
+text-shadow:0 0 10px black;
 }
 
+/* 💥 EFEITO DE TELA QUANDO GANHA */
 @keyframes telaFlash{
-0%{background:#000;}
-50%{background:#330000;}
-100%{background:#000;}
+0%{background-color:rgba(0,0,0,0.9);}
+50%{background-color:rgba(0,255,0,0.3);}
+100%{background-color:rgba(0,0,0,0.9);}
 }
 </style>
 </head>
@@ -126,7 +162,7 @@ font-weight:bold;
 <div>💎 <span id="jackpot">{{jackpot}}</span></div>
 </div>
 
-<h1>🎰 Slot Frutas</h1>
+<h1>🍒🍋 SLOT FRUTAS 🍇🍊</h1>
 
 <div class="window">
 <div class="reel"><div class="strip" id="r1"></div></div>
@@ -142,8 +178,8 @@ font-weight:bold;
 
 <div id="resultado"></div>
 
-<audio id="somGiro" src="/static/audio/jogo2.mp3"></audio>
-<audio id="somWin" src="/static/win.mp3"></audio>
+<audio id="somGiro" src="/static/audio/jogo2.mp3">
+<audio id="somWin" src="/static/win.mp3">
 
 <script>
 
@@ -318,7 +354,7 @@ texto+=" x"+data.multiplicador+" 🔥";
 }
 
 if(data.bonus){
-texto+="<br>🎁 BONUS!";
+texto+="<br>🎁 BÔNUS!";
 }
 
 if(data.ganho > 500){
@@ -327,7 +363,7 @@ texto+="<br>💎 JACKPOT!";
 
 res.innerHTML=texto;
 
-document.body.style.animation="telaFlash 0.3s 6";
+document.body.style.animation="telaFlash 0.3s 8";
 
 }else{
 res.innerHTML="Boa sorte!";
@@ -344,8 +380,6 @@ document.getElementById("btnGirar").disabled = false;
 }
 
 </script>
-</div><a class="depositar" href="/depositar">
-💳 Depositar
-  </a> </div>
+
 </body>
 </html>
