@@ -15,22 +15,37 @@ app.config["SESSION_COOKIE_HTTPONLY"] = True
 # ================================
 # CONEXÃO POSTGRES
 # ================================
+#def conectar():
+
+   # db_url = os.getenv("DATABASE_URL")
+    #result = urlparse(db_url)
+
+   # conn = psycopg2.connect(
+       # database=result.path[1:],
+       # user=result.username,
+        #password=result.password,
+       # host=result.hostname,
+        #port=result.port,
+        #sslmode='require'
+    #)
+
+    #return conn
+#import os
+#import psycopg2
+
 def conectar():
+    try:
+        conn = psycopg2.connect(
+            os.getenv("DATABASE_URL"),
+            sslmode='require',
+            connect_timeout=10
+        )
+        print("✅ Conectado ao banco")
+        return conn
 
-    db_url = os.getenv("DATABASE_URL")
-    result = urlparse(db_url)
-
-    conn = psycopg2.connect(
-        database=result.path[1:],
-        user=result.username,
-        password=result.password,
-        host=result.hostname,
-        port=result.port,
-        sslmode='require'
-    )
-
-    return conn
-
+    except Exception as e:
+        print("❌ Erro ao conectar:", e)
+        return None
 
 
 # ================================
