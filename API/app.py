@@ -1018,7 +1018,7 @@ def api_slot2():
 
     if aposta <= 0:
         return jsonify({"erro": "Aposta inválida"})
-     MIN_APOSTA = 1
+    MIN_APOSTA = 1
     MAX_APOSTA = 100
 
     if aposta < MIN_APOSTA:
