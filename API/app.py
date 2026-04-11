@@ -1010,7 +1010,7 @@ def resetar_cassino():
 #============rota motor ========
 @app.route("/api/slot2", methods=["POST"])
 def api_slot2():
-
+    
     try:
         aposta = float(request.form.get("aposta", 0))
     except:
@@ -1018,6 +1018,14 @@ def api_slot2():
 
     if aposta <= 0:
         return jsonify({"erro": "Aposta inválida"})
+     MIN_APOSTA = 1
+    MAX_APOSTA = 100
+
+    if aposta < MIN_APOSTA:
+        return jsonify({"erro": f"Aposta mínima é R$ {MIN_APOSTA}"})
+
+    if aposta > MAX_APOSTA:
+        return jsonify({"erro": f"Aposta máxima é R$ {MAX_APOSTA}"})    
 
     conn = conectar()
     c = conn.cursor()
