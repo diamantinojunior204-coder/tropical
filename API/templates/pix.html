@@ -2,40 +2,35 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Depositar via PIX</title>
+<title>Depósito PIX</title>
 
 <style>
 body {
-    background: #0f172a;
-    color: white;
     font-family: Arial;
     text-align: center;
-    padding: 20px;
+    background: #0f172a;
+    color: white;
 }
 
-.box {
-    background: #1e293b;
-    padding: 25px;
-    border-radius: 15px;
-    max-width: 400px;
-    margin: auto;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+.container {
+    margin-top: 50px;
 }
 
 input {
-    width: 80%;
     padding: 10px;
-    border-radius: 8px;
+    width: 200px;
+    font-size: 16px;
+    border-radius: 5px;
     border: none;
-    margin-bottom: 10px;
 }
 
 button {
     padding: 10px 20px;
-    border: none;
     background: #22c55e;
+    border: none;
     color: white;
-    border-radius: 10px;
+    font-size: 16px;
+    border-radius: 5px;
     cursor: pointer;
 }
 
@@ -45,59 +40,47 @@ button:hover {
 
 #qr {
     margin-top: 20px;
-    border-radius: 10px;
+    width: 250px;
 }
 
 #codigo {
-    width: 90%;
+    background: #1e293b;
+    padding: 10px;
     margin-top: 10px;
+    word-break: break-all;
+    border-radius: 5px;
 }
 
-.status {
-    margin-top: 15px;
-    font-weight: bold;
-}
-
-.loading {
-    color: orange;
-}
-
-.sucesso {
-    color: #22c55e;
+.loader {
+    margin-top: 20px;
+    display: none;
 }
 </style>
-</head>
 
+</head>
 <body>
 
-<div class="box">
+<div class="container">
 
-    <h2>💳 Depositar via PIX</h2>
+    <h1>💳 Depósito via PIX</h1>
 
-    <input type="number" id="valor" placeholder="Digite o valor">
+    <input type="number" id="valor" placeholder="Digite o valor" />
 
-    <br>
+    <br><br>
 
     <button onclick="gerarPix()">Gerar PIX</button>
 
-    <br>
+    <div class="loader" id="loading">
+        ⏳ Gerando pagamento...
+    </div>
 
-    <img id="qr" width="220" style="display:none;">
+    <img id="qr" />
 
-    <br>
-
-    <textarea id="codigo" rows="4" readonly placeholder="Código PIX"></textarea>
-
-    <br>
-
-    <button onclick="copiarCodigo()">Copiar Código</button>
-
-    <div id="status" class="status"></div>
+    <div id="codigo"></div>
 
 </div>
 
 <script>
-
 async function gerarPix() {
 
     let valor = document.getElementById("valor").value;
@@ -107,59 +90,50 @@ async function gerarPix() {
         return;
     }
 
-    document.getElementById("status").innerHTML = "⏳ Gerando PIX...";
-    document.getElementById("status").className = "status loading";
+    document.getElementById("loading").style.display = "block";
 
-    let res = await fetch("/criar_pix", {
-        method: "POST",
-        body: new URLSearchParams({valor})
-    });
+    try {
+        let res = await fetch("/criar_pix", {
+            method: "POST",
+            body: new URLSearchParams({valor})
+        });
 
-    let data = await res.json();
+        let data = await res.json();
 
-    // mostrar QR
-    document.getElementById("qr").style.display = "block";
-    document.getElementById("qr").src =
-        "data:image/png;base64," + data.qr_base64;
+        console.log(data);
 
-    document.getElementById("codigo").value = data.qr_code;
-
-    document.getElementById("status").innerHTML = "📲 Aguardando pagamento...";
-    document.getElementById("status").className = "status loading";
-
-    // 🔁 verificação automática
-    let interval = setInterval(async () => {
-
-        let r = await fetch("/status_pix/" + data.payment_id);
-        let s = await r.json();
-
-        if (s.status === "pago") {
-            clearInterval(interval);
-
-            document.getElementById("status").innerHTML = "✅ Pagamento confirmado!";
-            document.getElementById("status").className = "status sucesso";
-
-            setTimeout(() => {
-                location.href = "/index";
-            }, 2000);
+        if (data.erro) {
+            alert("Erro: " + data.erro);
+            document.getElementById("loading").style.display = "none";
+            return;
         }
 
-    }, 3000);
+        document.getElementById("qr").src =
+            "data:image/png;base64," + data.qr_base64;
+
+        document.getElementById("codigo").innerText = data.qr_code;
+
+        document.getElementById("loading").innerText =
+            "⏳ Aguardando pagamento...";
+
+        let interval = setInterval(async () => {
+
+            let r = await fetch("/status_pix/" + data.payment_id);
+            let s = await r.json();
+
+            if (s.status === "pago") {
+                clearInterval(interval);
+                alert("✅ Pagamento confirmado!");
+                location.reload();
+            }
+
+        }, 3000);
+
+    } catch (e) {
+        alert("Erro ao conectar com servidor");
+        console.log(e);
+    }
 }
-
-// 📋 copiar código PIX
-function copiarCodigo() {
-
-    let campo = document.getElementById("codigo");
-
-    campo.select();
-    campo.setSelectionRange(0, 99999);
-
-    document.execCommand("copy");
-
-    alert("Código PIX copiado!");
-}
-
 </script>
 
 </body>
