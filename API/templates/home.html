@@ -236,6 +236,36 @@
 
     // Troca a imagem a cada 4 segundos
     setInterval(trocarBanner, 4000);
+ // regar pix automatico
+   async function gerarPix() {
+
+    let valor = document.getElementById("valor").value;
+
+    let res = await fetch("/criar_pix", {
+        method: "POST",
+        body: new URLSearchParams({valor})
+    });
+
+    let data = await res.json();
+
+    document.getElementById("qr").src =
+        "data:image/png;base64," + data.qr_base64;
+
+    document.getElementById("codigo").innerText = data.qr_code;
+
+    let interval = setInterval(async () => {
+
+        let r = await fetch("/status_pix/" + data.payment_id);
+        let s = await r.json();
+
+        if (s.status === "pago") {
+            clearInterval(interval);
+            alert("Pagamento confirmado!");
+            location.reload();
+        }
+
+    }, 3000);
+}
 </script>
 
 </body>
