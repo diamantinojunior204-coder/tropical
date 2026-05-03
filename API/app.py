@@ -963,7 +963,13 @@ def aprovar_saque(id):
 #========novo pix automatico====
 @app.route("/criar_pix", methods=["POST"])
 def criar_pix():
+    payment = sdk.payment().create(payment_data)
 
+    print("🔵 RESPOSTA BRUTA:", payment)
+
+    response = payment.get("response", {})
+
+    print("🟡 RESPONSE:", response)
     if "user_id" not in session:
         return jsonify({"erro": "login"}), 401
 
