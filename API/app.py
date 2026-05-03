@@ -7,7 +7,7 @@ from flask import Flask, render_template, render_template_string, request, redir
 from werkzeug.security import generate_password_hash, check_password_hash
 import mercadopago
 #MP_ACCESS_TOKEN = os.getenv("APP_USR-3384395624349371-041210-238af1f226dce983cc79541618556e2a-3330") 
-MP_ACCESS_TOKEN = "APP_USR-3384395624349371-041210-238af1f226dce983cc79541618556e2a-3330256031" 
+MP_ACCESS_TOKEN = "APP_USR-6455663191296495-041210-f8e9801da7ba3f93b80f4727f353d13a-62748056" 
 
 sdk = mercadopago.SDK(MP_ACCESS_TOKEN)
 
