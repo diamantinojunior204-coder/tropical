@@ -99,6 +99,7 @@ async function gerarPix() {
         });
 
         let data = await res.json();
+        console.log("PAYMENT ID:", data.payment_id);
 
         console.log(data);
 
@@ -134,7 +135,7 @@ async function gerarPix() {
         console.log(e);
     }
 }
-console.log("PAYMENT ID:", data.payment_id);
+
 </script>
 
 </body>
