@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 from flask import Flask, render_template, render_template_string, request, redirect, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 import mercadopago
-MP_ACCESS_TOKEN = os.getenv("MP_ACCESS_TOKEN") or "APP_USR-3384395624349371-041210-238af1f226dce983cc79541618556e2a-3330256031"
+MP_ACCESS_TOKEN = os.getenv("MP_ACCESS_TOKEN") 
 
 sdk = mercadopago.SDK(MP_ACCESS_TOKEN)
 
@@ -69,11 +69,7 @@ def criar_db():
     )
     """)
 
-    # 🔥 NOVAS COLUNAS PIX PROFISSIONAL
-   c.execute("""
-   ALTER TABLE depositos 
-   ADD COLUMN IF NOT EXISTS payment_id TEXT;
-   """)
+   
 
    c.execute("""
    ALTER TABLE depositos 
@@ -106,7 +102,16 @@ def criar_db():
         data TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
+    # 🔥 NOVAS COLUNAS PIX PROFISSIONAL
+    c.execute("""
+    ALTER TABLE depositos 
+    ADD COLUMN IF NOT EXISTS payment_id TEXT;
+    """)
 
+    c.execute("""
+    ALTER TABLE depositos 
+    ADD COLUMN IF NOT EXISTS status_detail TEXT;
+    """)
     # SAQUES
     c.execute("""
     CREATE TABLE IF NOT EXISTS saques(
