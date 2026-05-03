@@ -69,12 +69,6 @@ def criar_db():
     )
     """)
 
-   
-
-    c.execute("""
-    ALTER TABLE depositos 
-    ADD COLUMN IF NOT EXISTS status_detail TEXT;
-      """)
     # JACKPOT
     c.execute("""
     CREATE TABLE IF NOT EXISTS jackpot(
@@ -83,7 +77,7 @@ def criar_db():
     )
     """)
 
-    # ESTATÍSTICAS (RTP DO CASSINO)
+    # ESTATÍSTICAS
     c.execute("""
     CREATE TABLE IF NOT EXISTS estatisticas(
         id INTEGER PRIMARY KEY,
@@ -92,7 +86,7 @@ def criar_db():
     )
     """)
 
-    # DEPÓSITOS PIX
+    # DEPÓSITOS (PRIMEIRO CRIA)
     c.execute("""
     CREATE TABLE IF NOT EXISTS depositos(
         id SERIAL PRIMARY KEY,
@@ -102,7 +96,8 @@ def criar_db():
         data TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
-    # 🔥 NOVAS COLUNAS PIX PROFISSIONAL
+
+    # 🔥 DEPOIS ALTERA (CORRETO)
     c.execute("""
     ALTER TABLE depositos 
     ADD COLUMN IF NOT EXISTS payment_id TEXT;
@@ -112,6 +107,7 @@ def criar_db():
     ALTER TABLE depositos 
     ADD COLUMN IF NOT EXISTS status_detail TEXT;
     """)
+
     # SAQUES
     c.execute("""
     CREATE TABLE IF NOT EXISTS saques(
@@ -123,36 +119,9 @@ def criar_db():
         data TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
-    #=======controle de RTP====
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS config (
-    id SERIAL PRIMARY KEY,
-    rtp REAL DEFAULT 0.92,
-    chance_loss REAL DEFAULT 0.6,
-    chance_small REAL DEFAULT 0.3,
-    chance_big REAL DEFAULT 0.1
-    )""")
-    c.execute("SELECT COUNT(*) FROM config")
-    if c.fetchone()[0] == 0:
-        c.execute("""
-        INSERT INTO config (rtp, chance_loss, chance_small, chance_big)
-        VALUES (%s, %s, %s, %s)
-        """, (0.92, 0.6, 0.3, 0.1))
-    
-    # GARANTIR JACKPOT INICIAL
-    c.execute("SELECT id FROM jackpot WHERE id=1")
-    if not c.fetchone():
-        c.execute("INSERT INTO jackpot (id,valor) VALUES (1,100)")
-    
-
-    # GARANTIR ESTATÍSTICAS INICIAIS
-    c.execute("SELECT id FROM estatisticas WHERE id=1")
-    if not c.fetchone():
-        c.execute("INSERT INTO estatisticas (id,total_apostado,total_pago) VALUES (1,0,0)")
 
     conn.commit()
     conn.close()
-
 
 # ================================
 # CRIAR ADMIN
