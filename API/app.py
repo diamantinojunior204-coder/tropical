@@ -5,6 +5,10 @@ import psycopg2
 from urllib.parse import urlparse
 from flask import Flask, render_template, render_template_string, request, redirect, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
+import mercadopago
+MP_ACCESS_TOKEN = os.getenv("MP_ACCESS_TOKEN") or "APP_USR-3384395624349371-041210-238af1f226dce983cc79541618556e2a-3330256031"
+
+sdk = mercadopago.SDK(MP_ACCESS_TOKEN)
 
 app = Flask(__name__)
 app.secret_key = "segredo_super_cassino"
@@ -32,11 +36,7 @@ def conectar():
 
     return conn
 
-
-
-    
-
-      
+     
 
 # ================================
 # CRIAR BANCO
@@ -69,6 +69,16 @@ def criar_db():
     )
     """)
 
+    # 🔥 NOVAS COLUNAS PIX PROFISSIONAL
+   c.execute("""
+   ALTER TABLE depositos 
+   ADD COLUMN IF NOT EXISTS payment_id TEXT;
+   """)
+
+   c.execute("""
+   ALTER TABLE depositos 
+   ADD COLUMN IF NOT EXISTS status_detail TEXT;
+   """)
     # JACKPOT
     c.execute("""
     CREATE TABLE IF NOT EXISTS jackpot(
@@ -975,7 +985,130 @@ def aprovar_saque(id):
     conn.close()
 
     return redirect("/admin")
+#========novo pix automatico====
+@app.route("/criar_pix", methods=["POST"])
+def criar_pix():
 
+    if "user_id" not in session:
+        return jsonify({"erro": "login"}), 401
+
+    try:
+        valor = float(request.form["valor"])
+    except:
+        return jsonify({"erro": "valor inválido"})
+
+    if valor <= 0:
+        return jsonify({"erro": "valor inválido"})
+
+    payment_data = {
+        "transaction_amount": valor,
+        "description": f"Deposito user {session['user_id']}",
+        "payment_method_id": "pix",
+        "payer": {
+            "email": f"user{session['user_id']}@cassino.com"
+        },
+        #"notification_url": "https://SEU-SITE.com/webhook"
+        "notification_url": "https://diamante.onrender.com/webhook"
+    }
+
+    payment = sdk.payment().create(payment_data)
+    response = payment["response"]
+
+    payment_id = str(response["id"])
+
+    conn = conectar()
+    c = conn.cursor()
+
+    c.execute("""
+    INSERT INTO depositos(user_id, valor, status, payment_id)
+    VALUES(%s,%s,'pendente',%s)
+    """, (session["user_id"], valor, payment_id))
+
+    conn.commit()
+    conn.close()
+
+    qr_code = response["point_of_interaction"]["transaction_data"]["qr_code"]
+    qr_base64 = response["point_of_interaction"]["transaction_data"]["qr_code_base64"]
+
+    return jsonify({
+        "qr_code": qr_code,
+        "qr_base64": qr_base64,
+        "payment_id": payment_id
+    })
+#======sistema de notificação do pix
+@app.route("/webhook", methods=["POST"])
+def webhook():
+
+    data = request.json
+
+    if not data or "data" not in data:
+        return "ok", 200
+
+    payment_id = str(data["data"]["id"])
+
+    payment = sdk.payment().get(payment_id)
+    response = payment["response"]
+
+    status = response.get("status")
+    status_detail = response.get("status_detail")
+    valor = response.get("transaction_amount")
+
+    if status != "approved":
+        return "ok", 200
+
+    conn = conectar()
+    c = conn.cursor()
+
+    c.execute("""
+    SELECT id, user_id, status FROM depositos
+    WHERE payment_id=%s
+    """, (payment_id,))
+
+    dep = c.fetchone()
+
+    if not dep:
+        conn.close()
+        return "ok", 200
+
+    dep_id, user_id, status_db = dep
+
+    if status_db == "pago":
+        conn.close()
+        return "ok", 200
+
+    c.execute("""
+    UPDATE users
+    SET saldo = saldo + %s
+    WHERE id=%s
+    """, (valor, user_id))
+
+    c.execute("""
+    UPDATE depositos
+    SET status='pago', status_detail=%s
+    WHERE id=%s
+    """, (status_detail, dep_id))
+
+    conn.commit()
+    conn.close()
+
+    return "ok", 200
+@app.route("/status_pix/<payment_id>")
+def status_pix(payment_id):
+
+    conn = conectar()
+    c = conn.cursor()
+
+    c.execute("""
+    SELECT status FROM depositos WHERE payment_id=%s
+    """, (payment_id,))
+
+    row = c.fetchone()
+    conn.close()
+
+    if not row:
+        return jsonify({"status": "erro"})
+
+    return jsonify({"status": row[0]})
 # excluir usuário 
 @app.route("/excluir_usuario/<int:id>")
 def excluir_usuario(id):
