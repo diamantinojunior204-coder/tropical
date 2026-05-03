@@ -71,10 +71,10 @@ def criar_db():
 
    
 
-   c.execute("""
-   ALTER TABLE depositos 
-   ADD COLUMN IF NOT EXISTS status_detail TEXT;
-   """)
+    c.execute("""
+    ALTER TABLE depositos 
+    ADD COLUMN IF NOT EXISTS status_detail TEXT;
+      """)
     # JACKPOT
     c.execute("""
     CREATE TABLE IF NOT EXISTS jackpot(
