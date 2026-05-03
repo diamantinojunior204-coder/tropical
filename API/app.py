@@ -974,41 +974,45 @@ def criar_pix():
     if valor <= 0:
         return jsonify({"erro": "valor inválido"})
 
-    payment_data = {
-        "transaction_amount": valor,
-        "description": f"Deposito user {session['user_id']}",
-        "payment_method_id": "pix",
-        "payer": {
-            "email": f"user{session['user_id']}@cassino.com"
-        },
-        #"notification_url": "https://SEU-SITE.com/webhook"
-        "notification_url": "https://diamante.onrender.com/webhook"
-    }
+    try:
+        payment_data = {
+            "transaction_amount": valor,
+            "description": f"Deposito user {session['user_id']}",
+            "payment_method_id": "pix",
+            "payer": {
+                "email": f"user{session['user_id']}@cassino.com"
+            },
+            "notification_url": "https://diamante.onrender.com/webhook"
+        }
 
-    payment = sdk.payment().create(payment_data)
-    response = payment["response"]
+        payment = sdk.payment().create(payment_data)
+        response = payment["response"]
 
-    payment_id = str(response["id"])
+        payment_id = str(response["id"])
 
-    conn = conectar()
-    c = conn.cursor()
+        conn = conectar()
+        c = conn.cursor()
 
-    c.execute("""
-    INSERT INTO depositos(user_id, valor, status, payment_id)
-    VALUES(%s,%s,'pendente',%s)
-    """, (session["user_id"], valor, payment_id))
+        c.execute("""
+        INSERT INTO depositos(user_id, valor, status, payment_id)
+        VALUES(%s,%s,'pendente',%s)
+        """, (session["user_id"], valor, payment_id))
 
-    conn.commit()
-    conn.close()
+        conn.commit()
+        conn.close()
 
-    qr_code = response["point_of_interaction"]["transaction_data"]["qr_code"]
-    qr_base64 = response["point_of_interaction"]["transaction_data"]["qr_code_base64"]
+        qr_code = response["point_of_interaction"]["transaction_data"]["qr_code"]
+        qr_base64 = response["point_of_interaction"]["transaction_data"]["qr_code_base64"]
 
-    return jsonify({
-        "qr_code": qr_code,
-        "qr_base64": qr_base64,
-        "payment_id": payment_id
-    })
+        return jsonify({
+            "qr_code": qr_code,
+            "qr_base64": qr_base64,
+            "payment_id": payment_id
+        })
+
+    except Exception as e:
+        print("ERRO PIX:", e)
+        return jsonify({"erro": str(e)})
 #======sistema de notificação do pix
 @app.route("/webhook", methods=["POST"])
 def webhook():
