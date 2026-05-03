@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Depositar via PIX</title>
+
+<style>
+body {
+    background: #0f172a;
+    color: white;
+    font-family: Arial;
+    text-align: center;
+    padding: 20px;
+}
+
+.box {
+    background: #1e293b;
+    padding: 25px;
+    border-radius: 15px;
+    max-width: 400px;
+    margin: auto;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+input {
+    width: 80%;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    margin-bottom: 10px;
+}
+
+button {
+    padding: 10px 20px;
+    border: none;
+    background: #22c55e;
+    color: white;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #16a34a;
+}
+
+#qr {
+    margin-top: 20px;
+    border-radius: 10px;
+}
+
+#codigo {
+    width: 90%;
+    margin-top: 10px;
+}
+
+.status {
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+.loading {
+    color: orange;
+}
+
+.sucesso {
+    color: #22c55e;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+
+    <h2>💳 Depositar via PIX</h2>
+
+    <input type="number" id="valor" placeholder="Digite o valor">
+
+    <br>
+
+    <button onclick="gerarPix()">Gerar PIX</button>
+
+    <br>
+
+    <img id="qr" width="220" style="display:none;">
+
+    <br>
+
+    <textarea id="codigo" rows="4" readonly placeholder="Código PIX"></textarea>
+
+    <br>
+
+    <button onclick="copiarCodigo()">Copiar Código</button>
+
+    <div id="status" class="status"></div>
+
+</div>
+
+<script>
+
+async function gerarPix() {
+
+    let valor = document.getElementById("valor").value;
+
+    if (!valor || valor <= 0) {
+        alert("Digite um valor válido");
+        return;
+    }
+
+    document.getElementById("status").innerHTML = "⏳ Gerando PIX...";
+    document.getElementById("status").className = "status loading";
+
+    let res = await fetch("/criar_pix", {
+        method: "POST",
+        body: new URLSearchParams({valor})
+    });
+
+    let data = await res.json();
+
+    // mostrar QR
+    document.getElementById("qr").style.display = "block";
+    document.getElementById("qr").src =
+        "data:image/png;base64," + data.qr_base64;
+
+    document.getElementById("codigo").value = data.qr_code;
+
+    document.getElementById("status").innerHTML = "📲 Aguardando pagamento...";
+    document.getElementById("status").className = "status loading";
+
+    // 🔁 verificação automática
+    let interval = setInterval(async () => {
+
+        let r = await fetch("/status_pix/" + data.payment_id);
+        let s = await r.json();
+
+        if (s.status === "pago") {
+            clearInterval(interval);
+
+            document.getElementById("status").innerHTML = "✅ Pagamento confirmado!";
+            document.getElementById("status").className = "status sucesso";
+
+            setTimeout(() => {
+                location.href = "/index";
+            }, 2000);
+        }
+
+    }, 3000);
+}
+
+// 📋 copiar código PIX
+function copiarCodigo() {
+
+    let campo = document.getElementById("codigo");
+
+    campo.select();
+    campo.setSelectionRange(0, 99999);
+
+    document.execCommand("copy");
+
+    alert("Código PIX copiado!");
+}
+
+</script>
+
+</body>
+</html>
